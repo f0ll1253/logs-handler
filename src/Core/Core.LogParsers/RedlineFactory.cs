@@ -1,7 +1,6 @@
 using Core.Models.Abstractions;
-using Core.Models.Realizations;
 
-namespace Core.Models.Factories;
+namespace Core.LogParsers;
 
 public class RedlineFactory : ILogsFactory
 {

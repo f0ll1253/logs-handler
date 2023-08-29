@@ -1,6 +1,6 @@
 using Core.Models.Abstractions;
 
-namespace Core.Models.Realizations;
+namespace Core.LogParsers;
 
 public class PasswordField : IPasswordField
 {

@@ -1,0 +1,4 @@
+PDD: NOT FOUND
+
+CDD: 
+[MONEY] binance.com (38), [MONEY] coinmarketcap.com (36), [MONEY] bitstar (10), [MONEY] coinbase.com (4), [MONEY] coinex (2), [PayPal] paypal.com (5), [SOCIAL] facebook.com (8), [SOCIAL] twitter.com (12), [SOCIAL] instagram.com (10), [SOCIAL] tiktok.com (9), [SOCIAL] linkedin.com (10), [GAME] roblox.com (9), [GAME] ea.com (1), [DARK] github.com (4), [DARK] sync.com (4), [DARK] mediafire.com (12), [CASINO] betsson.com (4)

@@ -1,6 +1,6 @@
-using Core.Models.Abstractions;
+using Core.Wallets.Abstractions;
 
-namespace Core.Models.Realizations;
+namespace Core.Wallets;
 
 public class WalletMetamask : IWallet
 {

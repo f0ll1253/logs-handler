@@ -1,6 +1,6 @@
-using Console.Models.Abstractions;
+using Core.View.Models.Abstractions;
 
-namespace Console.Models.Realizations;
+namespace Core.View.Models.Realizations;
 
 public abstract class BaseView : IView
 {

@@ -5,7 +5,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <EntryPointExe>App.Main</EntryPointExe>
+        <EntryPointExe>Program.Main</EntryPointExe>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,14 +13,18 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
+    
     <ItemGroup>
       <PackageReference Include="Autofac" Version="7.1.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
       <PackageReference Include="Splat.Autofac" Version="14.7.1" />
     </ItemGroup>
-
-
-
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\Core\Core.View\Core.View.csproj" />
+      <ProjectReference Include="..\..\Core\Core.LogParsers\Core.LogParsers.csproj" />
+    </ItemGroup>
+    
+    
 </Project>

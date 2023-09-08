@@ -1,5 +1,5 @@
-using Console.Models;
-using Console.Models.Abstractions;
+using Core.View.Models;
+using Core.View.Models.Abstractions;
 
 namespace Console.Views;
 
@@ -11,6 +11,8 @@ public class MainView : ArgsView
     
     private Task Parse_Wallets()
     {
+        
+        
         return Task.CompletedTask;
     }
 }

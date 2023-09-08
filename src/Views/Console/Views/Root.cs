@@ -1,4 +1,4 @@
-using Console.Models.Realizations;
+using Core.View.Models.Realizations;
 
 namespace Console.Views;
 

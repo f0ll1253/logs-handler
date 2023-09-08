@@ -1,8 +1,8 @@
 using System.Reflection;
-using Console.Models.Abstractions;
-using Console.Models.Realizations;
+using Core.View.Models.Abstractions;
+using Core.View.Models.Realizations;
 
-namespace Console.Models;
+namespace Core.View.Models;
 
 public abstract class ArgsView : BaseView
 {

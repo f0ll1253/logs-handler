@@ -1,57 +1,40 @@
-﻿using Autofac;
-using Console.Models.Abstractions;
+using Autofac;
+using Console.Models;
 using Console.Views;
-using Microsoft.Extensions.Configuration;
+using Core.LogParsers;
+using Core.View;
+using Core.View.Models.Abstractions;
 using Splat;
-using Splat.Autofac;
 
 namespace Console;
 
-internal static class App
+public static class Program
 {
-    private static readonly CancellationTokenSource _source = new();
-    
     public static async Task Main()
     {
-        InitializeServices();
-
-        var root = Locator.Current.GetService<IRoot>()!;
-        await root.Redirect<MainView>();
-        await root.Start(Token);
+        await App.Initialize(builder =>
+        {
+            builder.RegisterServices();
+            builder.RegisterViews();
+        });
+        await App.Run(Locator.Current.GetService<StartView>()!);
     }
 
-    public static CancellationToken Token => _source.Token;
-
-    private static void InitializeServices()
+    private static void RegisterServices(this ContainerBuilder builder)
     {
-        var builder = new ContainerBuilder()
-            .RegisterConfiguration()
-            .RegisterViews();
-
-        var resolver = builder.UseAutofacDependencyResolver();
-        builder.RegisterInstance(resolver);
-        resolver.SetLifetimeScope(builder.Build());
+        builder.RegisterType<LogsInfo>()
+            .SingleInstance();
+        builder.RegisterType<RedlineFactory>()
+            .SingleInstance();
     }
     
-    private static ContainerBuilder RegisterConfiguration(this ContainerBuilder builder)
-    {
-        var configBuilder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json");
-
-        builder.RegisterInstance((IConfiguration) configBuilder.Build());
-
-        return builder;
-    }
-
-    public static ContainerBuilder RegisterViews(this ContainerBuilder builder)
+    private static void RegisterViews(this ContainerBuilder builder)
     {
         builder.RegisterType<Root>()
             .As<IRoot>()
             .SingleInstance();
 
+        builder.RegisterType<StartView>();
         builder.RegisterType<MainView>();
-        
-        return builder;
     }
 }

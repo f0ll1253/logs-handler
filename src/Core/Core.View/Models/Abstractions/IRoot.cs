@@ -1,4 +1,4 @@
-namespace Console.Models.Abstractions;
+namespace Core.View.Models.Abstractions;
 
 public interface IRoot
 {

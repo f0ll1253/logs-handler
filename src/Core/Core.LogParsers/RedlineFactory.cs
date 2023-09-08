@@ -4,6 +4,14 @@ namespace Core.LogParsers;
 
 public class RedlineFactory : ILogsFactory
 {
+    public async IAsyncEnumerable<ILog> CreateMany(string path)
+    {
+        foreach (var dir in Directory.GetDirectories(path))
+        {
+            yield return await Create(dir);
+        }
+    }
+    
     public Task<ILog> Create(string path)
     {
         return Task.FromResult<ILog>(new Log

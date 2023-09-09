@@ -1,6 +1,6 @@
 using Core.Models.Abstractions;
 
-namespace Core.LogParsers;
+namespace Core.Models.Logs;
 
 public class Log : ILog
 {

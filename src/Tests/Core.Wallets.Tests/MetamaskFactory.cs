@@ -1,4 +1,6 @@
-using Core.LogParsers;
+using Core.Models;
+using Core.Models.Logs;
+using Core.Models.Wallets;
 
 namespace Core.Wallets.Tests;
 

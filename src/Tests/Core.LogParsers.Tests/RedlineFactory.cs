@@ -1,4 +1,6 @@
+using Core.Models;
 using Core.Models.Abstractions;
+using Core.Models.Logs;
 
 namespace Core.LogParsers.Tests;
 

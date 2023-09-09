@@ -22,8 +22,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Core\Core.Models\Core.Models.csproj" />
-      <ProjectReference Include="..\..\Core\Core.Wallets\Core.Wallets.csproj" />
-      <ProjectReference Include="..\..\Core\Core.LogParsers\Core.LogParsers.csproj" />
     </ItemGroup>
 
 </Project>

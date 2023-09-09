@@ -1,7 +1,7 @@
 using Console.Models;
-using Core.LogParsers;
+using Core.Models.Logs;
+using Core.View.Models;
 using Core.View.Models.Abstractions;
-using Core.View.Models.Realizations;
 using Splat;
 
 namespace Console.Views;
@@ -12,7 +12,7 @@ public class StartView : BaseView
     {
     }
 
-    public override async Task Build()
+    public override Task Build()
     {
         System.Console.Write("Path to logs: ");
         
@@ -20,14 +20,16 @@ public class StartView : BaseView
 
         if (string.IsNullOrEmpty(path)
             || !Directory.Exists(path)) 
-            return;
+            return Task.CompletedTask;
 
         var logs = Locator.Current.GetService<LogsInfo>()!;
         var factory = Locator.Current.GetService<RedlineFactory>()!;
         logs.Path = path;
-        logs.Logs.AddRange(await factory.CreateMany(path).ToListAsync());
+        logs.Logs = factory.CreateMany(path);
 
         Root.Views.Pop();
         Root.Views.Push(Locator.Current.GetService<MainView>()!);
+
+        return Task.CompletedTask;
     }
 }

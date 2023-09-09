@@ -1,8 +1,9 @@
 using System.Reflection;
+using Core.View.Attributes;
+using Core.View.Models;
 using Core.View.Models.Abstractions;
-using Core.View.Models.Realizations;
 
-namespace Core.View.Models;
+namespace Core.View;
 
 public abstract class ArgsView : BaseView
 {
@@ -10,9 +11,10 @@ public abstract class ArgsView : BaseView
     
     protected ArgsView(IRoot root) : base(root)
     {
-        var args = this.GetType()
+        var args = GetType()
             .GetTypeInfo()
             .DeclaredMethods
+            .Where(x => x.GetCustomAttribute<CommandAttribute>() != null)
             .Select(x => x.Name)
             .Select(x => x.Replace('_', ' '))
             .ToArray();
@@ -23,12 +25,12 @@ public abstract class ArgsView : BaseView
     
     public override Task Build()
     {
-        foreach (var (i, cmd) in _args) System.Console.WriteLine($"{i}. {cmd}");
+        foreach (var (i, cmd) in _args) Console.WriteLine($"{i}. {cmd}");
 
-        System.Console.Write("Choice: ");
+        Console.Write("Choice: ");
         
         _args.TryGetValue(
-            int.TryParse(System.Console.ReadLine() ?? "", out var index) 
+            int.TryParse(Console.ReadLine() ?? "", out var index) 
                 ? index 
                 : -1, 
             out var value);
@@ -44,10 +46,10 @@ public abstract class ArgsView : BaseView
             return Task.CompletedTask;
         }
         
-        var method = this.GetType()
+        var method = GetType()
             .GetTypeInfo()
             .DeclaredMethods
-            .FirstOrDefault(x => x.Name.ToLower() == name.ToLower());
+            .FirstOrDefault(x => x.Name.ToLower() == name.ToLower() && x.GetCustomAttribute<CommandAttribute>() != null);
 
         if (method is null) return Task.CompletedTask; // todo add logging
 

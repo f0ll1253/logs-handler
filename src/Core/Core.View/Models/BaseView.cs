@@ -1,6 +1,6 @@
 using Core.View.Models.Abstractions;
 
-namespace Core.View.Models.Realizations;
+namespace Core.View.Models;
 
 public abstract class BaseView : IView
 {

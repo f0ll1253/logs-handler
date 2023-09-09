@@ -1,7 +1,7 @@
 using Core.View.Models.Abstractions;
 using Splat;
 
-namespace Core.View.Models.Realizations;
+namespace Core.View.Models;
 
 public abstract class BaseRoot : IRoot
 {
@@ -14,18 +14,15 @@ public abstract class BaseRoot : IRoot
             if (token is not null && token.Value.IsCancellationRequested) break;
             if (!Views.TryPeek(out var view)) break;
             
-            System.Console.Clear();
-            System.Console.WriteLine("""
+            Console.Clear();
+            Console.WriteLine("""
                                         .____    ________    ____________  ___
                                      /\ |    |   \_____  \  /  _____/\   \/  / /\
                                      \/ |    |    /   |   \/   \  ___ \     /  \/
                                      /\ |    |___/    |    \    \_\  \/     \  /\
                                      \/ |_______ \_______  /\______  /___/\  \ \/
                                                 \/       \/        \/      \_/
-                                                
-                                            https://github.com/f0ll1253
-
-                                     """);
+                                     """ + '\n');
                 
             await view.Build().WaitAsync(App.Token);
             await Task.Delay(500, App.Token);
@@ -34,7 +31,7 @@ public abstract class BaseRoot : IRoot
     
     public Task Redirect<T>(T view) where T : IView
     {
-        System.Console.Clear();
+        Console.Clear();
         
         view.Initialize();
         

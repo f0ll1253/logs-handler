@@ -1,4 +1,4 @@
-namespace Core.Wallets.Abstractions;
+namespace Core.Models.Abstractions;
 
 public interface IWallet
 {

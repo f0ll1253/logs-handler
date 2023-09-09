@@ -23,7 +23,7 @@
     
     <ItemGroup>
       <ProjectReference Include="..\..\Core\Core.View\Core.View.csproj" />
-      <ProjectReference Include="..\..\Core\Core.LogParsers\Core.LogParsers.csproj" />
+      <ProjectReference Include="..\..\Core\Core.Models\Core.Models.csproj" />
     </ItemGroup>
     
     

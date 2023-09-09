@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Core.Models;
+namespace Core.Models.Wallets;
 
 [JsonObject(MemberSerialization.OptOut)]
 public sealed class Vault

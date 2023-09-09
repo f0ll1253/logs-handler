@@ -1,6 +1,4 @@
-using Core.Models.Abstractions;
-
-namespace Core.Wallets.Abstractions;
+namespace Core.Models.Abstractions;
 
 public interface IWalletsFactory<T>
     where T : IWallet

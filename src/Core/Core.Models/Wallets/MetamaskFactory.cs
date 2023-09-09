@@ -1,16 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Core.Models;
 using Core.Models.Abstractions;
-using Core.Wallets.Abstractions;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 
-namespace Core.Wallets;
+namespace Core.Models.Wallets;
 
 public class MetamaskFactory : IWalletsFactory<WalletMetamask>
 {

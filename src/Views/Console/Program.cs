@@ -1,7 +1,7 @@
 using Autofac;
 using Console.Models;
 using Console.Views;
-using Core.LogParsers;
+using Core.Models.Logs;
 using Core.View;
 using Core.View.Models.Abstractions;
 using Splat;
@@ -12,6 +12,8 @@ public static class Program
 {
     public static async Task Main()
     {
+        System.Console.Title = "https://github.com/f0ll1253";
+        
         await App.Initialize(builder =>
         {
             builder.RegisterServices();

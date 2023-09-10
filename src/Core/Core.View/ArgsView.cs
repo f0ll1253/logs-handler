@@ -16,7 +16,6 @@ public abstract class ArgsView : BaseView
             .DeclaredMethods
             .Where(x => x.GetCustomAttribute<CommandAttribute>() != null)
             .Select(x => x.Name)
-            .Select(x => x.Replace('_', ' '))
             .ToArray();
         
         for (int i = 0; i < args.Length; i++) _args.Add(i, args[i]);
@@ -25,7 +24,7 @@ public abstract class ArgsView : BaseView
     
     public override Task Build()
     {
-        foreach (var (i, cmd) in _args) Console.WriteLine($"{i}. {cmd}");
+        foreach (var (i, cmd) in _args) Console.WriteLine($"{i}. {cmd.Replace('_', ' ')}");
 
         Console.Write("Choice: ");
         

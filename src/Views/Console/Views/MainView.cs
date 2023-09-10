@@ -56,6 +56,15 @@ public class MainView : ArgsView
         System.Console.Write($"All data saved into {filename}. Press any key for continue."); System.Console.ReadKey();
     }
 
+    [Command(Index = 98)]
+    public Task Change_Logs()
+    {
+        Root.Views.Pop();
+        Root.Views.Push(Locator.Current.GetService<StartView>()!);
+        
+        return Task.CompletedTask;
+    }
+
     public override async Task Build()
     {
         System.Console.WriteLine("Count\tWith Passwords\tWallets\tSteam\tTelegram\n" +

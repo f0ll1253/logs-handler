@@ -7,18 +7,23 @@ namespace Core.View;
 
 public abstract class ArgsView : BaseView
 {
-    private readonly Dictionary<int, string> _args = new ();
+    private readonly Dictionary<int, string> _args;
     
     protected ArgsView(IRoot root) : base(root)
     {
-        var args = GetType()
+        _args = GetType()
             .GetTypeInfo()
             .DeclaredMethods
             .Where(x => x.GetCustomAttribute<CommandAttribute>() != null)
-            .Select(x => x.Name)
-            .ToArray();
+            .Select((x, i) =>
+            {
+                var attribute = x.GetCustomAttribute<CommandAttribute>()!;
+
+                return (attribute.Index == 0 ? i : attribute.Index, x.Name);
+            })
+            .OrderBy(x => x.Item1)
+            .ToDictionary(x => x.Item1, x => x.Name);
         
-        for (int i = 0; i < args.Length; i++) _args.Add(i, args[i]);
         _args.Add(99, "Exit");
     }
     

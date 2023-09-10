@@ -1,4 +1,4 @@
-using Core.Models.Abstractions;
+using Core.Models.Logs.Abstractions;
 
 namespace Console.Models;
 

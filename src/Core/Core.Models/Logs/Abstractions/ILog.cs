@@ -1,4 +1,4 @@
-namespace Core.Models.Abstractions;
+namespace Core.Models.Logs.Abstractions;
 
 public interface ILog
 {

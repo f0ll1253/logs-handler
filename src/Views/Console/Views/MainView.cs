@@ -3,6 +3,9 @@ using Core.Models.Wallets;
 using Core.View;
 using Core.View.Attributes;
 using Core.View.Models.Abstractions;
+using Nethereum.Hex.HexTypes;
+using Nethereum.Web3;
+using Splat;
 
 namespace Console.Views;
 
@@ -21,6 +24,7 @@ public class MainView : ArgsView
     {
         var withWallets = _logs.Logs.Where(x => x.HasWallets);
         var filename = Path.Combine("Wallets", $"{new DirectoryInfo(_logs.Path).Name}.txt");
+        var web = Locator.Current.GetService<Web3>("Ethereum")!;
 
         Directory.CreateDirectory("Wallets");
         
@@ -32,8 +36,19 @@ public class MainView : ArgsView
                 
                 await foreach (var w in _metamask.Create(x))
                 {
-                    System.Console.WriteLine($"{w.Log}\n{w.Address}\n{w.Mnemonic}\n");
-                    await writer.WriteAsync($"{w.Address}\n{w.Mnemonic}\n");
+                    HexBigInteger? balance = null;
+
+                    try
+                    {
+                        balance = await web.Eth.GetBalance.SendRequestAsync(w.Address);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Console.WriteLine($"Log: {w.Log}\nError: {e.Message}");
+                    }
+                    
+                    System.Console.WriteLine($"{w.Log}\n{w.Address}\n{w.Mnemonic}\n{balance}\n");
+                    await writer.WriteAsync($"{w.Address}\n{w.Mnemonic}\n{balance}\n");
                 }
             }
         }

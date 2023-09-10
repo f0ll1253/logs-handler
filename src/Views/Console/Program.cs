@@ -4,6 +4,9 @@ using Console.Views;
 using Core.Models.Logs;
 using Core.View;
 using Core.View.Models.Abstractions;
+using Microsoft.Extensions.Configuration;
+using Nethereum.JsonRpc.Client;
+using Nethereum.Web3;
 using Splat;
 
 namespace Console;
@@ -27,6 +30,15 @@ public static class Program
         builder.RegisterType<LogsInfo>()
             .SingleInstance();
         builder.RegisterType<RedlineFactory>()
+            .SingleInstance();
+
+        builder.Register(ctx =>
+            {
+                var cfg = ctx.Resolve<IConfiguration>();
+                
+                return new Web3(cfg["Web3:Ethereum"]);
+            })
+            .Named<Web3>("Ethereum")
             .SingleInstance();
     }
     

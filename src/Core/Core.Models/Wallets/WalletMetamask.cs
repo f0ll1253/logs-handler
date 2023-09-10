@@ -1,4 +1,4 @@
-using Core.Models.Abstractions;
+using Core.Models.Wallets.Abstractions;
 
 namespace Core.Models.Wallets;
 

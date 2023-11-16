@@ -1,5 +1,0 @@
-.hnfanknocfeofbddgcijnmhnfnkdnaad	TRUE	/	FALSE	1721736254	__utma	183163519.1535546314.1687094075.1687169277.1687176251.3
-.hnfanknocfeofbddgcijnmhnfnkdnaad	TRUE	/	FALSE	1687178054	__utmb	183163519.2.10.1687176251
-.hnfanknocfeofbddgcijnmhnfnkdnaad	TRUE	/	FALSE	17227780138027721	__utmc	183163519
-.hnfanknocfeofbddgcijnmhnfnkdnaad	TRUE	/	FALSE	1687176851	__utmt	1
-.hnfanknocfeofbddgcijnmhnfnkdnaad	TRUE	/	FALSE	1702944254	__utmz	183163519.1687094075.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)

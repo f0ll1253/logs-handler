@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Core.Discord;
 
-public class DiscordChecker
+public class DiscordChecker : IDisposable
 {
     private readonly HttpRequest _request;
     
@@ -15,7 +15,12 @@ public class DiscordChecker
         _request.Proxy = new HttpProxyClient("46.8.107.43", 1050, "WGtC9e", "fRqZn7MaIS"); // todo change on proxies from file
         _request.IgnoreProtocolErrors = true;
     }
-    
+
+    public void Dispose()
+    {
+        _request.Dispose();
+    }
+
     public DiscordAccount? TryLogin(string token)
     {
         _request.Authorization = token;

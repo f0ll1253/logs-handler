@@ -1,6 +1,6 @@
 namespace Console.Models;
 
-public class Configuration
+public class Settings
 {
     public string Path { get; set; } = "";
 }

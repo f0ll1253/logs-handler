@@ -21,7 +21,7 @@ public class StartView : BaseView
             || !Directory.Exists(path)) 
             return Task.CompletedTask;
 
-        Locator.Current.GetService<Configuration>()!.Path = path;
+        Locator.Current.GetService<Settings>()!.Path = path;
 
         Root.Views.Push(Locator.Current.GetService<MainView>()!);
 

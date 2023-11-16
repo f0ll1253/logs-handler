@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Core.Wallets.Abstractions;
 using LevelDB;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,11 +10,16 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace Core.Wallets;
 
-public class MetamaskParser : IParser
+public enum WalletType
 {
-    public IEnumerable<IWallet?> ByLogs(string logs) => Directory.GetDirectories(logs).SelectMany(ByLog);
+    Metamask
+}
 
-    public IEnumerable<IWallet?> ByLog(string log)
+public class MetamaskParser
+{
+    public IEnumerable<MetamaskWallet?> ByLogs(string logs) => Directory.GetDirectories(logs).SelectMany(ByLog);
+
+    public IEnumerable<MetamaskWallet?> ByLog(string log)
     {
         var passwords = new List<string>();
         var passwordsPath = Path.Combine(log, "Passwords.txt");
@@ -40,7 +44,7 @@ public class MetamaskParser : IParser
         }
     }
 
-    public IWallet? ByWallet(string dir, IEnumerable<string> passwords)
+    public MetamaskWallet? ByWallet(string dir, IEnumerable<string> passwords)
     {
         // get vault
         using var options = new Options
@@ -64,14 +68,19 @@ public class MetamaskParser : IParser
         
         if (ParseVault(json) is not {} vault) return null;
         
-        string? decrypted = null;
+        string? decrypted = null, password = null;
 
         // get mnemonic
-        foreach (var password in passwords)
+        foreach (var pass in passwords)
         {
-            decrypted = DecryptVault(password, vault);
+            decrypted = DecryptVault(pass, vault);
 
-            if (decrypted is not null) break;
+            if (decrypted is not null)
+            {
+                password = pass;
+                
+                break;
+            }
         }
 
         if (decrypted is null) return null;
@@ -80,7 +89,8 @@ public class MetamaskParser : IParser
         {
             Mnemonic = GetMnemonic(decrypted),
             Type = WalletType.Metamask,
-            Accounts = ParseAccounts(json)
+            Accounts = ParseAccounts(json),
+            Password = password
         };
     }
 

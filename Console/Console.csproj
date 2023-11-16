@@ -22,7 +22,6 @@
       </PackageReference>
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
-      <PackageReference Include="Nethereum.Web3" Version="4.16.0" />
       <PackageReference Include="Splat.Autofac" Version="14.7.1" />
     </ItemGroup>
     

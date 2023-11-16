@@ -4,6 +4,7 @@ using Console.Models.Abstractions;
 using Console.Models.Views;
 using Console.Views;
 using Microsoft.Extensions.Configuration;
+using Nethereum.Util;
 using Nethereum.Web3;
 using Splat;
 
@@ -25,15 +26,7 @@ public static class Program
 
     private static void RegisterServices(this ContainerBuilder builder)
     {
-        builder.RegisterType<Configuration>()
-            .SingleInstance();
-        builder.Register(ctx =>
-            {
-                var cfg = ctx.Resolve<IConfiguration>();
-                
-                return new Web3(cfg["Web3:Ethereum"]);
-            })
-            .Named<Web3>("Ethereum")
+        builder.RegisterType<Settings>()
             .SingleInstance();
     }
     

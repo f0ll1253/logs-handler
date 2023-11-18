@@ -1,9 +1,9 @@
-using Console.Extensions;
 using Console.Models;
 using Console.Models.Abstractions;
 using Console.Models.Attributes;
 using Console.Models.Views;
 using Core.Discord;
+using Core.Parsers;
 using Core.Wallets;
 using Microsoft.Extensions.Configuration;
 
@@ -108,22 +108,10 @@ public class MainView : ArgsView
         using var writer = new StreamWriter("Links/links.txt", true);
         var links = File.ReadAllLines("links.txt");
         
-        foreach (var log in Directory.GetDirectories(_settings.Path))
+        foreach (var account in links.FromLogs(_settings.Path))
         {
-            var passwords = Path.Combine(log, "Passwords.txt");
-            
-            if (!File.Exists(passwords)) continue;
-
-            using var reader = new StreamReader(passwords);
-
-            reader.ReadAccounts(
-                urlPredicate: url => links.Any(url.Contains),
-                func: account =>
-                {
-                    System.Console.WriteLine(account.ToString());
-                    writer.WriteLine(account.ToString());
-                }
-            );
+            System.Console.WriteLine(account.ToString());
+            writer.WriteLine(account.ToString());
         }
 
         _ExitWait();
@@ -136,21 +124,12 @@ public class MainView : ArgsView
         var folder = $"Cookies/{new DirectoryInfo(_settings.Path).Name}";
         Directory.CreateDirectory(folder);
 
-        int i = 0;
-        foreach (var log in Directory.GetDirectories(_settings.Path))
+        var i = 0;
+        foreach (var cookies in ".instagram.com".FromLogs(_settings.Path).Where(x => x.Any()))
         {
-            if (!Directory.Exists(Path.Combine(log, "Cookies"))) continue;
-            
-            foreach (var cookies in Directory.GetFiles(Path.Combine(log, "Cookies")))
-            {
-                var lines = File.ReadLines(cookies).Where(x => x.StartsWith(".instagram.com"));
-                
-                if (!lines.Any()) continue;
+            File.WriteAllLines($"{folder}/cookies{i}.txt", cookies);
 
-                File.WriteAllLines($"{folder}/cookies{i}.txt", lines);
-
-                i++;
-            }
+            i++;
         }
         
         _ExitWait();

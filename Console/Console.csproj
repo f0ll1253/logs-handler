@@ -29,6 +29,8 @@
     
     <ItemGroup>
       <ProjectReference Include="..\Core\Core.Discord\Core.Discord.csproj" />
+      <ProjectReference Include="..\Core\Core.Models\Core.Models.csproj" />
+      <ProjectReference Include="..\Core\Core.Parsers\Core.Parsers.csproj" />
       <ProjectReference Include="..\Core\Core.Wallets\Core.Wallets.csproj" />
     </ItemGroup>
     

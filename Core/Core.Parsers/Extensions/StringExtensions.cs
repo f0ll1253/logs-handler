@@ -1,15 +1,18 @@
-using Console.Models;
+using Core.Models;
 
-namespace Console.Extensions;
+namespace Core.Parsers.Extensions;
 
-public static class StreamExtensions
+public static class StringExtensions
 {
-    public static IEnumerable<Account> ReadAccounts(this StreamReader reader,
+    public static IEnumerable<Account> ReadAccounts(
+        this string filepath,
         Predicate<string>? urlPredicate = null, 
         Predicate<string>? usernamePredicate = null, 
         Predicate<string>? passwordPredicate = null,
         Action<Account>? func = null)
     {
+        using var reader = new StreamReader(filepath);
+        
         while (!reader.EndOfStream)
         {
             var account = reader.ReadAccount(urlPredicate, usernamePredicate, passwordPredicate);
@@ -17,6 +20,7 @@ public static class StreamExtensions
             if (account is null) continue;
             
             func?.Invoke(account);
+            
             yield return account;
         }
     }

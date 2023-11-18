@@ -1,4 +1,4 @@
-namespace Console.Models;
+namespace Core.Models;
 
 public record Account(
     string Url,

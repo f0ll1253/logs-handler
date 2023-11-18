@@ -5,11 +5,11 @@ namespace Core.Parsers;
 
 public static class Links
 {
-    public static IEnumerable<Account> FromLogs(this string[] links, string path)
+    public static IEnumerable<Account> LinksFromLogs(this string[] links, string path)
         => Directory.GetDirectories(path)
-            .SelectMany(links.FromLog);
+            .SelectMany(links.LinksFromLog);
     
-    public static IEnumerable<Account> FromLog(this string[] links, string path)
+    public static IEnumerable<Account> LinksFromLog(this string[] links, string path)
     {
         if (!Directory.Exists(path)) throw new DirectoryNotFoundException(path);
         

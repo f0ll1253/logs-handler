@@ -2,32 +2,32 @@ namespace Core.Parsers;
 
 public static class Cookies
 {
-    public static IEnumerable<IEnumerable<string>> FromLogs(this IEnumerable<string> domains, string path)
-        => domains.SelectMany(x => x.FromLogs(path));
+    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLogs(this IEnumerable<string> domains, string path)
+        => domains.ToDictionary(x => x, x => x.CookiesFromLogs(path));
     
-    public static IEnumerable<IEnumerable<string>> FromLog(this IEnumerable<string> domains, string path)
-        => domains.SelectMany(x => x.FromLog(path));
+    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLog(this IEnumerable<string> domains, string path)
+        => domains.ToDictionary(x => x, x => x.CookiesFromLog(path));
     
-    public static IEnumerable<string> FromFile(this IEnumerable<string> domains, string path)
-        => domains.SelectMany(x => x.FromFile(path));
+    public static IDictionary<string, IEnumerable<string>> CookiesFromFile(this IEnumerable<string> domains, string path)
+        => domains.ToDictionary(x => x, x => x.CookiesFromFile(path));
     
-    public static IEnumerable<IEnumerable<string>> FromLogs(this string domain, string path)
+    public static IEnumerable<IEnumerable<string>> CookiesFromLogs(this string domain, string path)
         => !Directory.Exists(path)
             ? ArraySegment<IEnumerable<string>>.Empty
             : Directory.GetDirectories(path)
-                .SelectMany(domain.FromLog)
+                .SelectMany(domain.CookiesFromLog)
                 .Where(x => x.Any());
     
-    public static IEnumerable<IEnumerable<string>> FromLog(this string domain, string path)
+    public static IEnumerable<IEnumerable<string>> CookiesFromLog(this string domain, string path)
     {
         var cookies = Path.Combine(path, "Cookies");
         
         return !Directory.Exists(cookies)
             ? ArraySegment<IEnumerable<string>>.Empty
-            : Directory.GetFiles(cookies).Select(domain.FromFile);
+            : Directory.GetFiles(cookies).Select(domain.CookiesFromFile);
     }
 
-    public static IEnumerable<string> FromFile(this string domain, string path)
+    public static IEnumerable<string> CookiesFromFile(this string domain, string path)
     {
         if (!File.Exists(path)) yield break;
 

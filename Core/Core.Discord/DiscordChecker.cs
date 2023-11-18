@@ -3,46 +3,44 @@ using Newtonsoft.Json;
 
 namespace Core.Discord;
 
-public class DiscordChecker : IDisposable
+public static class DiscordChecker
 {
-    private readonly HttpRequest _request;
-    
-    public DiscordChecker()
+    public static DiscordAccount? TryLogin(string token)
     {
-        _request = new HttpRequest();
-        _request.UserAgentRandomize();
+        using var request = CreateRequest(token);
+        
+        var response = request.Get("https://discord.com/api/v9/users/@me");
 
-        _request.Proxy = new HttpProxyClient("46.8.107.43", 1050, "WGtC9e", "fRqZn7MaIS"); // todo change on proxies from file
-        _request.IgnoreProtocolErrors = true;
-    }
+        if (response is not { StatusCode: HttpStatusCode.OK }) return null;
 
-    public void Dispose()
-    {
-        _request.Dispose();
-    }
-
-    public DiscordAccount? TryLogin(string token)
-    {
-        _request.Authorization = token;
-
-        var userInfo = _request.Get("https://discord.com/api/v9/users/@me");
-
-        if (userInfo is not { StatusCode: HttpStatusCode.OK }) return null;
-
-        var account = JsonConvert.DeserializeObject<DiscordAccount>(userInfo.ToString()!);
+        var account = JsonConvert.DeserializeObject<DiscordAccount>(response.ToString()!);
 
         if (account is not null) account.Token = token;
         
         return account;
     }
 
-    public IEnumerable<DiscordFriend>? Friends(DiscordAccount account)
+    public static IEnumerable<DiscordFriend>? Friends(string token)
     {
-        var friends = _request.Get("https://discord.com/api/v8/users/@me/relationships");
+        using var request = CreateRequest(token);
+        
+        var friends = request.Get("https://discord.com/api/v8/users/@me/relationships");
 
         if (friends is not { StatusCode: HttpStatusCode.OK }) return null;
 
         return JsonConvert.DeserializeObject<List<DiscordFriend>>(friends.ToString()!);
+    }
+
+    private static HttpRequest CreateRequest(string token)
+    {
+        var request = new HttpRequest();
+        request.UserAgentRandomize();
+
+        request.Proxy = new HttpProxyClient("46.8.107.43", 1050, "WGtC9e", "fRqZn7MaIS"); // todo change on proxies from file
+        request.IgnoreProtocolErrors = true;
+        request.Authorization = token;
+
+        return request;
     }
 }
 

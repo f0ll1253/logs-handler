@@ -39,5 +39,6 @@ public static class Program
 
         builder.RegisterType<StartView>();
         builder.RegisterType<MainView>();
+        builder.RegisterType<CheckersView>();
     }
 }

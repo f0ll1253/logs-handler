@@ -7,4 +7,5 @@ public record Account(
 )
 {
     public override string ToString() => $"{Username}:{Password}:{Url}";
+    public string ToStringShort() => $"{Username}:{Password}";
 }

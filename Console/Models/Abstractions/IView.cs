@@ -5,6 +5,7 @@ public interface IView : IDisposable
     public IRoot Root { get; set; }
 
     void Initialize();
-    void SetState(Action action);
+    void Activate();
+    void Deactivate();
     Task Build();
 }

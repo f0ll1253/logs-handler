@@ -11,11 +11,16 @@ public class StartView : BaseView
     {
     }
 
+    public override void Activate()
+    {
+        if (Locator.Current.GetService<Settings>() is {} settings) settings.Path = "";
+    }
+
     public override Task Build()
     {
         System.Console.Write("Path to logs: ");
         
-        var path = System.Console.ReadLine();
+        var path = System.Console.ReadLine()?.Replace("\"", "");
 
         if (string.IsNullOrEmpty(path)
             || !Directory.Exists(path)) 
@@ -23,7 +28,7 @@ public class StartView : BaseView
 
         Locator.Current.GetService<Settings>()!.Path = path;
 
-        Root.Views.Push(Locator.Current.GetService<MainView>()!);
+        Root.PushRedirect<MainView>();
 
         return Task.CompletedTask;
     }

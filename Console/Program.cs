@@ -15,7 +15,8 @@ public static class Program
     public static async Task Main()
     {
         System.Console.Title = "https://github.com/f0ll1253";
-        
+
+        App.ConfigureLogging();
         await App.Initialize(builder =>
         {
             builder.RegisterServices();

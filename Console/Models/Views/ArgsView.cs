@@ -26,11 +26,11 @@ public abstract class ArgsView : BaseView
         System.Console.CursorVisible = false;
     }
 
-    ~ArgsView()
+    public override void Dispose()
     {
         System.Console.CursorVisible = true;
     }
-    
+
     public override Task Build()
     {
         foreach (var (i, method) in _args) System.Console.WriteLine($"{i}. {method.Name.Replace('_', ' ')}");
@@ -42,7 +42,9 @@ public abstract class ArgsView : BaseView
     {
         if (key.Key is ConsoleKey.Escape)
         {
-            Root.Views.Pop();
+            Root.Pop();
+            Dispose();
+            
             return Task.CompletedTask;
         }
 

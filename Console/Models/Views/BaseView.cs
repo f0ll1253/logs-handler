@@ -13,12 +13,9 @@ public abstract class BaseView : IView
     
     public virtual void Initialize() { }
 
-    public virtual void SetState(Action action)
-    {
-        action.Invoke();
-        
-        Build();
-    }
+    public virtual void Activate() { }
+    
+    public virtual void Deactivate() { }
 
     public virtual Task Build() => Task.CompletedTask;
 

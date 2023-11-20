@@ -25,19 +25,11 @@ public static class App
         AppDomain.CurrentDomain.UnhandledException += (sender, args) => Log.Error(((Exception)args.ExceptionObject).ToString());
     }
 
-    public static void InitializeFolders()
-    {
-        Directory.CreateDirectory("Discord");
-        Directory.CreateDirectory("Wallets");
-        Directory.CreateDirectory("Links");
-        Directory.CreateDirectory("Passwords");
-    }
-
     public static void InitializeFiles()
     {
-        File.Create("cookies.txt");
-        File.Create("accounts.txt");
-        File.Create("links.txt");
+        if (!File.Exists("cookies.txt")) File.Create("cookies.txt").Close();
+        if (!File.Exists("accounts.txt")) File.Create("accounts.txt").Close();
+        if (!File.Exists("links.txt")) File.Create("links.txt").Close();
     }
     
     public static Task Initialize(Action<ContainerBuilder>? other = null)

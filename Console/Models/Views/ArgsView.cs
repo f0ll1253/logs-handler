@@ -33,7 +33,7 @@ public abstract class ArgsView : BaseView
 
     public override Task Build()
     {
-        foreach (var (i, method) in _args) System.Console.WriteLine($"{i}. {method.Name.Replace('_', ' ')}");
+        foreach (var (i, method) in _args) System.Console.WriteLine($"{i}. {method.Name.Replace('_', ' ')}{(method.GetCustomAttribute<RedirectAttribute>() is not null ? " ->" : "")}");
         
         return Execute(System.Console.ReadKey(true));
     }

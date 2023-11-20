@@ -41,7 +41,7 @@ public static class StringExtensions
         var username = reader.ReadLine()!;
         username = username["Username: ".Length..username.Length];
         
-        if (!usernamePredicate?.Invoke(username) ?? false) return null;
+        if ((!usernamePredicate?.Invoke(username) ?? false) || username == "UNKNOWN") return null;
                 
         var password = reader.ReadLine()!;
         password = password["Password: ".Length..password.Length];

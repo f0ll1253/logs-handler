@@ -17,7 +17,6 @@ public static class Program
         System.Console.Title = "https://github.com/f0ll1253";
 
         App.ConfigureLogging();
-        App.InitializeFolders();
         App.InitializeFiles();
         await App.Initialize(builder =>
         {
@@ -31,6 +30,7 @@ public static class Program
     {
         builder.RegisterType<Settings>()
             .SingleInstance();
+        builder.RegisterType<SaverService>();
     }
     
     private static void RegisterViews(this ContainerBuilder builder)

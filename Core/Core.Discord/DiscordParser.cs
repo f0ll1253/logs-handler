@@ -1,14 +1,15 @@
 namespace Core.Discord;
 
-public class DiscordParser
+public static class DiscordParser
 {
-    public IEnumerable<string> ByLogs(string logs) => Directory.GetDirectories(logs).SelectMany(ByLog);
+    public static IEnumerable<string> DiscordByLogs(this string logs) => Directory.GetDirectories(logs).SelectMany(DiscordByLog);
     
-    public IEnumerable<string> ByLog(string log)
+    public  static IEnumerable<string> DiscordByLog(this string log)
     {
-        if (!Directory.Exists(Path.Combine(log, "Discord"))) yield break;
+        var file = Path.Combine(log, "Discord", "Tokens.txt");
+        if (!File.Exists(file)) yield break;
 
-        using var reader = new StreamReader(Path.Combine(log, "Discord", "Tokens.txt"));
+        using var reader = new StreamReader(file);
 
         while (!reader.EndOfStream)
         {

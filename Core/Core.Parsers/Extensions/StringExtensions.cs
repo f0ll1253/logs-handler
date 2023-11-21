@@ -4,12 +4,17 @@ namespace Core.Parsers.Extensions;
 
 public static class StringExtensions
 {
+    public static bool ContainsMany(this string str, IEnumerable<string> arg)
+    {
+        return arg.Any(s => str.Contains(s));
+
+    }
+    
     public static IEnumerable<Account> ReadAccounts(
         this string filepath,
         Predicate<string>? urlPredicate = null, 
         Predicate<string>? usernamePredicate = null, 
-        Predicate<string>? passwordPredicate = null,
-        Action<Account>? func = null)
+        Predicate<string>? passwordPredicate = null)
     {
         using var reader = new StreamReader(filepath);
         
@@ -18,8 +23,6 @@ public static class StringExtensions
             var account = reader.ReadAccount(urlPredicate, usernamePredicate, passwordPredicate);
                 
             if (account is null) continue;
-            
-            func?.Invoke(account);
             
             yield return account;
         }

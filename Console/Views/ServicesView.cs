@@ -24,15 +24,19 @@ public class ServicesView : ArgsView
         var tokens = _settings.Path.DiscordByLogs().Distinct();
         
         await _save.SaveAsync("tokens", tokens);
-        
-        if (invalid is null || valid is null) return;
+
+        if (invalid is null || valid is null)
+        {
+            _ExitWait();
+            return;
+        }
 
         foreach (var token in tokens)
         {
             if (await DiscordChecker.TryLoginAsync(token) is not { } account)
             {
                 await invalid.WriteLineAsync(token);
-                return;
+                continue;
             }
 
             await valid.WriteLineAsync(token);

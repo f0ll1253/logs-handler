@@ -7,8 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Leaf.xNet" Version="5.2.10" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Core.Models\Core.Models.csproj" />
     </ItemGroup>
 
 </Project>

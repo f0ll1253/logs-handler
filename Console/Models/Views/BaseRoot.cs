@@ -32,7 +32,8 @@ public abstract class BaseRoot : IRoot
             catch (Exception ex)
             {
                 Log.Error(ex.ToString());
-                System.Console.WriteLine("Error occurred while execution. Check log.txt for details");
+                System.Console.WriteLine("Error occurred while execution. Check log.txt for details.\nPress any key for continue");
+                System.Console.ReadKey(true);
             }
             
             await Task.Delay(500, App.Token);

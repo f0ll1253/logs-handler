@@ -1,48 +1,83 @@
-using Leaf.xNet;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Authentication;
 using Newtonsoft.Json;
 
 namespace Core.Discord;
 
 public static class DiscordChecker
 {
-    public static DiscordAccount? TryLogin(string token)
+    public static async Task<DiscordAccount?> TryLoginAsync(string token)
     {
-        using var request = CreateRequest(token);
-        
-        var response = request.Get("https://discord.com/api/v9/users/@me");
+        var response = await _SendRequestAsync(token, "https://discord.com/api/v9/users/@me", HttpMethod.Get);
 
         if (response is not { StatusCode: HttpStatusCode.OK }) return null;
 
-        var account = JsonConvert.DeserializeObject<DiscordAccount>(response.ToString()!);
+        var content = await response.Content.ReadAsStringAsync();
 
+        if (string.IsNullOrEmpty(content)) return null;
+        
+        var account = JsonConvert.DeserializeObject<DiscordAccount>(content);
+        
         if (account is not null) account.Token = token;
         
         return account;
     }
 
-    public static IEnumerable<DiscordFriend>? Friends(string token)
+    public static async IAsyncEnumerable<DiscordFriend> Friends(string token)
     {
-        using var request = CreateRequest(token);
+        var response = await _SendRequestAsync(token, "https://discord.com/api/v8/users/@me/relationships", HttpMethod.Get);
         
-        var friends = request.Get("https://discord.com/api/v8/users/@me/relationships");
+        if (response is not { StatusCode: HttpStatusCode.OK }) yield break;
 
-        if (friends is not { StatusCode: HttpStatusCode.OK }) return null;
-
-        return JsonConvert.DeserializeObject<List<DiscordFriend>>(friends.ToString()!);
+        var content = await response.Content.ReadAsStringAsync();
+        
+        if (string.IsNullOrEmpty(content)) yield break;
+        
+        foreach (var friend in JsonConvert.DeserializeObject<List<DiscordFriend>>(content) ?? new List<DiscordFriend>())
+        {
+            yield return friend;
+        }
     }
 
-    private static HttpRequest CreateRequest(string token)
+    private static async Task<HttpResponseMessage> _SendRequestAsync(string token, string url, HttpMethod method)
     {
-        var request = new HttpRequest();
-        request.UserAgentRandomize();
+        using var http = _CreateHttpClient(token);
 
-        request.Proxy = new HttpProxyClient("46.8.107.43", 1050, "WGtC9e", "fRqZn7MaIS"); // todo change on proxies from file
-        request.IgnoreProtocolErrors = true;
-        request.Authorization = token;
+        var request = new HttpRequestMessage(method, url);
+        var response = await http.SendAsync(request);
+        
+        return response;
+    }
 
-        return request;
+    private static HttpClient _CreateHttpClient(string token)
+    {
+        var proxy = new WebProxy
+        {
+            Address = new Uri($"http://46.8.107.43:1050"),
+            BypassProxyOnLocal = false,
+            UseDefaultCredentials = false,
+
+            Credentials = new NetworkCredential("WGtC9e", "fRqZn7MaIS")
+        };
+
+        var handler = new HttpClientHandler
+        {
+            Proxy = proxy,
+            UseProxy = true,
+            AllowAutoRedirect = false,
+            SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
+        };
+
+        var http = new HttpClient(handler, true);
+
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(token);
+        
+        return http;
     }
 }
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 public record DiscordFriend(
     [JsonProperty("id")] string Id,

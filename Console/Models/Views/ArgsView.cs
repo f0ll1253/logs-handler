@@ -56,4 +56,11 @@ public abstract class ArgsView : BaseView
             ? (Task) method.Invoke(this, null)!
             : Task.FromResult(method.Invoke(this, null));
     }
+    
+    protected private static void _ExitWait()
+    {
+        System.Console.Beep();
+        System.Console.WriteLine("Press any key for continue");
+        System.Console.ReadKey(true);
+    }
 }

@@ -48,6 +48,6 @@ public class SaverService
 
         Directory.CreateDirectory(Path.Combine(name, dir.Name, subpath));
 
-        return Task.FromResult<StreamWriter?>(new StreamWriter(Path.Combine(name, dir.Name, $"{filename}.txt"), append));
+        return Task.FromResult<StreamWriter?>(new StreamWriter(Path.Combine(name, dir.Name, subpath, $"{filename}.txt"), append));
     }
 }

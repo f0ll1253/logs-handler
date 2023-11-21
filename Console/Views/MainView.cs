@@ -23,11 +23,7 @@ public class MainView : ArgsView
     }
 
     [Command, Redirect]
-    public Task Checkers()
-    {
-        Root.PushRedirect<CheckersView>();
-        return Task.CompletedTask;
-    }
+    public Task Services() => Task.Run(() => Root.PushRedirect<ServicesView>());
     
     [Command]
     public async Task Wallets()
@@ -55,14 +51,6 @@ public class MainView : ArgsView
                 }
             }
         }
-
-        _ExitWait();
-    }
-
-    [Command]
-    public async Task Discord()
-    {
-        await _save.SaveAsync("tokens.txt", _settings.Path.DiscordByLogs().Distinct());
 
         _ExitWait();
     }
@@ -119,30 +107,5 @@ public class MainView : ArgsView
         }
 
         _ExitWait();
-    }
-
-    [Command]
-    public Task Steam_maFiles()
-    {
-        foreach (var log in Directory.GetDirectories(_settings.Path))
-        {
-            if (!Directory.Exists(Path.Combine(log, "Steam"))) continue;
-            
-            var files = Directory.GetFiles(Path.Combine(log, "Steam"), ".maFile");
-            
-            if (!files.Any()) continue;
-            
-            System.Console.WriteLine(new FileInfo(files.First()).Directory?.FullName);
-        }
-        
-        _ExitWait();
-        return Task.CompletedTask;
-    }
-    
-    private static void _ExitWait()
-    {
-        System.Console.Beep();
-        System.Console.WriteLine("Press any key for continue");
-        System.Console.ReadKey(true);
     }
 }

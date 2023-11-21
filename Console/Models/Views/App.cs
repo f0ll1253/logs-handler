@@ -11,7 +11,7 @@ namespace Console.Models.Views;
 public static class App
 {
     private static readonly CancellationTokenSource _source = new();
-    
+
     public static CancellationToken Token => _source.Token;
 
     public static void ConfigureLogging()

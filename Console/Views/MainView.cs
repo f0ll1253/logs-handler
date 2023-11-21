@@ -73,13 +73,17 @@ public class MainView : ArgsView
         foreach (var (domain, cookies) in domains.CookiesFromLogs(_settings.Path)
                      .ToDictionary(
                          x => x.Key,
-                         x => x.Value.Where(cookies => cookies.Any()).ToArray()
+                         x => x.Value.ToArray()
                      )
                 )
         {
             for (var i = 0; i < cookies.Length; i++)
             {
-                await _save.SaveAsync($"cookies{i}", cookies[i], subpath: domain);
+                var data = cookies[i].ToArray();
+                
+                if (!data.Any()) continue;
+                
+                await _save.SaveAsync($"cookies{i}", data, subpath: domain);
             }
         }
 

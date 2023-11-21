@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Console.Models.Abstractions;
 using Console.Models.Attributes;
@@ -7,6 +8,7 @@ namespace Console.Models.Views;
 public abstract class ArgsView : BaseView
 {
     private readonly Dictionary<int, MethodInfo> _args;
+    private readonly Stopwatch _watch = new ();
     
     protected ArgsView(IRoot root) : base(root)
     {
@@ -51,15 +53,20 @@ public abstract class ArgsView : BaseView
         if (!int.TryParse(key.KeyChar.ToString(), out var index)) return Task.CompletedTask;
 
         if (!_args.TryGetValue(index, out var method)) return Task.CompletedTask;
-
+        
+        _watch.Start();
+        
         return method.ReturnType == typeof(Task)
             ? (Task) method.Invoke(this, null)!
             : Task.FromResult(method.Invoke(this, null));
     }
     
-    protected private static void _ExitWait()
+    protected private void _ExitWait()
     {
+        _watch.Stop();
+        
         System.Console.Beep();
+        System.Console.WriteLine($"Action completed for {_watch.Elapsed.ToString()}");
         System.Console.WriteLine("Press any key for continue");
         System.Console.ReadKey(true);
     }

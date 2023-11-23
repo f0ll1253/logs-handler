@@ -2,24 +2,24 @@ using Console.Models;
 using Console.Models.Abstractions;
 using Console.Models.Attributes;
 using Console.Models.Views;
-using Core.Discord;
 using Core.Parsers;
 using Core.Wallets;
-using Microsoft.Extensions.Configuration;
 
 namespace Console.Views;
 
 public class MainView : ArgsView
 {
     private readonly Settings _settings;
-    private readonly IConfiguration _config;
+    private readonly Web3Config cfg_web3;
+    private readonly ParsingConfig cfg_parse;
     private readonly SaverService _save;
     
-    public MainView(IRoot root, Settings settings, IConfiguration config, SaverService save) : base(root)
+    public MainView(IRoot root, Settings settings, SaverService save, Web3Config cfgWeb3, ParsingConfig cfgParse) : base(root)
     {
         _settings = settings;
-        _config = config;
         _save = save;
+        cfg_web3 = cfgWeb3;
+        cfg_parse = cfgParse;
     }
 
     [Command, Redirect]
@@ -28,7 +28,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Wallets()
     {
-        var checker = new MetamaskChecker(_config["Web3:Eth"]!, _config["Web3:Bsc"]!);
+        var checker = new MetamaskChecker(cfg_web3.Eth, cfg_web3.Bsc);
         var wallets = new MetamaskParser().ByLogs(_settings.Path);
 
         await _save.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
@@ -58,9 +58,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Links()
     {
-        var links = File.ReadAllLines("links.txt").Select(x => x.Trim());
-        
-        await _save.SaveAsync("links.txt", links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
+        await _save.SaveAsync("links.txt", cfg_parse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
 
         _ExitWait();
     }
@@ -68,9 +66,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Cookies()
     {
-        var domains = File.ReadAllLines("cookies.txt").Select(x => x.Trim());
-
-        foreach (var (domain, cookies) in domains.CookiesFromLogs(_settings.Path)
+        foreach (var (domain, cookies) in cfg_parse.Cookies.CookiesFromLogs(_settings.Path)
                      .ToDictionary(
                          x => x.Key,
                          x => x.Value.ToArray()
@@ -94,9 +90,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Accounts()
     {
-        var domains = File.ReadAllLines("accounts.txt").Select(x => x.Trim());
-
-        foreach (var (domain, accounts) in domains.AccountsFromLogs(_settings.Path)
+        foreach (var (domain, accounts) in cfg_parse.Accounts.AccountsFromLogs(_settings.Path)
                      .ToDictionary(
                          x => x.Key,
                          x => x.Value.DistinctBy(acc => acc.Username + acc.Password)

@@ -33,6 +33,11 @@ public abstract class BaseRoot : IRoot
             {
                 Log.Error(ex.ToString());
                 System.Console.WriteLine("Error occurred while execution. Check log.txt for details.\nPress any key for continue");
+                
+                #if DEBUG
+                throw;
+                #endif
+                
                 System.Console.ReadKey(true);
             }
             

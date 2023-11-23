@@ -13,27 +13,11 @@ public static class App
     private static readonly CancellationTokenSource _source = new();
 
     public static CancellationToken Token => _source.Token;
-
-    public static void ConfigureLogging()
-    {
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.File("log.txt", LogEventLevel.Information)
-            .MinimumLevel.Error()
-            .Enrich.FromLogContext()
-            .CreateLogger();
-
-        AppDomain.CurrentDomain.UnhandledException += (sender, args) => Log.Error(((Exception)args.ExceptionObject).ToString());
-    }
-
-    public static void InitializeFiles()
-    {
-        if (!File.Exists("cookies.txt")) File.Create("cookies.txt").Close();
-        if (!File.Exists("accounts.txt")) File.Create("accounts.txt").Close();
-        if (!File.Exists("links.txt")) File.Create("links.txt").Close();
-    }
     
     public static Task Initialize(Action<ContainerBuilder>? other = null)
     {
+        ConfigureLogging();
+        
         var builder = new ContainerBuilder()
             .RegisterConfiguration();
         
@@ -53,13 +37,28 @@ public static class App
         await root.Start(Token);
     }
     
+    private static void ConfigureLogging()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.File("log.txt", LogEventLevel.Information)
+            .MinimumLevel.Error()
+            .Enrich.FromLogContext()
+            .CreateLogger();
+
+        AppDomain.CurrentDomain.UnhandledException += (sender, args) => Log.Error(((Exception)args.ExceptionObject).ToString());
+    }
+    
     private static ContainerBuilder RegisterConfiguration(this ContainerBuilder builder)
     {
         var configBuilder = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json");
 
-        builder.RegisterInstance((IConfiguration) configBuilder.Build());
+        var build = configBuilder.Build();
+        
+        builder.RegisterInstance(build);
+        builder.RegisterInstance(build.GetRequiredSection("Web3").Get<Web3Config>());
+        builder.RegisterInstance(build.GetRequiredSection("ParsingConfig").Get<ParsingConfig>());
 
         return builder;
     }

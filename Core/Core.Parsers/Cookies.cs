@@ -61,12 +61,16 @@ public static class Cookies
         while (!reader.EndOfStream)
         {
             var line = reader.ReadLine();
-            var domain = line?[..line.IndexOf('\t')];
             
-            if (domain is null || !domains.Contains(domain)) continue;
+            if (line is not {Length:>1}) continue;
+            
+            var index = line.IndexOf('\t');
+            var domain = line[..(index == -1 ? 1 : index)];
+            
+            if (domains.FirstOrDefault(x => domain.Contains(x)) is not {} picked) continue;
 
-            result.TryAdd(domain, new List<string>());
-            result[domain].Add(line!);
+            result.TryAdd(picked, new List<string>());
+            result[picked].Add(line);
         }
         
         return result.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());

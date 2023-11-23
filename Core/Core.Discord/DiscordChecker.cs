@@ -1,12 +1,15 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
+using Core.Models;
 using Newtonsoft.Json;
 
 namespace Core.Discord;
 
 public static class DiscordChecker
 {
+    public static ProxyPool Proxy { get; set; } = new();
+    
     public static async Task<DiscordAccount?> TryLoginAsync(string token)
     {
         var response = await _SendRequestAsync(token, "https://discord.com/api/v9/users/@me", HttpMethod.Get);
@@ -42,38 +45,12 @@ public static class DiscordChecker
 
     private static async Task<HttpResponseMessage> _SendRequestAsync(string token, string url, HttpMethod method)
     {
-        using var http = _CreateHttpClient(token);
+        using var http = Proxy.TakeClient(new AuthenticationHeaderValue(token))!;
 
         var request = new HttpRequestMessage(method, url);
         var response = await http.SendAsync(request);
         
         return response;
-    }
-
-    private static HttpClient _CreateHttpClient(string token)
-    {
-        var proxy = new WebProxy
-        {
-            Address = new Uri($"http://46.8.107.43:1050"),
-            BypassProxyOnLocal = false,
-            UseDefaultCredentials = false,
-
-            Credentials = new NetworkCredential("WGtC9e", "fRqZn7MaIS")
-        };
-
-        var handler = new HttpClientHandler
-        {
-            Proxy = proxy,
-            UseProxy = true,
-            AllowAutoRedirect = false,
-            SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
-        };
-
-        var http = new HttpClient(handler, true);
-
-        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(token);
-        
-        return http;
     }
 }
 

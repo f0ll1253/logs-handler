@@ -4,6 +4,7 @@ using Console.Models.Abstractions;
 using Console.Models.Views;
 using Console.Views;
 using Core.Discord;
+using Core.IGV;
 using Core.Models;
 using Splat;
 
@@ -53,22 +54,21 @@ public static class Program
                     break;
             }
         }
-
-        Directory.CreateDirectory("Proxies");
-        await using var valid = new StreamWriter("Proxies/valid.txt", true);
-        await using var invalid = new StreamWriter("Proxies/invalid.txt", true);
         
         await Parallel.ForEachAsync(proxies,
-            async (proxy, token) =>
+             (proxy, token) =>
             {
-                if (token.IsCancellationRequested) return;
+                if (token.IsCancellationRequested) return ValueTask.CompletedTask;
 
-                System.Console.ForegroundColor = await settings.Proxy.TryAdd(proxy, valid, invalid) ? ConsoleColor.Green : ConsoleColor.Red;
+                System.Console.ForegroundColor = settings.Proxy.Add(proxy) ? ConsoleColor.Green : ConsoleColor.Red;
                 System.Console.WriteLine(proxy);
                 System.Console.ForegroundColor = ConsoleColor.White;
+                
+                return ValueTask.CompletedTask;
             });
 
         DiscordChecker.Proxy = settings.Proxy;
+        IGVChecker.Proxy = settings.Proxy; // todo replace with di
     }
 
     private static void RegisterServices(this ContainerBuilder builder)

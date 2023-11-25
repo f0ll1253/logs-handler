@@ -41,6 +41,9 @@ public static class App
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.File("log.txt", LogEventLevel.Information)
+#if DEBUG
+            .WriteTo.Console(standardErrorFromLevel: LogEventLevel.Error)
+#endif
             .MinimumLevel.Error()
             .Enrich.FromLogContext()
             .CreateLogger();

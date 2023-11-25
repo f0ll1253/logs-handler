@@ -1,30 +1,54 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Authentication;
 using Core.Models;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace Core.Discord;
 
 public static class DiscordChecker
 {
     public static ProxyPool Proxy { get; set; } = new();
-    
-    public static async Task<DiscordAccount?> TryLoginAsync(string token)
+
+    public static async Task<DiscordAccount> GetInfoAsync(string token)
     {
         var response = await _SendRequestAsync(token, "https://discord.com/api/v9/users/@me", HttpMethod.Get);
+        var content = await response.Content.ReadAsStringAsync();
+        var account = JsonConvert.DeserializeObject<DiscordAccount>(content)!;
+        
+        account.Token = token;
+        
+        return account;
+    }
+    
+    public static async Task<bool?> TryLoginAsync(string token)
+    {
+        HttpResponseMessage? response;
 
-        if (response is not { StatusCode: HttpStatusCode.OK }) return null;
+        try
+        {
+            response = await _SendRequestAsync(token, "https://discord.com/api/v9/users/@me", HttpMethod.Get);
+        }
+        catch (HttpRequestException ex)
+        {
+            #if DEBUG
+            Log.Error(ex.ToString());
+            #endif
+            
+            return null;
+        }
+
+        if (response is not { StatusCode: HttpStatusCode.OK }) return false;
 
         var content = await response.Content.ReadAsStringAsync();
 
-        if (string.IsNullOrEmpty(content)) return null;
+        if (string.IsNullOrEmpty(content)) return false;
         
         var account = JsonConvert.DeserializeObject<DiscordAccount>(content);
         
         if (account is not null) account.Token = token;
         
-        return account;
+        return true;
     }
 
     public static async IAsyncEnumerable<DiscordFriend> Friends(string token)
@@ -45,7 +69,7 @@ public static class DiscordChecker
 
     private static async Task<HttpResponseMessage> _SendRequestAsync(string token, string url, HttpMethod method)
     {
-        using var http = Proxy.TakeClient(new AuthenticationHeaderValue(token))!;
+        using var http = await Proxy.TakeClient(new AuthenticationHeaderValue(token));
 
         var request = new HttpRequestMessage(method, url);
         var response = await http.SendAsync(request);

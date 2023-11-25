@@ -1,9 +1,9 @@
 namespace Core.Models;
 
 public record Account(
-    string Url,
     string Username,
-    string Password
+    string Password,
+    string Url = ""
 )
 {
     public override string ToString() => $"{Username}:{Password}:{Url}";

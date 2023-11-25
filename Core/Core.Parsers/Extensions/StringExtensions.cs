@@ -4,12 +4,6 @@ namespace Core.Parsers.Extensions;
 
 public static class StringExtensions
 {
-    public static bool ContainsMany(this string str, IEnumerable<string> arg)
-    {
-        return arg.Any(s => str.Contains(s));
-
-    }
-    
     public static IEnumerable<Account> ReadAccounts(
         this string filepath,
         Predicate<string>? urlPredicate = null, 
@@ -37,20 +31,45 @@ public static class StringExtensions
                 
         if (line is null || !line.StartsWith("URL")) return null;
 
-        var url = line["URL: ".Length..line.Length];
+        string url, username, password;
+        
+        try
+        {
+            url = line["URL: ".Length..line.Length];
+        }
+        catch
+        {
+            return null;
+        }
 
         if (!urlPredicate?.Invoke(url) ?? false) return null;
 
-        var username = reader.ReadLine()!;
-        username = username["Username: ".Length..username.Length];
+        username = reader.ReadLine()!;
+
+        try
+        {
+            username = username["Username: ".Length..username.Length];
+        }
+        catch
+        {
+            return null;
+        }
         
         if ((!usernamePredicate?.Invoke(username) ?? false) || username == "UNKNOWN") return null;
                 
-        var password = reader.ReadLine()!;
-        password = password["Password: ".Length..password.Length];
+        password = reader.ReadLine()!;
+
+        try
+        {
+            password = password["Password: ".Length..password.Length];
+        }
+        catch
+        {
+            return null;
+        }
         
         if (!passwordPredicate?.Invoke(password) ?? false) return null;
 
-        return new Account(url, username, password);
+        return new Account(username, password, url);
     }
 }

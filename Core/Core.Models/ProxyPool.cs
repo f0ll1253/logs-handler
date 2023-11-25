@@ -19,25 +19,82 @@ public class ProxyPool
     private readonly List<Proxy> _proxies = new ();
     private int _last = 0;
 
-    public ProxyPool(string validpath = "Proxies/valid.txt", string invalidpath = "Proxies/invalid.txt", int timeout = 5000, ProxyType type = ProxyType.Http)
+    public ProxyPool(int timeout = 5000, ProxyType type = ProxyType.Http)
     {
         _timeout = timeout;
         _type = type;
     }
 
-    public Task<bool> TryAdd(string host, int port) => TryAdd(new Proxy(host, port));
+    public bool Add(string host, int port) => Add(new Proxy(host, port));
     
-    public Task<bool> TryAdd(string host, int port, string login, string password) => TryAdd(new Proxy(host, port, login, password));
+    public bool Add(string host, int port, string login, string password) => Add(new Proxy(host, port, login, password));
     
-    public async Task<bool> TryAdd(Proxy proxy, StreamWriter? valid = null, StreamWriter? invalid = null)
+    public bool Add(Proxy proxy)
     {
         if (string.IsNullOrEmpty(proxy.Host) || proxy.Port <= 0) return false;
         
+        _proxies.Add(proxy);
+        
+        return true;
+    }
+
+    public async Task<HttpClient> TakeClient(AuthenticationHeaderValue? authorization = null) 
+        => new(await TakeHandler(), true)
+    {
+        DefaultRequestHeaders =
+        {
+            Authorization = authorization
+        }
+    };
+
+    public async Task<HttpClientHandler> TakeHandler() 
+        => new()
+    {
+        Proxy = await TakeProxy(),
+        UseProxy = true,
+        AllowAutoRedirect = false,
+        SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
+    };
+
+    public async Task<WebProxy> TakeProxy()
+    {
+        if (_proxies.Count == 0) throw new Exception("Proxies not loaded");
+        
+        if (_last > _proxies.Count) _last = 0;
+
+        if (_proxies.Count == 1) return _CreateWebProxy(_proxies.First());
+        
+        Proxy? proxy = null;
+
+        do
+        {
+            if (proxy is not null) _proxies.Remove(proxy);
+            
+            proxy = _proxies[_last];
+        } while (!await _ProxyAvailable(proxy));
+
+        _last++;
+
+        return _CreateWebProxy(proxy);
+    }
+
+    private WebProxy _CreateWebProxy(Proxy proxy)
+        => new()
+        {
+            Address = new Uri($"{_GetProtocol()}://{proxy.Host}:{proxy.Port}"),
+            BypassProxyOnLocal = false,
+            UseDefaultCredentials = false,
+
+            Credentials = new NetworkCredential(proxy.Login, proxy.Password)
+        };
+
+    private async Task<bool> _ProxyAvailable(Proxy proxy)
+    {
         using var http = new HttpClient(new HttpClientHandler
         {
             Proxy = new WebProxy
             {
-                Address = new Uri($"{_GetProtocol()}://{(string.IsNullOrEmpty(proxy.Login) ? "" : $"{proxy.Login}:{proxy.Password}@")}{proxy.Host}:{proxy.Port}"),
+                Address = new Uri($"{_GetProtocol()}://{proxy.Host}:{proxy.Port}"),
                 BypassProxyOnLocal = false,
                 UseDefaultCredentials = false,
             
@@ -46,63 +103,20 @@ public class ProxyPool
             UseProxy = true,
             AllowAutoRedirect = false,
             SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13,
-        }, true)
-        {
-            Timeout = TimeSpan.FromMilliseconds(_timeout)
-        };
+        }, true);
         
+        http.Timeout = TimeSpan.FromMilliseconds(_timeout);
+
         try
         {
             await http.GetAsync("http://ip-api.com/line/?fields=8192");
         }
         catch
         {
-            invalid?.WriteLine(proxy);
-            
             return false;
         }
-
-        valid?.WriteLine(proxy);
-        _proxies.Add(proxy);
         
         return true;
-    }
-
-    public HttpClient TakeClient(AuthenticationHeaderValue? authorization = null) 
-        => new(TakeHandler(), true)
-    {
-        DefaultRequestHeaders =
-        {
-            Authorization = authorization
-        }
-    };
-
-    public HttpClientHandler TakeHandler() 
-        => new()
-    {
-        Proxy = TakeProxy(),
-        UseProxy = true,
-        AllowAutoRedirect = false,
-        SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
-    };
-
-    public WebProxy TakeProxy()
-    {
-        if (_proxies.Count == 0) throw new Exception("Proxies not loaded");
-        
-        if (_last >= _proxies.Count) _last = 0;
-
-        var proxy = _proxies[_last];
-        _last++;
-
-        return new WebProxy
-        {
-            Address = new Uri($"{_GetProtocol()}://{proxy.Host}:{proxy.Port}"),
-            BypassProxyOnLocal = false,
-            UseDefaultCredentials = false,
-            
-            Credentials = new NetworkCredential(proxy.Login, proxy.Password)
-        };
     }
 
     private string _GetProtocol() => _type switch

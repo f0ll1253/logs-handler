@@ -34,7 +34,7 @@ public static class Program
 
         if (!File.Exists(proxiespath)) throw new Exception("Proxies file doesn't exists");
 
-        var settings = Locator.Current.GetService<Settings>()!;
+        var proxypool = Locator.Current.GetService<ProxyPool>()!;
         var proxies = new List<Proxy>();
         using var reader = new StreamReader(proxiespath);
 
@@ -54,28 +54,20 @@ public static class Program
                     break;
             }
         }
-        
-        await Parallel.ForEachAsync(proxies,
-             (proxy, token) =>
-            {
-                if (token.IsCancellationRequested) return ValueTask.CompletedTask;
 
-                System.Console.ForegroundColor = settings.Proxy.Add(proxy) ? ConsoleColor.Green : ConsoleColor.Red;
-                System.Console.WriteLine(proxy);
-                System.Console.ForegroundColor = ConsoleColor.White;
-                
-                return ValueTask.CompletedTask;
-            });
-
-        DiscordChecker.Proxy = settings.Proxy;
-        IGVChecker.Proxy = settings.Proxy; // todo replace with di
+        proxypool.AddRange(proxies);
     }
 
     private static void RegisterServices(this ContainerBuilder builder)
     {
         builder.RegisterType<Settings>()
             .SingleInstance();
-        builder.RegisterType<SaverService>();
+        builder.RegisterType<ProxyPool>()
+            .SingleInstance();
+        
+        builder.RegisterType<DataService>();
+        builder.RegisterType<DiscordChecker>();
+        builder.RegisterType<IGVChecker>();
     }
     
     private static void RegisterViews(this ContainerBuilder builder)

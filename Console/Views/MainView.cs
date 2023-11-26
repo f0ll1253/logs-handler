@@ -12,12 +12,12 @@ public class MainView : ArgsView
     private readonly Settings _settings;
     private readonly Web3Config cfg_web3;
     private readonly ParsingConfig cfg_parse;
-    private readonly SaverService _save;
+    private readonly DataService _data;
     
-    public MainView(IRoot root, Settings settings, SaverService save, Web3Config cfgWeb3, ParsingConfig cfgParse) : base(root)
+    public MainView(IRoot root, Settings settings, DataService data, Web3Config cfgWeb3, ParsingConfig cfgParse) : base(root)
     {
         _settings = settings;
-        _save = save;
+        _data = data;
         cfg_web3 = cfgWeb3;
         cfg_parse = cfgParse;
     }
@@ -31,7 +31,7 @@ public class MainView : ArgsView
         var checker = new MetamaskChecker(cfg_web3.Eth, cfg_web3.Bsc);
         var wallets = new MetamaskParser().ByLogs(_settings.Path);
 
-        await _save.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
+        await _data.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
         
         foreach (var wallet in wallets)
         {
@@ -58,7 +58,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Links()
     {
-        await _save.SaveAsync("links.txt", cfg_parse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
+        await _data.SaveAsync("links.txt", cfg_parse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
 
         _ExitWait();
     }
@@ -79,7 +79,7 @@ public class MainView : ArgsView
                 
                 if (!data.Any()) continue;
                 
-                await _save.SaveAsync($"cookies{i}", data, subpath: domain);
+                await _data.SaveAsync($"cookies{i}", data, subpath: domain);
             }
         }
 
@@ -101,7 +101,7 @@ public class MainView : ArgsView
                      )
                 )
         {
-            await _save.SaveAsync(domain, accounts);
+            await _data.SaveAsync(domain, accounts);
         }
 
         _ExitWait();

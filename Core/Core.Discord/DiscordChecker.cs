@@ -6,11 +6,16 @@ using Serilog;
 
 namespace Core.Discord;
 
-public static class DiscordChecker
+public class DiscordChecker
 {
-    public static ProxyPool Proxy { get; set; } = new();
-
-    public static async Task<DiscordAccount> GetInfoAsync(string token)
+    private readonly ProxyPool _proxy;
+    
+    public DiscordChecker(ProxyPool proxy)
+    {
+        _proxy = proxy;
+    }
+    
+    public async Task<DiscordAccount> GetInfoAsync(string token)
     {
         var response = await _SendRequestAsync(token, "https://discord.com/api/v9/users/@me", HttpMethod.Get);
         var content = await response.Content.ReadAsStringAsync();
@@ -21,7 +26,7 @@ public static class DiscordChecker
         return account;
     }
     
-    public static async Task<bool?> TryLoginAsync(string token)
+    public async Task<bool?> TryLoginAsync(string token)
     {
         HttpResponseMessage? response;
 
@@ -51,7 +56,7 @@ public static class DiscordChecker
         return true;
     }
 
-    public static async IAsyncEnumerable<DiscordFriend> Friends(string token)
+    public async IAsyncEnumerable<DiscordFriend> Friends(string token)
     {
         var response = await _SendRequestAsync(token, "https://discord.com/api/v8/users/@me/relationships", HttpMethod.Get);
         
@@ -67,9 +72,9 @@ public static class DiscordChecker
         }
     }
 
-    private static async Task<HttpResponseMessage> _SendRequestAsync(string token, string url, HttpMethod method)
+    private async Task<HttpResponseMessage> _SendRequestAsync(string token, string url, HttpMethod method)
     {
-        using var http = await Proxy.TakeClient(new AuthenticationHeaderValue(token));
+        using var http = await _proxy.TakeClient(new AuthenticationHeaderValue(token));
 
         var request = new HttpRequestMessage(method, url);
         var response = await http.SendAsync(request);

@@ -5,13 +5,18 @@ using Newtonsoft.Json;
 
 namespace Core.IGV;
 
-public static class IGVChecker
+public class IGVChecker
 {
-    public static ProxyPool Proxy { get; set; }
+    private readonly ProxyPool _proxy;
 
-    public static async Task<string?> TryLoginAsync(string login, string password)
+    public IGVChecker(ProxyPool proxy)
     {
-        using var http = await Proxy.TakeClient();
+        _proxy = proxy;
+    }
+    
+    public async Task<string?> TryLoginAsync(string login, string password)
+    {
+        using var http = await _proxy.TakeClient();
         var request = new HttpRequestMessage(HttpMethod.Post, "https://paas-gateway.imetastore.io/account/oauth/token?client_id=default&client_secret=SADFAS345ASREGNREF");
         
         request.Content = new StringContent(JsonConvert.SerializeObject(new

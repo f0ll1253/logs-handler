@@ -10,22 +10,26 @@ namespace Console.Views;
 
 public class ServicesView : ArgsView
 {
-    private readonly SaverService _save;
+    private readonly DataService _data;
     private readonly Settings _settings;
+    private readonly DiscordChecker _discord;
+    private readonly IGVChecker _igv;
     
-    public ServicesView(IRoot root, SaverService save, Settings settings) : base(root)
+    public ServicesView(IRoot root, DataService data, Settings settings, DiscordChecker discord, IGVChecker igv) : base(root)
     {
-        _save = save;
+        _data = data;
         _settings = settings;
+        _discord = discord;
+        _igv = igv;
     }
     
     [Command]
     public async Task Discord()
     {
-        StreamWriter invalid = await _save.CreateStreamAsync("invalid"), valid = await _save.CreateStreamAsync("valid");
+        StreamWriter? invalid = await _data.CreateWriterAsync("invalid"), valid = await _data.CreateWriterAsync("valid");
         var tokens = _settings.Path.DiscordByLogs().Distinct().ToArray();
         
-        await _save.SaveAsync("tokens", tokens);
+        await _data.SaveAsync("tokens", tokens);
 
         if (invalid is null || valid is null)
         {
@@ -42,7 +46,7 @@ public class ServicesView : ArgsView
             await invalid.WriteLineAsync(token);
         }
         
-        async Task WriteValid(string token, DiscordAccount account)
+        async Task WriteValid(string token)
         {
             System.Console.ForegroundColor = ConsoleColor.Green;
             System.Console.WriteLine(token);
@@ -60,11 +64,11 @@ public class ServicesView : ArgsView
                 
                 do
                 {
-                    check = await DiscordChecker.TryLoginAsync(token);
+                    check = await _discord.TryLoginAsync(token);
                 } while (check is null);
 
                 if (check is false) await WriteInvalid(token);
-                else await WriteValid(token, await DiscordChecker.GetInfoAsync(token));
+                else await WriteValid(token);
             });
 
         invalid.Close();
@@ -76,20 +80,15 @@ public class ServicesView : ArgsView
     [Command]
     public async Task IGV()
     {
-        System.Console.Write("File with accounts: ");
-        var filepath = System.Console.ReadLine()?.Replace("\n", "");
-        
-        if (!File.Exists(filepath)) return;
-
-        var lines = await File.ReadAllLinesAsync(filepath);
+        var lines = _data.ReadAsync("igv.com");
 
         System.Console.ForegroundColor = ConsoleColor.Green;
         
-        foreach (var account in lines
+        await foreach (var account in lines
                      .Select(x => x.Split(':'))
                      .Select(x => new Account(x[0], x[1])))
         {
-            if (await IGVChecker.TryLoginAsync(account.Username, account.Password) is {})
+            if (await _igv.TryLoginAsync(account.Username, account.Password) is {})
                 System.Console.WriteLine(account.ToString());
         }
 

@@ -25,6 +25,11 @@ public class ProxyPool
         _type = type;
     }
 
+    public void AddRange(IEnumerable<Proxy> arr)
+    {
+        foreach (var proxy in arr) Add(proxy);
+    }
+
     public bool Add(string host, int port) => Add(new Proxy(host, port));
     
     public bool Add(string host, int port, string login, string password) => Add(new Proxy(host, port, login, password));

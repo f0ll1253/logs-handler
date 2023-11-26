@@ -27,7 +27,7 @@ public abstract class BaseRoot : IRoot
 
             try
             {
-                await view.Build().WaitAsync(App.Token);
+                await view.Build().WaitAsync(App.Source.Token);
             }
             catch (Exception ex)
             {
@@ -41,7 +41,7 @@ public abstract class BaseRoot : IRoot
                 System.Console.ReadKey(true);
             }
             
-            await Task.Delay(500, App.Token);
+            await Task.Delay(500, App.Source.Token);
         }
     }
 

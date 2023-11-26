@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Console.Models.Abstractions;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -10,14 +11,13 @@ namespace Console.Models.Views;
 
 public static class App
 {
-    private static readonly CancellationTokenSource _source = new();
-
-    public static CancellationToken Token => _source.Token;
+    public static CancellationTokenSource Source => new ();
     
     public static Task Initialize(Action<ContainerBuilder>? other = null)
     {
         ConfigureLogging();
         
+        // services
         var builder = new ContainerBuilder()
             .RegisterConfiguration();
         
@@ -27,6 +27,9 @@ public static class App
         builder.RegisterInstance(resolver);
         resolver.SetLifetimeScope(builder.Build());
         
+        //
+        AppDomain.CurrentDomain.ProcessExit += async (sender, args) => await Locator.Current.GetService<ILifetimeScope>()!.DisposeAsync();
+        
         return Task.CompletedTask;
     }
 
@@ -34,7 +37,7 @@ public static class App
     {
         var root = Locator.Current.GetService<IRoot>()!;
         root.PushRedirect(start);
-        await root.Start(Token);
+        await root.Start(Source.Token);
     }
     
     private static void ConfigureLogging()
@@ -44,7 +47,6 @@ public static class App
 #if DEBUG
             .WriteTo.Console(standardErrorFromLevel: LogEventLevel.Error)
 #endif
-            .MinimumLevel.Error()
             .Enrich.FromLogContext()
             .CreateLogger();
 
@@ -60,8 +62,8 @@ public static class App
         var build = configBuilder.Build();
         
         builder.RegisterInstance(build);
-        builder.RegisterInstance(build.GetRequiredSection("Web3").Get<Web3Config>());
-        builder.RegisterInstance(build.GetRequiredSection("ParsingConfig").Get<ParsingConfig>());
+        builder.RegisterInstance(build.GetRequiredSection("Web3").Get<Web3Config>()!);
+        builder.RegisterInstance(build.GetRequiredSection("ParsingConfig").Get<ParsingConfig>()!);
 
         return builder;
     }

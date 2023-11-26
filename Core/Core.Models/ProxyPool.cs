@@ -25,14 +25,42 @@ public class ProxyPool
         _type = type;
     }
 
+    public void Clear()
+    {
+        _proxies.Clear();
+        _last = 0;
+    }
+
+    public async Task LoadAsync(string file)
+    {
+        if (!File.Exists(file)) throw new Exception("Proxies file doesn't exists");
+
+        using var reader = new StreamReader(file);
+        
+        Clear();
+        
+        while (!reader.EndOfStream)
+        {
+            var args = (await reader.ReadLineAsync())?.Replace('@', ':').Split(':');
+            
+            if (args is not {Length:>=2}) continue;
+
+            switch (args.Length)
+            {
+                case 2:
+                    Add(new Proxy(args[0], int.Parse(args[1])));
+                    break;
+                case 4:
+                    Add(new Proxy(args[2], int.Parse(args[3]), args[0], args[1]));
+                    break;
+            }
+        }
+    }
+    
     public void AddRange(IEnumerable<Proxy> arr)
     {
         foreach (var proxy in arr) Add(proxy);
     }
-
-    public bool Add(string host, int port) => Add(new Proxy(host, port));
-    
-    public bool Add(string host, int port, string login, string password) => Add(new Proxy(host, port, login, password));
     
     public bool Add(Proxy proxy)
     {

@@ -1,35 +1,18 @@
-using Console.Models;
 using Console.Models.Abstractions;
+using Console.Models.Attributes;
 using Console.Models.Views;
-using Splat;
 
 namespace Console.Views;
 
-public class StartView : BaseView
+public class StartView : ArgsView
 {
     public StartView(IRoot root) : base(root)
     {
     }
 
-    public override void Activate()
-    {
-        if (Locator.Current.GetService<Settings>() is {} settings) settings.Path = "";
-    }
+    [Command]
+    public Task Launcher() => Task.Run(() => Root.PushRedirect<MainView>());
 
-    public override Task Build()
-    {
-        System.Console.Write("Path to logs: ");
-        
-        var path = System.Console.ReadLine()?.Replace("\"", "");
-
-        if (string.IsNullOrEmpty(path)
-            || !Directory.Exists(path)) 
-            return Task.CompletedTask;
-
-        Locator.Current.GetService<Settings>()!.Path = path;
-
-        Root.PushRedirect<MainView>();
-
-        return Task.CompletedTask;
-    }
+    [Command]
+    public Task Settings() => Task.Run(() => Root.PushRedirect<SettingsView>());
 }

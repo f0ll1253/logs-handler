@@ -1,3 +1,4 @@
+using Console.Extensions;
 using Console.Models;
 using Console.Models.Abstractions;
 using Console.Models.Attributes;
@@ -39,19 +40,13 @@ public class ServicesView : ArgsView
         
         async Task WriteInvalid(string token)
         {
-            System.Console.ForegroundColor = ConsoleColor.Red;
-            System.Console.WriteLine(token);
-            System.Console.ForegroundColor = ConsoleColor.White;
-                    
+            System.Console.Out.WriteInvalidLine(token);
             await invalid.WriteLineAsync(token);
         }
         
         async Task WriteValid(string token)
         {
-            System.Console.ForegroundColor = ConsoleColor.Green;
-            System.Console.WriteLine(token);
-            System.Console.ForegroundColor = ConsoleColor.White;
-            
+            System.Console.Out.WriteValidLine(token);
             await valid.WriteLineAsync(token);
         }
 
@@ -89,7 +84,9 @@ public class ServicesView : ArgsView
                      .Select(x => new Account(x[0], x[1])))
         {
             if (await _igv.TryLoginAsync(account.Username, account.Password) is {})
-                System.Console.WriteLine(account.ToString());
+                System.Console.Out.WriteValidLine(account.ToString());
+            else
+                System.Console.Out.WriteInvalidLine(account.ToString());
         }
 
         System.Console.ForegroundColor = ConsoleColor.White;

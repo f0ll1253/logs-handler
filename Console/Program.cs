@@ -22,52 +22,42 @@ public static class Program
             builder.RegisterViews();
         });
         
-        await LoadProxies();
-        
         await App.Run(Locator.Current.GetService<StartView>()!);
-    }
-
-    private static async Task LoadProxies()
-    {
-        System.Console.Write("Path to proxies: ");
-        var proxiespath =  System.Console.ReadLine()?.Replace("\"", "");
-
-        if (!File.Exists(proxiespath)) throw new Exception("Proxies file doesn't exists");
-
-        var proxypool = Locator.Current.GetService<ProxyPool>()!;
-        var proxies = new List<Proxy>();
-        using var reader = new StreamReader(proxiespath);
-
-        while (!reader.EndOfStream)
-        {
-            var args = (await reader.ReadLineAsync())?.Replace('@', ':').Split(':');
-            
-            if (args is not {Length:>=2}) continue;
-
-            switch (args.Length)
-            {
-                case 2:
-                    proxies.Add(new Proxy(args[0], int.Parse(args[1])));
-                    break;
-                case 4:
-                    proxies.Add(new Proxy(args[2], int.Parse(args[3]), args[0], args[1]));
-                    break;
-            }
-        }
-
-        proxypool.AddRange(proxies);
     }
 
     private static void RegisterServices(this ContainerBuilder builder)
     {
         builder.RegisterType<Settings>()
-            .SingleInstance();
+            .OnActivated(x =>
+            {
+                x.Instance.Initialize();
+
+                if (!Directory.Exists(x.Instance.Path)) x.Instance.Path = "";
+            })
+            .SingleInstance()
+            .AsSelf();
         builder.RegisterType<ProxyPool>()
-            .SingleInstance();
+            .OnActivated(x =>
+            {
+                var settings = x.Context.Resolve<Settings>();
+
+                if (!File.Exists(settings.ProxyPath))
+                {
+                    settings.ProxyPath = "";
+                    return;
+                }
+
+                x.Instance.LoadAsync(settings.ProxyPath).GetAwaiter().GetResult();
+            })
+            .SingleInstance()
+            .AsSelf();
         
-        builder.RegisterType<DataService>();
-        builder.RegisterType<DiscordChecker>();
-        builder.RegisterType<IGVChecker>();
+        builder.RegisterType<DataService>()
+            .AsSelf();
+        builder.RegisterType<DiscordChecker>()
+            .AsSelf();
+        builder.RegisterType<IGVChecker>()
+            .AsSelf();
     }
     
     private static void RegisterViews(this ContainerBuilder builder)
@@ -78,6 +68,7 @@ public static class Program
 
         builder.RegisterType<StartView>();
         builder.RegisterType<MainView>();
+        builder.RegisterType<SettingsView>();
         builder.RegisterType<ServicesView>();
     }
 }

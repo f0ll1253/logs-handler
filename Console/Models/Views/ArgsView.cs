@@ -56,6 +56,8 @@ public abstract class ArgsView : BaseView
         
         _watch.Start();
         
+        System.Console.Clear();
+        
         return method.ReturnType == typeof(Task)
             ? (Task) method.Invoke(this, null)!
             : Task.FromResult(method.Invoke(this, null));

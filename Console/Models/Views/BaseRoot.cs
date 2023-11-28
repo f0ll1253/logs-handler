@@ -6,7 +6,7 @@ namespace Console.Models.Views;
 
 public abstract class BaseRoot : IRoot
 {
-    private Stack<IView> _views = new();
+    private Stack<IViewDefault> _views = new();
 
     public async Task Start(CancellationToken? token = null)
     {
@@ -45,6 +45,24 @@ public abstract class BaseRoot : IRoot
         }
     }
 
+    public async Task<T> Show<T>(IViewResult<T> view)
+    {
+        view.Initialize();
+        view.Activate();
+
+        T? result;
+
+        do
+        {
+            result = await view.Build();
+        } while (result is null);
+        
+        view.Deactivate();
+        view.Dispose();
+        
+        return result;
+    }
+
     public void Pop()
     {
         if (!_views.TryPop(out var last)) return;
@@ -55,7 +73,7 @@ public abstract class BaseRoot : IRoot
         if (_views.TryPeek(out var view)) view.Activate();
     }
     
-    public void PushRedirect<T>(T view) where T : IView
+    public void PushRedirect<T>(T view) where T : IViewDefault
     {
         System.Console.Clear();
 
@@ -67,5 +85,5 @@ public abstract class BaseRoot : IRoot
         _views.Push(view);
     }
 
-    public void PushRedirect<T>() where T : IView => PushRedirect(Locator.Current.GetService<T>()!);
+    public void PushRedirect<T>() where T : IViewDefault => PushRedirect(Locator.Current.GetService<T>()!);
 }

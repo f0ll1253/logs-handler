@@ -86,22 +86,19 @@ public class MainView : ArgsView
 
         _ExitWait();
     }
-
+    
     [Command]
     public async Task Accounts()
     {
-        foreach (var (domain, accounts) in cfg_parse.Accounts.AccountsFromLogs(_settings.Path)
-                     .ToDictionary(
-                         x => x.Key,
-                         x => x.Value.DistinctBy(acc => acc.Username + acc.Password)
-                     )
-                     .ToDictionary(
-                         x => x.Key,
-                         x => x.Value.Select(acc => acc.ToStringShort())
-                     )
-                )
+        // new
+        if (cfg_parse.Accounts.Count == 0) return;
+        
+        var domains = await Root.Show(new PickView<string[]>(cfg_parse.Accounts));
+        var accounts = domains.AccountsFromLogs(_settings.Path);
+        
+        foreach (var (domain, account) in accounts)
         {
-            await _data.SaveAsync(domain, accounts);
+            await _data.SaveAsync(domain, account.Select(x => x.ToStringShort()).Distinct());
         }
 
         _ExitWait();

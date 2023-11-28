@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace Core.Models;
 
-public abstract class IniSettings : IDisposable, IAsyncDisposable
+public abstract class IniSettings : IDisposable
 {
     private readonly Dictionary<string, PropertyInfo> _properties;
     private readonly string _path;
@@ -21,8 +21,6 @@ public abstract class IniSettings : IDisposable, IAsyncDisposable
     public void Initialize() => Load(_path);
 
     public void Dispose() => Save(_path);
-    
-    public ValueTask DisposeAsync() => new(Task.Run(() => Save(_path)));
 
     private void Save(string path)
     {

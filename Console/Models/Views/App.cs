@@ -28,12 +28,12 @@ public static class App
         resolver.SetLifetimeScope(builder.Build());
         
         //
-        AppDomain.CurrentDomain.ProcessExit += async (sender, args) => await Locator.Current.GetService<ILifetimeScope>()!.DisposeAsync();
+        AppDomain.CurrentDomain.ProcessExit += (sender, args) => Locator.Current.GetService<ILifetimeScope>()!.Dispose();
         
         return Task.CompletedTask;
     }
 
-    public static async Task Run(IView start)
+    public static async Task Run(IViewDefault start)
     {
         var root = Locator.Current.GetService<IRoot>()!;
         root.PushRedirect(start);

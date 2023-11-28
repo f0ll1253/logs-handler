@@ -2,7 +2,7 @@ using Console.Models.Abstractions;
 
 namespace Console.Models.Views;
 
-public abstract class BaseView : IView
+public abstract class BaseView : IViewDefault
 {
     protected BaseView(IRoot root)
     {

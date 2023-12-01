@@ -4,7 +4,7 @@ using Core.Models;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace Core.Discord;
+namespace Core.Checkers;
 
 public class DiscordChecker
 {

@@ -25,7 +25,7 @@ public class MainView : ArgsView
     [Command, Redirect]
     public Task Services() => Task.Run(() => Root.PushRedirect<ServicesView>());
     
-    [Command]
+    // [Command]
     public async Task Wallets()
     {
         var checker = new MetamaskChecker(cfg_web3.Eth, cfg_web3.Bsc);
@@ -58,7 +58,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Links()
     {
-        await _data.SaveAsync("links.txt", cfg_parse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
+        await _data.SaveAsync("links", cfg_parse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
 
         _ExitWait();
     }
@@ -90,7 +90,6 @@ public class MainView : ArgsView
     [Command]
     public async Task Accounts()
     {
-        // new
         if (cfg_parse.Accounts.Count == 0) return;
         
         var domains = await Root.Show(new PickView<string[]>(cfg_parse.Accounts));

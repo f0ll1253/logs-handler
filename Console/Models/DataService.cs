@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Core.Models;
 
 namespace Console.Models;
 
@@ -11,6 +12,15 @@ public class DataService
         _settings = settings;
     }
 
+    public IAsyncEnumerable<Account> ReadAccountsAsync(
+        string filename,
+        string subpath = "",
+        [CallerMemberName] string? name = null)
+        => ReadAsync(filename, subpath, name)
+            .Select(x => x.Split(':'))
+            .Where(x => x.Length == 2)
+            .Select(x => new Account(x[0], x[1]));
+    
     public async IAsyncEnumerable<string> ReadAsync(
         string filename,
         string subpath = "",

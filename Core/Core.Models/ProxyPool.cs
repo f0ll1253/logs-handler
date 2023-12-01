@@ -76,7 +76,7 @@ public class ProxyPool
     {
         DefaultRequestHeaders =
         {
-            Authorization = authorization
+            Authorization = authorization,
         }
     };
 

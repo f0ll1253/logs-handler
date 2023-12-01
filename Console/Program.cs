@@ -3,8 +3,8 @@ using Console.Models;
 using Console.Models.Abstractions;
 using Console.Models.Views;
 using Console.Views;
-using Core.Discord;
-using Core.IGV;
+using Core.Checkers;
+using Core.Checkers.Crypto;
 using Core.Models;
 using Splat;
 
@@ -53,10 +53,16 @@ public static class Program
             .AsSelf();
         
         builder.RegisterType<DataService>()
+            .SingleInstance()
             .AsSelf();
         builder.RegisterType<DiscordChecker>()
+            .SingleInstance()
             .AsSelf();
         builder.RegisterType<IGVChecker>()
+            .SingleInstance()
+            .AsSelf();
+        builder.RegisterType<CatmineChecker>()
+            .SingleInstance()
             .AsSelf();
     }
     

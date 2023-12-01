@@ -3,9 +3,9 @@ using Console.Models;
 using Console.Models.Abstractions;
 using Console.Models.Attributes;
 using Console.Models.Views;
+using Core.Checkers;
+using Core.Checkers.Crypto;
 using Core.Discord;
-using Core.IGV;
-using Core.Models;
 
 namespace Console.Views;
 
@@ -13,15 +13,19 @@ public class ServicesView : ArgsView
 {
     private readonly DataService _data;
     private readonly Settings _settings;
+    
+    // checkers
     private readonly DiscordChecker _discord;
     private readonly IGVChecker _igv;
+    private readonly CatmineChecker _catmine;
     
-    public ServicesView(IRoot root, DataService data, Settings settings, DiscordChecker discord, IGVChecker igv) : base(root)
+    public ServicesView(IRoot root, DataService data, Settings settings, DiscordChecker discord, IGVChecker igv, CatmineChecker catmine) : base(root)
     {
         _data = data;
         _settings = settings;
         _discord = discord;
         _igv = igv;
+        _catmine = catmine;
     }
     
     [Command]
@@ -75,20 +79,30 @@ public class ServicesView : ArgsView
     [Command]
     public async Task IGV()
     {
-        var lines = _data.ReadAsync("igv.com");
-
-        System.Console.ForegroundColor = ConsoleColor.Green;
-        
-        await foreach (var account in lines
-                     .Select(x => x.Split(':'))
-                     .Select(x => new Account(x[0], x[1])))
+        await foreach (var account in _data.ReadAccountsAsync("igv", name: "Accounts"))
         {
             if (await _igv.TryLoginAsync(account.Username, account.Password) is {})
-                System.Console.Out.WriteValidLine(account.ToString());
+                System.Console.Out.WriteValidLine(account.ToStringShort());
             else
-                System.Console.Out.WriteInvalidLine(account.ToString());
+                System.Console.Out.WriteInvalidLine(account.ToStringShort());
         }
+        
+        _ExitWait();
+    }
 
+    [Command]
+    public async Task Catmine()
+    {
+        System.Console.ForegroundColor = ConsoleColor.Green;
+
+        await foreach (var account in _data.ReadAccountsAsync("catmine", name: "Accounts"))
+        {
+            if (await _catmine.TryLoginAsync(account.Username, account.Password))
+                System.Console.Out.WriteValidLine(account.ToStringShort());
+            else
+                System.Console.Out.WriteInvalidLine(account.ToStringShort());
+        }
+        
         System.Console.ForegroundColor = ConsoleColor.White;
         
         _ExitWait();

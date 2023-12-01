@@ -3,7 +3,7 @@ using System.Text;
 using Core.Models;
 using Newtonsoft.Json;
 
-namespace Core.IGV;
+namespace Core.Checkers;
 
 public class IGVChecker
 {

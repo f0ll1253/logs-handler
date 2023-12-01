@@ -31,7 +31,7 @@ public static class StringExtensions
                 
         if (line is null || !line.StartsWith("URL")) return null;
 
-        string url, username, password;
+        string? url, username, password;
         
         try
         {
@@ -44,31 +44,31 @@ public static class StringExtensions
 
         if (!urlPredicate?.Invoke(url) ?? false) return null;
 
-        username = reader.ReadLine()!;
+        username = reader.ReadLine();
 
         try
         {
-            username = username["Username: ".Length..username.Length];
+            username = username?["Username: ".Length..username.Length];
         }
         catch
         {
             return null;
         }
         
-        if ((!usernamePredicate?.Invoke(username) ?? false) || username == "UNKNOWN") return null;
+        if (username is null || (!usernamePredicate?.Invoke(username) ?? false) || username == "UNKNOWN") return null;
                 
-        password = reader.ReadLine()!;
+        password = reader.ReadLine();
 
         try
         {
-            password = password["Password: ".Length..password.Length];
+            password = password?["Password: ".Length..password.Length];
         }
         catch
         {
             return null;
         }
         
-        if (!passwordPredicate?.Invoke(password) ?? false) return null;
+        if (password is null || (!passwordPredicate?.Invoke(password) ?? false)) return null;
 
         return new Account(username, password, url);
     }

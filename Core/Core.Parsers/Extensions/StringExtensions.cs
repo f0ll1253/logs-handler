@@ -48,7 +48,7 @@ public static class StringExtensions
 
         try
         {
-            username = username?["Username: ".Length..username.Length];
+            username = username?[(username.IndexOf(' ')+1)..username.Length];
         }
         catch
         {
@@ -61,7 +61,7 @@ public static class StringExtensions
 
         try
         {
-            password = password?["Password: ".Length..password.Length];
+            password = password?[(password.IndexOf(' ')+1)..password.Length];
         }
         catch
         {

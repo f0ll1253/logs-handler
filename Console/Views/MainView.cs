@@ -66,23 +66,12 @@ public class MainView : ArgsView
     [Command]
     public async Task Cookies()
     {
-        foreach (var (domain, cookies) in cfg_parse.Cookies.CookiesFromLogs(_settings.Path)
-                     .ToDictionary(
-                         x => x.Key,
-                         x => x.Value.ToArray()
-                     )
-                )
+        var data = cfg_parse.Cookies.CookiesFromLogs(_settings.Path);
+        
+        foreach (var (domain, cookies) in data)
         {
-            for (var i = 0; i < cookies.Length; i++)
-            {
-                var data = cookies[i].ToArray();
-                
-                if (!data.Any()) continue;
-                
-                await _data.SaveAsync($"cookies{i}", data, subpath: domain);
-            }
+            await _data.SaveZipAsync("cookies", domain, cookies.ToArray());
         }
-
 
         _ExitWait();
     }

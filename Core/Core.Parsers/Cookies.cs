@@ -1,32 +1,16 @@
+using Core.Models.Extensions;
+
 namespace Core.Parsers;
 
 public static class Cookies
 {
-    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLogs(this IEnumerable<string> domains, string path)
-    {
-        if (!Directory.Exists(path)) return new Dictionary<string, IEnumerable<IEnumerable<string>>>();
+    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLogs(this IEnumerable<string> domains, string path) 
+        => Directory.GetDirectories(path)
+        .SelectThread(domains.CookiesFromLog)
+        .SelectMany(x => x)
+        .ToLookup(x => x.Key)
+        .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value));
 
-        var res = new Dictionary<string, List<IEnumerable<string>>>();
-        var data = Directory.GetDirectories(path).Select(domains.CookiesFromLog);
-
-        foreach (var cookies in data)
-        {
-            foreach (var cookie in cookies)
-            {
-                if (res.TryGetValue(cookie.Key, out var list))
-                    list.AddRange(cookie.Value);
-                else
-                {
-                    var newlist = new List<IEnumerable<string>>();
-                    newlist.AddRange(cookie.Value);
-                    res.Add(cookie.Key, newlist);
-                }
-            }
-        }
-
-        return res.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());
-    }
-    
     public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLog(this IEnumerable<string> domains, string path)
     {
         path = Path.Combine(path, "Cookies");

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Core.Models;
+using Core.Models.Extensions;
 using Core.Parsers.Extensions;
 
 namespace Core.Parsers;
@@ -8,9 +9,10 @@ public static class Accounts
 {
     public static IDictionary<string, IEnumerable<Account>> AccountsFromLogs(this IEnumerable<string> domains, string path)
         => Directory.GetDirectories(path)
-            .SelectMany(domains.AccountsFromLog)
-            .GroupBy(x => x.Key, x => x.Value)
-            .ToDictionary(x => x.Key, x => x.SelectMany(x => x));
+            .SelectThread(domains.AccountsFromLog)
+            .SelectMany(x => x)
+            .ToLookup(x => x.Key)
+            .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value));
 
     private static readonly Regex _domain = new ("https://(.*?)/");
     public static IDictionary<string, IEnumerable<Account>> AccountsFromLog(this IEnumerable<string> domains, string path)
@@ -25,7 +27,10 @@ public static class Accounts
         {
             var domain = _domain.Match(account.Url);
 
-            if (!domain.Success || domains.FirstOrDefault(x => domain.Groups[1].Value.Contains(x)) is not {} picked) continue;
+            if (!domain.Success 
+                || domains.FirstOrDefault(x => domain.Groups[1].Value.Contains(x)) is not {} picked 
+                || string.IsNullOrEmpty(account.Username) 
+                || string.IsNullOrEmpty(account.Password)) continue;
             
             if (result.TryGetValue(picked, out var list))
                 list.Add(account);

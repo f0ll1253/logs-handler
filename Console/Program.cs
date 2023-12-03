@@ -15,6 +15,18 @@ public static class Program
     public static async Task Main()
     {
         System.Console.Title = "https://github.com/f0ll1253";
+
+        ThreadPool.SetMaxThreads(1000 + 10, 1000);
+        
+        Task.Run(() =>
+        {
+            while (true)
+            {
+                ThreadPool.GetAvailableThreads(out var worker, out var port);
+                
+                System.Console.Title = $"{worker} | {port}";
+            }
+        });
         
         await App.Initialize(builder =>
         {

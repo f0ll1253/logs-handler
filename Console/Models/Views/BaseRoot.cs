@@ -41,6 +41,8 @@ public abstract class BaseRoot : IRoot
                 System.Console.ReadKey(true);
             }
             
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
+            
             await Task.Delay(500, App.Source.Token);
         }
     }

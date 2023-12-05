@@ -76,26 +76,35 @@ public class ProxyPool
     {
         DefaultRequestHeaders =
         {
-            Authorization = authorization,
+            Authorization = authorization
         }
     };
 
     public async Task<HttpClientHandler> TakeHandler() 
         => new()
     {
-        Proxy = await TakeProxy(),
+        Proxy = await TakeWebProxy(),
         UseProxy = true,
         AllowAutoRedirect = false,
         SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
     };
 
-    public async Task<WebProxy> TakeProxy()
+    public async Task<string> TakeProxyString() => (await _TakeProxy()).ToString();
+
+    public async Task<WebProxy> TakeWebProxy()
+    {
+        var proxy = await _TakeProxy();
+
+        return _CreateWebProxy(proxy);
+    }
+    
+    private async Task<Proxy> _TakeProxy()
     {
         if (_proxies.Count == 0) throw new Exception("Proxies not loaded");
         
-        if (_last > _proxies.Count) _last = 0;
+        if (_last >= _proxies.Count) _last = 0;
 
-        if (_proxies.Count == 1) return _CreateWebProxy(_proxies.First());
+        if (_proxies.Count == 1) return _proxies.First();
         
         Proxy? proxy = null;
 
@@ -108,7 +117,7 @@ public class ProxyPool
 
         _last++;
 
-        return _CreateWebProxy(proxy);
+        return proxy;
     }
 
     private WebProxy _CreateWebProxy(Proxy proxy)

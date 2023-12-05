@@ -1,9 +1,12 @@
+using System.Text.RegularExpressions;
 using Core.Models;
 
 namespace Core.Parsers.Extensions;
 
-public static class StringExtensions
+internal static class StringExtensions
 {
+    private static readonly Regex _password = new("^(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$");
+    
     public static IEnumerable<Account> ReadAccounts(
         this string filepath,
         Predicate<string>? urlPredicate = null, 
@@ -68,7 +71,7 @@ public static class StringExtensions
             return null;
         }
         
-        if (password is null || (!passwordPredicate?.Invoke(password) ?? false)) return null;
+        if (password is null || !_password.IsMatch(password) || (!passwordPredicate?.Invoke(password) ?? false)) return null;
 
         return new Account(username, password, url);
     }

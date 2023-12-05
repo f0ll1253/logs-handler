@@ -1,12 +1,13 @@
 using System.Net;
 using System.Net.Http.Headers;
+using Core.Checkers.Abstractions;
 using Core.Models;
 using Newtonsoft.Json;
 using Serilog;
 
 namespace Core.Checkers;
 
-public class DiscordChecker
+public class DiscordChecker : ITokenChecker<bool?>
 {
     private readonly ProxyPool _proxy;
     

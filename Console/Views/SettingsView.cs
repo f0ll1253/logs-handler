@@ -17,6 +17,12 @@ public class SettingsView : ArgsView
         _proxy = proxy;
     }
 
+    public override void Dispose()
+    {
+        base.Dispose();
+        _settings.Save();
+    }
+
     [Command]
     public Task Set_Path()
     {

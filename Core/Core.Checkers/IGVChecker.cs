@@ -1,11 +1,12 @@
 using System.Net;
 using System.Text;
+using Core.Checkers.Abstractions;
 using Core.Models;
 using Newtonsoft.Json;
 
 namespace Core.Checkers;
 
-public class IGVChecker
+public class IGVChecker : ICredentialsChecker<string?>
 {
     private readonly ProxyPool _proxy;
 

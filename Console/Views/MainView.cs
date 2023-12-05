@@ -10,16 +10,16 @@ namespace Console.Views;
 public class MainView : ArgsView
 {
     private readonly Settings _settings;
-    private readonly Web3Config cfg_web3;
-    private readonly ParsingConfig cfg_parse;
+    private readonly Web3Config _cfgWeb3;
+    private readonly ParsingConfig _cfgParse;
     private readonly DataService _data;
     
     public MainView(IRoot root, Settings settings, DataService data, Web3Config cfgWeb3, ParsingConfig cfgParse) : base(root)
     {
         _settings = settings;
         _data = data;
-        cfg_web3 = cfgWeb3;
-        cfg_parse = cfgParse;
+        _cfgWeb3 = cfgWeb3;
+        _cfgParse = cfgParse;
     }
 
     [Command, Redirect]
@@ -28,7 +28,7 @@ public class MainView : ArgsView
     // [Command]
     public async Task Wallets()
     {
-        var checker = new MetamaskChecker(cfg_web3.Eth, cfg_web3.Bsc);
+        var checker = new MetamaskChecker(_cfgWeb3.Eth, _cfgWeb3.Bsc);
         var wallets = new MetamaskParser().ByLogs(_settings.Path);
 
         await _data.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
@@ -58,7 +58,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Links()
     {
-        await _data.SaveAsync("links", cfg_parse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
+        await _data.SaveAsync("links", _cfgParse.Links.LinksFromLogs(_settings.Path).Select(x => x.ToString()));
 
         _ExitWait();
     }
@@ -66,7 +66,7 @@ public class MainView : ArgsView
     [Command]
     public async Task Cookies()
     {
-        var data = cfg_parse.Cookies.CookiesFromLogs(_settings.Path);
+        var data = _cfgParse.Cookies.CookiesFromLogs(_settings.Path);
         
         foreach (var (domain, cookies) in data)
         {
@@ -79,9 +79,9 @@ public class MainView : ArgsView
     [Command]
     public async Task Accounts()
     {
-        if (cfg_parse.Accounts.Count == 0) return;
+        if (_cfgParse.Accounts.Count == 0) return;
         
-        var domains = await Root.Show(new PickView<string[]>(cfg_parse.Accounts));
+        var domains = await Root.Show(new PickView<string[]>(_cfgParse.Accounts));
         var accounts = domains.AccountsFromLogs(_settings.Path);
         
         foreach (var (domain, account) in accounts)

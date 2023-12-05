@@ -18,8 +18,14 @@ public class ServicesView : ArgsView
     private readonly DiscordChecker _discord;
     private readonly IGVChecker _igv;
     private readonly CatmineChecker _catmine;
-    
-    public ServicesView(IRoot root, DataService data, Settings settings, DiscordChecker discord, IGVChecker igv, CatmineChecker catmine) : base(root)
+
+    public ServicesView(
+        IRoot root, 
+        DataService data, 
+        Settings settings, 
+        DiscordChecker discord, 
+        IGVChecker igv, 
+        CatmineChecker catmine) : base(root)
     {
         _data = data;
         _settings = settings;
@@ -93,8 +99,6 @@ public class ServicesView : ArgsView
     [Command]
     public async Task Catmine()
     {
-        System.Console.ForegroundColor = ConsoleColor.Green;
-
         await foreach (var account in _data.ReadAccountsAsync("catmine", name: "Accounts"))
         {
             if (await _catmine.TryLoginAsync(account.Username, account.Password))
@@ -102,8 +106,6 @@ public class ServicesView : ArgsView
             else
                 System.Console.Out.WriteInvalidLine(account.ToStringShort());
         }
-        
-        System.Console.ForegroundColor = ConsoleColor.White;
         
         _ExitWait();
     }

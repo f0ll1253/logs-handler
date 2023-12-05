@@ -63,10 +63,10 @@ public static class Program
             })
             .SingleInstance()
             .AsSelf();
-        
         builder.RegisterType<DataService>()
             .SingleInstance()
             .AsSelf();
+        
         builder.RegisterType<DiscordChecker>()
             .SingleInstance()
             .AsSelf();

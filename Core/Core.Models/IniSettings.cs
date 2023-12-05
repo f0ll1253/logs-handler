@@ -20,15 +20,15 @@ public abstract class IniSettings : IDisposable
 
     public void Initialize() => Load(_path);
 
-    public void Dispose() => Save(_path);
+    public void Dispose() => Save();
 
-    private void Save(string path)
+    public void Save()
     {
-        if (path[path.LastIndexOf('.')..] != ".ini") throw new ArgumentException("File is not .ini type configuration", nameof(path));
+        if (_path[_path.LastIndexOf('.')..] != ".ini") throw new ArgumentException("File is not .ini type configuration", nameof(_path));
         
-        if (!File.Exists(path)) File.Create(path).Close();
+        if (!File.Exists(_path)) File.Create(_path).Close();
         
-        using var writer = new StreamWriter(path);
+        using var writer = new StreamWriter(_path);
         writer.Flush(); // todo remove with changing values in file (now data rewriting)
         
         SaveObject(writer, this);

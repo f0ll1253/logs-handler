@@ -9,7 +9,7 @@ public static class Accounts
 {
     public static IDictionary<string, IEnumerable<Account>> AccountsFromLogs(this IEnumerable<string> domains, string path)
         => Directory.GetDirectories(path)
-            .SelectThread(domains.AccountsFromLog)
+            .SelectPerThread(domains.AccountsFromLog)
             .SelectMany(x => x)
             .ToLookup(x => x.Key)
             .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value));

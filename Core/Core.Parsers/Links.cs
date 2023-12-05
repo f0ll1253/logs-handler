@@ -1,4 +1,5 @@
 ﻿using Core.Models;
+using Core.Models.Extensions;
 using Core.Parsers.Extensions;
 
 namespace Core.Parsers;
@@ -7,7 +8,8 @@ public static class Links
 {
     public static IEnumerable<Account> LinksFromLogs(this IEnumerable<string> links, string path)
         => Directory.GetDirectories(path)
-            .SelectMany(links.LinksFromLog);
+            .SelectPerThread(links.LinksFromLog)
+            .SelectMany(x => x);
     
     public static IEnumerable<Account> LinksFromLog(this IEnumerable<string> links, string path)
     {

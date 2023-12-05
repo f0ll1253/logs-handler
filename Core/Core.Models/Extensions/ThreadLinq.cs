@@ -2,7 +2,7 @@ namespace Core.Models.Extensions;
 
 public static class ThreadLinqExtensions
 {
-    public static IEnumerable<TResult> SelectThread<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult?> func)
+    public static IEnumerable<TResult> SelectPerThread<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult?> func)
     {
         var list = new List<TResult>();
         var manual = new ManualResetEvent(false);

@@ -1,17 +1,18 @@
+using Core.Models;
 using Core.Models.Extensions;
 
 namespace Core.Parsers;
 
 public static class Cookies
 {
-    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLogs(this IEnumerable<string> domains, string path) 
+    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLogs(this IEnumerable<Cookie> domains, string path) 
         => Directory.GetDirectories(path)
-        .SelectThread(domains.CookiesFromLog)
+        .SelectPerThread(domains.CookiesFromLog)
         .SelectMany(x => x)
         .ToLookup(x => x.Key)
         .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value));
 
-    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLog(this IEnumerable<string> domains, string path)
+    public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLog(this IEnumerable<Cookie> domains, string path)
     {
         path = Path.Combine(path, "Cookies");
 
@@ -34,7 +35,7 @@ public static class Cookies
         return res.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());
     }
 
-    public static IDictionary<string, IEnumerable<string>> CookiesFromFile(this IEnumerable<string> domains, string path)
+    public static IDictionary<string, IEnumerable<string>> CookiesFromFile(this IEnumerable<Cookie> domains, string path)
     {
         var result = new Dictionary<string, List<string>>();
         
@@ -51,10 +52,10 @@ public static class Cookies
             var index = line.IndexOf('\t');
             var domain = line[..(index == -1 ? 1 : index)];
             
-            if (domains.FirstOrDefault(x => domain.Contains(x)) is not {} picked) continue;
+            if (domains.FirstOrDefault(x => x.IsFull ? domain == $".{x.Domain}" : domain.Contains(x.Domain)) is not {} picked) continue;
 
-            result.TryAdd(picked, new List<string>());
-            result[picked].Add(line);
+            result.TryAdd(picked.Domain, new List<string>());
+            result[picked.Domain].Add(line);
         }
         
         return result.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());

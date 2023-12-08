@@ -1,7 +1,6 @@
 ﻿using Autofac;
-using Autofac.Core;
 using Console.Models.Abstractions;
-using Microsoft.Extensions.Configuration;
+using Core.Models.Extensions;
 using Serilog;
 using Serilog.Events;
 using Splat;
@@ -39,7 +38,7 @@ public static class App
         root.PushRedirect(start);
         await root.Start(Source.Token);
     }
-    
+
     private static void ConfigureLogging()
     {
         Log.Logger = new LoggerConfiguration()
@@ -50,21 +49,6 @@ public static class App
             .Enrich.FromLogContext()
             .CreateLogger();
 
-        AppDomain.CurrentDomain.UnhandledException += (sender, args) => Log.Error(((Exception)args.ExceptionObject).ToString());
-    }
-    
-    private static ContainerBuilder RegisterConfiguration(this ContainerBuilder builder)
-    {
-        var configBuilder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json");
-
-        var build = configBuilder.Build();
-        
-        builder.RegisterInstance(build);
-        builder.RegisterInstance(build.GetRequiredSection("Web3").Get<Web3Config>()!);
-        builder.RegisterInstance(build.GetRequiredSection("ParsingConfig").Get<ParsingConfig>()!);
-
-        return builder;
+        AppDomain.CurrentDomain.UnhandledException += (sender, args) => Log.Error(((Exception) args.ExceptionObject).ToString());
     }
 }

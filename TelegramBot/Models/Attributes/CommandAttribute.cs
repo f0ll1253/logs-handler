@@ -1,7 +1,7 @@
 namespace TelegramBot.Models.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class CommandAttribute : Attribute
+public class CommandAttribute(string command) : Attribute
 {
-    public required string Command { get; set; }
+    public string Command { get; } = command;
 }

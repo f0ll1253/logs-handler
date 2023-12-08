@@ -3,19 +3,60 @@ using TelegramBot.Models;
 using TelegramBot.Models.Attributes;
 using TL;
 using WTelegram;
-using User = TelegramBot.Data.User;
 
 namespace TelegramBot.View;
 
 public class StartView(Client client, AppDbContext context) : CommandsView
 {
-    [Command(Command = "/start")]
-    public Task Start(UpdateNewMessage update)
+    [Command("/start")]
+    public async Task Start(UpdateNewMessage update)
     {
-        return client.Messages_SendMessage(App.Users[update.message.Peer.ID], $"Hello {App.Users[update.message.Peer.ID].first_name}! Please send your invite code. (/invite code)", new Random().NextInt64());
+        var user = await context.FindAsync<User>(update.message.Peer.ID);
+
+        if (user is null)
+        {
+            await client.Messages_SendMessage(App.Users[update.message.Peer.ID], $"Hello {App.Users[update.message.Peer.ID].first_name}! Please send your invite code. (/invite code)", new Random().NextInt64());
+            return;
+        }
+        
+        await client.Messages_SendMessage(
+            App.Users[update.message.Peer.ID], 
+            $"Hello {App.Users[update.message.Peer.ID].first_name}!", 
+            new Random().NextInt64(),
+            reply_markup: new ReplyKeyboardMarkup
+            {
+                rows = new []
+                {
+                    new KeyboardButtonRow
+                    {
+                        buttons = new []
+                        {
+                            new KeyboardButton
+                            {
+                                text = "Cookies"
+                            },
+                            new KeyboardButton
+                            {
+                                text = "Links"
+                            }
+                        }
+                    },
+                    new KeyboardButtonRow
+                    {
+                        buttons = new []
+                        {
+                            new KeyboardButton
+                            {
+                                text = "Accounts"
+                            }
+                        }
+                    }
+                },
+                flags = ReplyKeyboardMarkup.Flags.resize
+            });
     }
 
-    [Command(Command = "/invite")]
+    [Command("/invite")]
     public async Task Invite(UpdateNewMessage update)
     {
         var message = (Message) update.message;
@@ -42,7 +83,7 @@ public class StartView(Client client, AppDbContext context) : CommandsView
 
         await context.AddAsync(new User
         {
-            id = message.from_id.ID,
+            id = message.peer_id.ID,
             IsApproved = true
         });
         await context.SaveChangesAsync();

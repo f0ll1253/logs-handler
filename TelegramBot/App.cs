@@ -8,20 +8,21 @@ using WTelegram;
 
 namespace TelegramBot;
 
-public class App(Client bot, IConfiguration config)
+public class App(Client client, IConfiguration config)
 {
-    public static Dictionary<long, User> Users { get; private set; } = new();
-    public static Dictionary<long, ChatBase> Chats { get; private set; } = new();
+    public static Dictionary<long, Func<UpdateNewMessage, Task>> Wait { get; } = new();
+    public static Dictionary<long, TL.User> Users { get; } = new();
+    public static Dictionary<long, ChatBase> Chats { get; } = new();
     public static IReadOnlyDictionary<string, (CommandsView, MethodInfo)> Commands { get; private set; }
-    public static User Me { get; private set; }
+    public static TL.User Me { get; private set; }
 
     public async Task Run()
     {
         InitializeViews();
         Log.Information("Views was initialized");
 
-        Me = await bot.LoginBotIfNeeded(config["Bot:Token"]!);
-        bot.OnUpdate += OnUpdate;
+        Me = await client.LoginBotIfNeeded(config["Bot:Token"]!);
+        client.OnUpdate += OnUpdate;
         Log.Information("Bot successfully started");
 
         while (true)
@@ -61,16 +62,17 @@ public class App(Client bot, IConfiguration config)
     
     private Task HandleUpdateAsync(UpdateNewMessage update)
     {
+        if (Wait.TryGetValue(update.message.Peer.ID, out var func))
+            return func.Invoke(update);
+        
         if (update.message is not Message message)
             return Task.CompletedTask;
 
-        if (message.message.StartsWith('/'))
-        {
-            var index = message.message.IndexOf(' ');
-            var command = Commands[message.message[..(index == -1 ? message.message.Length : index)]];
+        var index = message.message.IndexOf(' ');
+        var command = message.message[..(index == -1 ? message.message.Length : index)];
 
-            return (Task) command.Item2.Invoke(command.Item1, new [] {update});
-        }
+        if (Commands.TryGetValue(command, out var cmd))
+            return (Task) cmd.Item2.Invoke(cmd.Item1, new[] { update });
         
         return Task.CompletedTask;
     }

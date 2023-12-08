@@ -1,4 +1,4 @@
-namespace Console.Models;
+namespace Core.Models.Configs;
 
 public class Web3Config
 {

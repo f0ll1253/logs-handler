@@ -1,6 +1,4 @@
-using Core.Models;
-
-namespace Console.Models;
+namespace Core.Models.Configs;
 
 public class ParsingConfig
 {

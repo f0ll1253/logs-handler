@@ -10,7 +10,7 @@ public static class Cookies
         .SelectPerThread(domains.CookiesFromLog)
         .SelectMany(x => x)
         .ToLookup(x => x.Key)
-        .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value));
+        .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value).Where(x => x.Any()));
 
     public static IDictionary<string, IEnumerable<IEnumerable<string>>> CookiesFromLog(this IEnumerable<Cookie> domains, string path)
     {

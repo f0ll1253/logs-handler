@@ -1,6 +1,6 @@
 ﻿using Autofac;
+using Core.Models.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;
 using Splat;
@@ -34,7 +34,7 @@ public static class Program
                     await context.AddAsync(code);
                     await context.SaveChangesAsync();
                     
-                    Log.Information($"Generated new invite code: {code.Id} \t Code will expire: {DateTime.FromBinary(code.Expire).ToShortTimeString()}");
+                    Log.Information($"Generated new invite code: {code.Id} \t Code will expire: {DateTime.FromFileTimeUtc(code.Expire).ToShortTimeString()}");
                 }
             }
         });
@@ -73,17 +73,6 @@ public static class Program
 
         AppDomain.CurrentDomain.UnhandledException += (sender, args) => Log.Error(((Exception)args.ExceptionObject).ToString());
     }
-    
-    private static ContainerBuilder RegisterConfiguration(this ContainerBuilder builder)
-    {
-        var configBuilder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json");
-
-        builder.RegisterInstance<IConfiguration>(configBuilder.Build());
-        
-        return builder;
-    }
 
     private static ContainerBuilder RegisterServices(this ContainerBuilder builder)
     {
@@ -95,6 +84,9 @@ public static class Program
             .AsSelf();
         builder.RegisterContext<AppDbContext>((_, options) => options.UseSqlite("Data Source=users.db"));
         builder.RegisterType<StartView>()
+            .As<CommandsView>()
+            .SingleInstance();
+        builder.RegisterType<MainView>()
             .As<CommandsView>()
             .SingleInstance();
         

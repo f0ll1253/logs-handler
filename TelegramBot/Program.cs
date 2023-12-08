@@ -5,11 +5,11 @@ using Serilog;
 using Serilog.Events;
 using Splat;
 using Splat.Autofac;
-using Telegram.Bot;
 using TelegramBot.Data;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TelegramBot.View;
+using WTelegram;
 
 namespace TelegramBot;
 
@@ -45,10 +45,14 @@ public static class Program
     private static Task Initialize()
     {
         ConfigureLogging();
+
+        var builder = new ContainerBuilder();
         
-        var builder = new ContainerBuilder()
-            .RegisterConfiguration()
-            .RegisterServices();
+        builder.RegisterConfiguration();
+        Log.Information("Success register configuration");
+        
+        builder.RegisterServices();
+        Log.Information("Success register services");
 
         var resolver = builder.UseAutofacDependencyResolver();
         builder.RegisterInstance(resolver);
@@ -76,25 +80,16 @@ public static class Program
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json");
 
-        var config = configBuilder.Build();
-        
-        builder.RegisterInstance<IConfiguration>(config);
-        Log.Information("Success register configuration");
+        builder.RegisterInstance<IConfiguration>(configBuilder.Build());
         
         return builder;
     }
 
     private static ContainerBuilder RegisterServices(this ContainerBuilder builder)
     {
-        builder.Register(x =>
-        {
-            var config = x.Resolve<IConfiguration>();
-
-            return new TelegramBotClient(config["Bot:API_KEY"]!);
-        })
-            .As<ITelegramBotClient>()
-            .SingleInstance();
-        
+        builder.Register<Client>(x => new Client(28352840, "e12baa8db750ab32ad22abab22b549c8"))
+            .SingleInstance()
+            .AsSelf();
         builder.RegisterType<App>()
             .SingleInstance()
             .AsSelf();
@@ -102,7 +97,6 @@ public static class Program
         builder.RegisterType<StartView>()
             .As<CommandsView>()
             .SingleInstance();
-        Log.Information("Success register services");
         
         return builder;
     }

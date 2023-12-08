@@ -1,37 +1,27 @@
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using Splat;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using TelegramBot.Models;
+using TL;
+using WTelegram;
 
 namespace TelegramBot;
 
-public class App(ITelegramBotClient bot)
+public class App(Client bot, IConfiguration config)
 {
-    public CancellationTokenSource Cancel { get; } = new();
-    public IReadOnlyDictionary<string, (CommandsView, MethodInfo)> Commands { get; private set; }
+    public static Dictionary<long, User> Users { get; private set; } = new();
+    public static Dictionary<long, ChatBase> Chats { get; private set; } = new();
+    public static IReadOnlyDictionary<string, (CommandsView, MethodInfo)> Commands { get; private set; }
+    public static User Me { get; private set; }
 
-    public Task Run()
+    public async Task Run()
     {
         InitializeViews();
         Log.Information("Views was initialized");
-        
-        var options = new ReceiverOptions
-        {
-            AllowedUpdates = Array.Empty<UpdateType>()
-        };
 
-        bot.StartReceiving(
-            updateHandler: HandleUpdateAsync,
-            pollingErrorHandler: HandlePollingErrorAsync,
-            receiverOptions: options,
-            cancellationToken: Cancel.Token
-        );
-        
+        Me = await bot.LoginBotIfNeeded(config["Bot:Token"]!);
+        bot.OnUpdate += OnUpdate;
         Log.Information("Bot successfully started");
 
         while (true)
@@ -40,10 +30,6 @@ public class App(ITelegramBotClient bot)
             
             if (cmd == "exit") break;
         }
-
-        Cancel.Cancel();
-        
-        return Task.CompletedTask;
     }
 
     private void InitializeViews()
@@ -59,36 +45,33 @@ public class App(ITelegramBotClient bot)
             .SelectMany(x => x.Commands.ToDictionary(a => a.Key, a => (x, a.Value)))
             .ToDictionary(x => x.Key, x => x.Value);
     }
-    
-    private Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+
+    private async Task OnUpdate(UpdatesBase updates)
     {
-        if (update.Message is not { } message)
-            return Task.CompletedTask;
+        updates.CollectUsersChats(Users, Chats);
         
-        if (message.Text is not { } text)
+        foreach (var update in updates.UpdateList)
+        {
+            switch (update)
+            {
+                case UpdateNewMessage msg: await HandleUpdateAsync(msg); break;
+            }
+        }
+    }
+    
+    private Task HandleUpdateAsync(UpdateNewMessage update)
+    {
+        if (update.message is not Message message)
             return Task.CompletedTask;
 
-        if (text.StartsWith('/'))
+        if (message.message.StartsWith('/'))
         {
-            var index = text.IndexOf(' ');
-            var command = Commands[text[..(index == -1 ? text.Length : index)]];
+            var index = message.message.IndexOf(' ');
+            var command = Commands[message.message[..(index == -1 ? message.message.Length : index)]];
 
             return (Task) command.Item2.Invoke(command.Item1, new [] {update});
         }
         
-        return Task.CompletedTask;
-    }
-    
-    private Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-    {
-        var errorMessage = exception switch
-        {
-            ApiRequestException apiRequestException
-                => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-            _ => exception.ToString()
-        };
-
-        Log.Error(errorMessage);
         return Task.CompletedTask;
     }
 }

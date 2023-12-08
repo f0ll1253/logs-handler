@@ -27,7 +27,7 @@
       <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
       <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
       <PackageReference Include="Splat.Autofac" Version="14.7.1" />
-      <PackageReference Include="Telegram.Bot" Version="19.0.0" />
+      <PackageReference Include="WTelegramClient" Version="3.6.1" />
     </ItemGroup>
 
 </Project>

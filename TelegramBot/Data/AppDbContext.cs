@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TL;
 
 namespace TelegramBot.Data;
 
@@ -16,7 +17,7 @@ public sealed class AppDbContext : DbContext
     {
         builder.Entity<User>(x =>
         {
-            x.Property(x => x.Id).IsRequired();
+            x.Property(x => x.id).IsRequired();
             x.ToTable("Users");
         });
 

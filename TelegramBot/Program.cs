@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Core.Models.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;
 using Splat;
@@ -8,6 +9,7 @@ using Splat.Autofac;
 using TelegramBot.Data;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
+using TelegramBot.Services;
 using TelegramBot.View;
 using WTelegram;
 
@@ -44,6 +46,10 @@ public static class Program
     
     private static Task Initialize()
     {
+        // initialize zip
+        var path = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase!, Environment.Is64BitProcess ? "x64" : "x86", "7z.dll");
+        SevenZip.SevenZipBase.SetLibraryPath(path);
+        
         ConfigureLogging();
 
         var builder = new ContainerBuilder();
@@ -53,6 +59,9 @@ public static class Program
         
         builder.RegisterServices();
         Log.Information("Success register services");
+
+        builder.RegisterViews();
+        Log.Information("Success register views");
 
         var resolver = builder.UseAutofacDependencyResolver();
         builder.RegisterInstance(resolver);
@@ -82,14 +91,35 @@ public static class Program
         builder.RegisterType<App>()
             .SingleInstance()
             .AsSelf();
+        builder.RegisterType<Random>()
+            .SingleInstance()
+            .AsSelf();
+        builder.RegisterType<DataService>()
+            .OnActivated(x =>
+            {
+                var folder = x.Context.Resolve<IConfiguration>()["BaseFolder"]!;
+
+                Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(Path.Combine(folder, "Logs"));
+                Directory.CreateDirectory(Path.Combine(folder, "Extracted"));
+            })
+            .SingleInstance()
+            .AsSelf();
+        
         builder.RegisterContext<AppDbContext>((_, options) => options.UseSqlite("Data Source=users.db"));
+        
+        return builder;
+    }
+
+    private static ContainerBuilder RegisterViews(this ContainerBuilder builder)
+    {
         builder.RegisterType<StartView>()
             .As<CommandsView>()
             .SingleInstance();
         builder.RegisterType<MainView>()
             .As<CommandsView>()
             .SingleInstance();
-        
+
         return builder;
     }
 }

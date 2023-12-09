@@ -1,12 +1,8 @@
+using System.IO.Compression;
 using System.Text.RegularExpressions;
+using Aspose.Zip;
 using Core.Models.Configs;
 using Core.Parsers;
-using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.Zip;
-using SharpCompress.Common;
-using SharpCompress.Readers;
-using SharpCompress.Writers.Zip;
 using TelegramBot.Models;
 using TelegramBot.Models.Attributes;
 using TL;
@@ -26,6 +22,7 @@ public class MainView(Client client, ParsingConfig cfgParse) : CommandsView
 
     private async Task HandleCookiesAsync(UpdateNewMessage update)
     {
+        // download
         string filepath;
         
         try
@@ -40,30 +37,40 @@ public class MainView(Client client, ParsingConfig cfgParse) : CommandsView
             return;
         }
 
+        // extract
         var message = (Message) update.message;
-        await ExtractLogsAsync(filepath, GetPassword(message.message));
         await client.Messages_SendMessage(App.Users[update.message.Peer.ID], "Start extracting logs from archive", new Random().NextInt64());
         
+        try
+        {
+            await ExtractLogsAsync(filepath, GetPassword(message.message));
+        }
+        catch (Exception e)
+        {
+            await client.Messages_SendMessage(App.Users[update.message.Peer.ID], e.Message, new Random().NextInt64()); 
+            return;
+        }
+        
+        // parsing
+        Directory.CreateDirectory($"Cookies/{filepath.Split('.')[0]}");
+        
+        await client.Messages_SendMessage(App.Users[update.message.Peer.ID], "Start parsing cookies from logs", new Random().NextInt64());
         foreach (var (domain, cookies) in  cfgParse.Cookies.CookiesFromLogs(GetFilePath(filepath)))
         {
-            using var outzip = ZipArchive.Create();
+            var file = new FileStream($"Cookies/{filepath.Split('.')[0]}/{domain}.zip", FileMode.OpenOrCreate);
+            var outzip = new ZipArchive(file, ZipArchiveMode.Create);
 
             for (int i = 0; i < cookies.Count(); i++)
             {
-                var memory = new MemoryStream();
-                var writer = new StreamWriter(memory);
-
+                using var stream = outzip.CreateEntry($"{domain}{i}.txt").Open();
+                using var writer = new StreamWriter(stream);
                 foreach (var cookie in cookies.ElementAt(i)) await writer.WriteLineAsync(cookie);
-
-                outzip.AddEntry($"{domain}{i}.txt", memory, true);
             }
-
-            var savefile = new FileInfo($"Cookies/{filepath.Split('.')[0]}/{domain}.zip");
-            savefile.Directory?.Create();
-            savefile.Create().Close();
             
-            outzip.SaveTo(savefile.FullName, new ZipWriterOptions(CompressionType.None));
-            await SendFileAsync(App.Users[update.message.Peer.ID], savefile.FullName);
+            outzip.Dispose();
+            await file.DisposeAsync();
+            
+            await SendFileAsync(App.Users[update.message.Peer.ID], $"Cookies/{filepath.Split('.')[0]}/{domain}.zip");
         }
         
         await client.Messages_SendMessage(App.Users[update.message.Peer.ID], "Logs successfully processed", new Random().NextInt64());
@@ -88,7 +95,7 @@ public class MainView(Client client, ParsingConfig cfgParse) : CommandsView
         return Directory.Exists(Path.Combine(dir, dir)) ? Path.Combine(dir, dir) : dir;
     }
 
-    private static readonly Regex _password = new("(P|p)ass(word)?(:)?.([a-zA-z0-1].*?)($| )");
+    private static readonly Regex _password = new("(P|p)?ass(word)?(:)? (.+)($| |\n)");
     private string GetPassword(string text)
     {
         var match = _password.Match(text);
@@ -100,15 +107,14 @@ public class MainView(Client client, ParsingConfig cfgParse) : CommandsView
     {
         if (Directory.Exists(filepath.Split('.')[0])) return Task.CompletedTask;
         
-        var options = new ReaderOptions { Password = string.IsNullOrEmpty(password) ? null : password, };
+        using var zip = new Archive(filepath,
+            new ArchiveLoadOptions
+            {
+                DecryptionPassword = password
+            });
         
-        using IArchive zip = filepath.Split('.')[1] == "zip"
-            ? ZipArchive.Open(filepath, options)
-            : RarArchive.Open(filepath, options);
 
-        var dir = filepath.Split('.')[0];
-        Directory.CreateDirectory(dir);
-        zip.ExtractToDirectory(dir);
+        zip.ExtractToDirectory(filepath.Split('.')[0]);
         
         return Task.CompletedTask;
     }
@@ -120,7 +126,7 @@ public class MainView(Client client, ParsingConfig cfgParse) : CommandsView
 
         var media = (MessageMediaDocument) message.media;
         var document = (Document) media.document;
-        if (document.Filename.Split('.').LastOrDefault() is not ("zip" or "rar")) throw new Exception("Error zip/rar archive not found");
+        if (document.Filename.Split('.').LastOrDefault() is not ("zip" or "rar" or "7z")) throw new Exception("Error zip/rar archive not found");
 
         if (File.Exists(document.Filename)) return document.Filename;
         

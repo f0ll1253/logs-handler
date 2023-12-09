@@ -63,7 +63,10 @@ public class App(Client client, IConfiguration config)
     private Task HandleUpdateAsync(UpdateNewMessage update)
     {
         if (Wait.TryGetValue(update.message.Peer.ID, out var func))
+        {
+            Wait.Remove(update.message.Peer.ID);
             return func.Invoke(update);
+        }
         
         if (update.message is not Message message)
             return Task.CompletedTask;

@@ -1,4 +1,4 @@
-namespace Core.Discord;
+namespace Core.Parsers.Services;
 
 public static class DiscordParser
 {

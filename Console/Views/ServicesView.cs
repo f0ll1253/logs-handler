@@ -5,7 +5,7 @@ using Console.Models.Attributes;
 using Console.Models.Views;
 using Core.Checkers;
 using Core.Checkers.Crypto;
-using Core.Discord;
+using Core.Parsers.Services;
 
 namespace Console.Views;
 

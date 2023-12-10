@@ -6,7 +6,7 @@ using TelegramBot.Services;
 using TL;
 using WTelegram;
 
-namespace TelegramBot.Commands;
+namespace TelegramBot.Commands.Main;
 
 public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService data, Random random) : ICommand
 {
@@ -47,22 +47,10 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
                 cookies.ToArray(),
                 name: "Cookies");
 
-            await SendFileAsync(user, path);
+            await data.SendFileAsync(user, path);
         }
         
         await client.Messages_SendMessage(user, $"{filename} successfully processed", random.NextInt64());
-    }
-
-    private async Task SendFileAsync(InputPeer peer, string filepath)
-    {
-        var uploaded = await client.UploadFileAsync(filepath);
-
-        await client.Messages_SendMedia(peer,
-            new InputMediaUploadedDocument(
-                uploaded,
-                ""),
-            "",
-            random.NextInt64());
     }
 
     private static readonly Regex _password = new(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)");

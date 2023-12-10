@@ -31,7 +31,7 @@ public class App(Client client, IConfiguration config)
                     },
                     new KeyboardButton
                     {
-                        text = "Links"
+                        text = "Accounts" // todo add
                     }
                 }
             },
@@ -41,7 +41,11 @@ public class App(Client client, IConfiguration config)
                 {
                     new KeyboardButton
                     {
-                        text = "Accounts"
+                        text = "Services"
+                    },
+                    new KeyboardButton
+                    {
+                        text = "Links" // todo add
                     }
                 }
             }
@@ -92,8 +96,20 @@ public class App(Client client, IConfiguration config)
             switch (update)
             {
                 case UpdateNewMessage msg: await HandleUpdateAsync(msg); break;
+                case UpdateBotCallbackQuery msg: await HandleCallbackAsync(msg); break;
             }
         }
+    }
+
+    private async Task HandleCallbackAsync(UpdateBotCallbackQuery update)
+    {
+        var messages = await client.Messages_GetMessages(update.msg_id);
+        
+        if (messages.Messages.FirstOrDefault() is not Message message) return;
+        
+        if (Locator.Current.GetService<ICallbackCommand>($"/{message.message.ToLower()}") is not {} cmd) return;
+
+        await cmd.Invoke(update, Users[update.user_id]);
     }
     
     private async Task HandleUpdateAsync(UpdateNewMessage update)
@@ -120,9 +136,9 @@ public class App(Client client, IConfiguration config)
         var command = message.message[..(index == -1 ? message.message.Length : index)];
         var user = await Locator.Current.GetService<AppDbContext>()!.FindAsync<Data.User>(message.Peer.ID);
 
-        if (Locator.Current.GetService<ICommand>(command) is not { } cmd)
+        if (Locator.Current.GetService<ICommand>(command == "Back" ? "/start" : command) is not { } cmd)
         {
-            await client.Messages_SendMessage(Users[message.Peer.ID], "Command not found", random.NextInt64());
+            await client.Messages_SendMessage(Users[message.Peer.ID], "Command not found", random.NextInt64(), reply_markup: MainReplyKeyboardMarkup);
             return;
         }
 

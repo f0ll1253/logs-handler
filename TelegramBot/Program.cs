@@ -7,6 +7,8 @@ using Serilog.Events;
 using Splat;
 using Splat.Autofac;
 using TelegramBot.Commands;
+using TelegramBot.Commands.Main;
+using TelegramBot.Commands.Services;
 using TelegramBot.Data;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
@@ -117,8 +119,17 @@ public static class Program
             .Named<ICommand>("/start");
         builder.RegisterType<InviteCommand>()
             .Named<ICommand>("/invite");
+        
+        // main
         builder.RegisterType<CookiesCommand>()
             .Named<ICommand>("Cookies");
+        
+        // services
+        builder.RegisterType<ServicesCommand>()
+            .Named<ICommand>("Services");
+        builder.RegisterType<TwitchServiceCommand>()
+            .Named<ICommand>("Twitch")
+            .Named<ICallbackCommand>("/twitch");
 
         return builder;
     }

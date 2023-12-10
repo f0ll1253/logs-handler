@@ -11,6 +11,35 @@ public class DataService(Client client, Random random, IConfiguration config)
 {
     private readonly string _baseFolder = config["BaseFolder"]!;
 
+    public string GetLogsPath(string logsname) => Path.Combine(_baseFolder, "Extracted", logsname);
+    
+    public async Task<string> SaveAsync(
+        string filename,
+        IEnumerable<string> lines,
+        [CallerMemberName] string name = "")
+    {
+        var file = new FileInfo(Path.Combine(_baseFolder, name, $"{filename}.txt"));
+        
+        file.Directory?.Create();
+
+        using var filestream = file.Create();
+        using var writer = new StreamWriter(filestream);
+
+        foreach (var line in lines)
+        {
+            await writer.WriteLineAsync(line);
+        }
+
+        return file.FullName;
+    }
+    
+    public IEnumerable<string> AvailableLogs(int start = 0, int count = -1) 
+        => Directory.GetDirectories(Path.Combine(_baseFolder, "Extracted"))
+            .Select(x => new DirectoryInfo(x))
+            .OrderByDescending(x => x.CreationTimeUtc)
+            .Take(count == -1 ? Range.All : new Range(start * count, start * count + count))
+            .Select(x => x.Name);
+    
     public async Task<string> SaveZipAsync(
         string zipname,
         string filename,
@@ -89,6 +118,20 @@ public class DataService(Client client, Random random, IConfiguration config)
         return extractFolder;
     }
     
+    #region network
+
+    public async Task SendFileAsync(InputPeer peer, string filepath)
+    {
+        var uploaded = await client.UploadFileAsync(filepath);
+
+        await client.Messages_SendMedia(peer,
+            new InputMediaUploadedDocument(
+                uploaded,
+                ""),
+            "",
+            random.NextInt64());
+    }
+    
     public async Task<string?> DownloadFileFromMessageAsync(InputPeer peer, UpdateNewMessage update)
     {
         var message = (Message) update.message;
@@ -119,4 +162,6 @@ public class DataService(Client client, Random random, IConfiguration config)
 
         return filepath;
     }
+
+    #endregion
 }

@@ -6,11 +6,11 @@ using Serilog;
 using Serilog.Events;
 using Splat;
 using Splat.Autofac;
+using TelegramBot.Commands;
 using TelegramBot.Data;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TelegramBot.Services;
-using TelegramBot.View;
 using WTelegram;
 
 namespace TelegramBot;
@@ -113,12 +113,12 @@ public static class Program
 
     private static ContainerBuilder RegisterViews(this ContainerBuilder builder)
     {
-        builder.RegisterType<StartView>()
-            .As<CommandsView>()
-            .SingleInstance();
-        builder.RegisterType<MainView>()
-            .As<CommandsView>()
-            .SingleInstance();
+        builder.RegisterType<StartCommand>()
+            .Named<ICommand>("/start");
+        builder.RegisterType<InviteCommand>()
+            .Named<ICommand>("/invite");
+        builder.RegisterType<CookiesCommand>()
+            .Named<ICommand>("Cookies");
 
         return builder;
     }

@@ -2,35 +2,41 @@ using System.Text.RegularExpressions;
 using Core.Models.Configs;
 using Core.Parsers;
 using TelegramBot.Models;
-using TelegramBot.Models.Attributes;
 using TelegramBot.Services;
 using TL;
 using WTelegram;
 
-namespace TelegramBot.View;
+namespace TelegramBot.Commands;
 
-public class MainView(Client client, ParsingConfig cfgParse, DataService data) : CommandsView
+public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService data, Random random) : ICommand
 {
-    [Command("Cookies")]
-    public Task Cookies(UpdateNewMessage update)
+    public bool AuthorizedOnly { get; } = true;
+    
+    public Task Invoke(UpdateNewMessage update, User user)
     {
-        App.Wait.Add(update.message.Peer.ID, HandleCookiesAsync);
-        
-        return client.Messages_SendMessage(App.Users[update.message.Peer.ID], "Send zip/rar file with logs", new Random().NextInt64());
-    }
+        App.Default.Add(update.message.Peer.ID, HandleCookiesAsync);
 
-    private async Task HandleCookiesAsync(UpdateNewMessage update)
+        return client.Messages_SendMessage(
+            user,
+            "Send zip/rar file with logs",
+            random.NextInt64(),
+            reply_markup: App.CancelReplyKeyboardMarkup);
+    }
+    
+    private async Task HandleCookiesAsync(UpdateNewMessage update, User user)
     {
         // download
-        var filepath = await data.DownloadFileFromMessageAsync(App.Users[update.message.Peer.ID], update);
+        var filepath = await data.DownloadFileFromMessageAsync(user, update);
         
         if (filepath is null) return;
 
         //  extracting
-        if (await data.ExtractFilesAsync(App.Users[update.message.Peer.ID], filepath, GetPassword(((Message) update.message).message)) is not {} dir) return;
+        if (await data.ExtractFilesAsync(user, filepath, GetPassword(((Message) update.message).message)) is not {} dir) return;
         
         // parsing
-        await client.Messages_SendMessage(App.Users[update.message.Peer.ID], "Start parsing cookies from logs", new Random().NextInt64());
+        var filename = filepath[(filepath.LastIndexOf('\\') + 1)..filepath.LastIndexOf('.')];
+        
+        await client.Messages_SendMessage(user, $"Start parsing cookies from {filename}", random.NextInt64());
         
         foreach (var (domain, cookies) in cfgParse.Cookies.CookiesFromLogs(dir))
         {
@@ -41,10 +47,10 @@ public class MainView(Client client, ParsingConfig cfgParse, DataService data) :
                 cookies.ToArray(),
                 name: "Cookies");
 
-            await SendFileAsync(App.Users[update.message.Peer.ID], path);
+            await SendFileAsync(user, path);
         }
         
-        await client.Messages_SendMessage(App.Users[update.message.Peer.ID], "Logs successfully processed", new Random().NextInt64());
+        await client.Messages_SendMessage(user, $"{filename} successfully processed", random.NextInt64());
     }
 
     private async Task SendFileAsync(InputPeer peer, string filepath)
@@ -56,7 +62,7 @@ public class MainView(Client client, ParsingConfig cfgParse, DataService data) :
                 uploaded,
                 ""),
             "",
-            new Random().NextInt64());
+            random.NextInt64());
     }
 
     private static readonly Regex _password = new(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)");

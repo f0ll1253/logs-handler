@@ -66,10 +66,7 @@ public class DataService(Client client, Random random, IConfiguration config)
         {
             if (!zip.Check()) throw new Exception($"Invalid password: {password}");
 
-            var foldername = extractFolder[(extractFolder.LastIndexOf('\\') + 1)..];
-            var copyFolder = (ArchiveFileInfo?) zip.ArchiveFileData.FirstOrDefault(x => x.IsDirectory && x.FileName == foldername);
-            
-            if (copyFolder.HasValue)
+            if (zip.ArchiveFileData.First().FileName.Contains(extractFolder[(extractFolder.LastIndexOf('\\') + 1)..]))
             {
                 await zip.ExtractArchiveAsync(extractFolder[..extractFolder.LastIndexOf('\\')]);
             }

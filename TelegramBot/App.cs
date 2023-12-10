@@ -1,24 +1,74 @@
-using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Splat;
+using TelegramBot.Data;
 using TelegramBot.Models;
 using TL;
 using WTelegram;
+using User = TL.User;
 
 namespace TelegramBot;
 
 public class App(Client client, IConfiguration config)
 {
-    public static Dictionary<long, Func<UpdateNewMessage, Task>> Wait { get; } = new();
-    public static Dictionary<long, TL.User> Users { get; } = new();
-    public static Dictionary<long, ChatBase> Chats { get; } = new();
-    public static IReadOnlyDictionary<string, (CommandsView, MethodInfo)> Commands { get; private set; }
-    public static TL.User Me { get; private set; }
+    private static Dictionary<long, User> Users { get; } = new();
+    private static Dictionary<long, ChatBase> Chats { get; } = new();
+    
+    public static Dictionary<long, Func<UpdateNewMessage, User, Task>> Default { get; } = new();
+    public static User Me { get; private set; }
+
+    public static ReplyKeyboardMarkup MainReplyKeyboardMarkup { get; } = new()
+    {
+        rows = new[]
+        {
+            new KeyboardButtonRow
+            {
+                buttons = new[]
+                {
+                    new KeyboardButton
+                    {
+                        text = "Cookies"
+                    },
+                    new KeyboardButton
+                    {
+                        text = "Links"
+                    }
+                }
+            },
+            new KeyboardButtonRow
+            {
+                buttons = new[]
+                {
+                    new KeyboardButton
+                    {
+                        text = "Accounts"
+                    }
+                }
+            }
+        },
+        flags = ReplyKeyboardMarkup.Flags.resize
+    };
+
+    public static ReplyKeyboardMarkup CancelReplyKeyboardMarkup { get; } = new()
+    {
+        rows = new[]
+        {
+            new KeyboardButtonRow
+            {
+                buttons = new[]
+                {
+                    new KeyboardButton
+                    {
+                        text = "Cancel"
+                    }
+                }
+            }
+        },
+        flags = ReplyKeyboardMarkup.Flags.resize
+    };
 
     public async Task Run()
     {
-        InitializeViews();
         Log.Information("Views was initialized");
 
         Me = await client.LoginBotIfNeeded(config["Bot:Token"]!);
@@ -31,20 +81,6 @@ public class App(Client client, IConfiguration config)
             
             if (cmd == "exit") break;
         }
-    }
-
-    private void InitializeViews()
-    {
-        var views = Locator.Current.GetServices<CommandsView>();
-
-        foreach (var view in views)
-        {
-            view.Initialize();
-        }
-
-        Commands = views
-            .SelectMany(x => x.Commands.ToDictionary(a => a.Key, a => (x, a.Value)))
-            .ToDictionary(x => x.Key, x => x.Value);
     }
 
     private async Task OnUpdate(UpdatesBase updates)
@@ -60,23 +96,42 @@ public class App(Client client, IConfiguration config)
         }
     }
     
-    private Task HandleUpdateAsync(UpdateNewMessage update)
+    private async Task HandleUpdateAsync(UpdateNewMessage update)
     {
-        if (Wait.TryGetValue(update.message.Peer.ID, out var func))
-        {
-            Wait.Remove(update.message.Peer.ID);
-            return func.Invoke(update);
-        }
-        
         if (update.message is not Message message)
-            return Task.CompletedTask;
+            return;
+        
+        var random = Locator.Current.GetService<Random>()!;
+        
+        if (Default.TryGetValue(update.message.Peer.ID, out var func))
+        {
+            if (message.message == "Cancel")
+            {
+                Default.Remove(update.message.Peer.ID);
+                await client.Messages_SendMessage(Users[message.Peer.ID], "Action canceled", random.NextInt64(), reply_markup: MainReplyKeyboardMarkup);
+            }
+            else 
+                await func.Invoke(update, Users[message.Peer.ID]);
+            
+            return;
+        }
 
         var index = message.message.IndexOf(' ');
         var command = message.message[..(index == -1 ? message.message.Length : index)];
+        var user = await Locator.Current.GetService<AppDbContext>()!.FindAsync<Data.User>(message.Peer.ID);
 
-        if (Commands.TryGetValue(command, out var cmd))
-            return (Task) cmd.Item2.Invoke(cmd.Item1, new[] { update });
+        if (Locator.Current.GetService<ICommand>(command) is not { } cmd)
+        {
+            await client.Messages_SendMessage(Users[message.Peer.ID], "Command not found", random.NextInt64());
+            return;
+        }
+
+        if (cmd.AuthorizedOnly && user is not { IsApproved: true })
+        {
+            await client.Messages_SendMessage(Users[message.Peer.ID], "Permission denied", random.NextInt64());
+            return;
+        }
         
-        return Task.CompletedTask;
+        await cmd.Invoke(update, Users[message.Peer.ID]);
     }
 }

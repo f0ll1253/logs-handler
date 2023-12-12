@@ -31,22 +31,8 @@ public class App(Client client, IConfiguration config)
                     },
                     new KeyboardButton
                     {
-                        text = "Accounts" // todo add
-                    }
-                }
-            },
-            new KeyboardButtonRow
-            {
-                buttons = new[]
-                {
-                    new KeyboardButton
-                    {
                         text = "Services"
                     },
-                    new KeyboardButton
-                    {
-                        text = "Links" // todo add
-                    }
                 }
             }
         },

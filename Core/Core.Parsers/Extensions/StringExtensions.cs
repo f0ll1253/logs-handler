@@ -17,7 +17,7 @@ internal static class StringExtensions
         
         while (!reader.EndOfStream)
         {
-            var account = reader.ReadAccount(urlPredicate, usernamePredicate, passwordPredicate);
+            var account = reader.ReadAccount(Directory.GetParent(filepath)!.FullName, urlPredicate, usernamePredicate, passwordPredicate);
                 
             if (account is null) continue;
             
@@ -25,7 +25,9 @@ internal static class StringExtensions
         }
     }
     
-    public static Account? ReadAccount(this StreamReader reader, 
+    public static Account? ReadAccount(
+        this StreamReader reader,
+        string logpath = "",
         Predicate<string>? urlPredicate = null, 
         Predicate<string>? usernamePredicate = null, 
         Predicate<string>? passwordPredicate = null)
@@ -73,6 +75,6 @@ internal static class StringExtensions
         
         if (password is null || !_password.IsMatch(password) || (!passwordPredicate?.Invoke(password) ?? false)) return null;
 
-        return new Account(username, password, url);
+        return new Account(username, password, url, logpath);
     }
 }

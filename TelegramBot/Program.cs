@@ -1,7 +1,10 @@
 ﻿using Autofac;
+using CG.Web.MegaApiClient;
+using Core.Models.Configs;
 using Core.Models.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Serilog;
 using Serilog.Events;
 using Splat;
@@ -107,8 +110,27 @@ public static class Program
             })
             .SingleInstance()
             .AsSelf();
-        
+
         builder.RegisterContext<AppDbContext>((_, options) => options.UseSqlite("Data Source=users.db"));
+
+        builder.Register((MegaConfig config) =>
+        {
+            var client = new MegaApiClient();
+            
+            if (File.Exists("mega.json"))
+                client.LoginBySession("mega.json");
+            else
+            {
+                var session = client.LoginByCredentials(config);
+
+                File.WriteAllText("mega.json", JsonConvert.SerializeObject(session, Formatting.None));
+            }
+            
+            return client;
+        })
+            .AutoActivate()
+            .SingleInstance()
+            .As<IMegaApiClient>();
         
         return builder;
     }
@@ -122,14 +144,18 @@ public static class Program
         
         // main
         builder.RegisterType<CookiesCommand>()
-            .Named<ICommand>("Cookies");
+            .Named<ICommand>("Cookies")
+            .Named<ICommand>("/cookies");
         
         // services
         builder.RegisterType<ServicesCommand>()
             .Named<ICommand>("Services");
         builder.RegisterType<TwitchServiceCommand>()
             .Named<ICommand>("Twitch")
-            .Named<ICallbackCommand>("/twitch");
+            .Named<ICallbackCommand>("Twitch");
+        builder.RegisterType<TelegramServiceCommand>()
+            .Named<ICommand>("Telegram")
+            .Named<ICallbackCommand>("Telegram");
 
         return builder;
     }

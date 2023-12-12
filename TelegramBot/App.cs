@@ -106,8 +106,10 @@ public class App(Client client, IConfiguration config)
         var messages = await client.Messages_GetMessages(update.msg_id);
         
         if (messages.Messages.FirstOrDefault() is not Message message) return;
+
+        var cmdend = message.message.IndexOf(' ');
         
-        if (Locator.Current.GetService<ICallbackCommand>($"/{message.message.ToLower()}") is not {} cmd) return;
+        if (Locator.Current.GetService<ICallbackCommand>(message.message[..(cmdend == -1 ? message.message.Length : cmdend)]) is not {} cmd) return;
 
         await cmd.Invoke(update, Users[update.user_id]);
     }

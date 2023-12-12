@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using CG.Web.MegaApiClient;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using SevenZip;
@@ -7,11 +8,31 @@ using WTelegram;
 
 namespace TelegramBot.Services;
 
-public class DataService(Client client, Random random, IConfiguration config)
+public class DataService(Client client, IMegaApiClient mega, Random random, IConfiguration config)
 {
     private readonly string _baseFolder = config["BaseFolder"]!;
 
-    public string GetLogsPath(string logsname) => Path.Combine(_baseFolder, "Extracted", logsname);
+    public async Task<string> GetShareLinkAsync(string filepath)
+    {
+        var node = await mega.UploadFileAsync(filepath, (await mega.GetNodesAsync()).First());
+
+        return (await mega.GetDownloadLinkAsync(node)).ToString();
+    }
+    
+    public string CreateZipPath(
+        string logsname,
+        [CallerMemberName] string name = "")
+    {
+        var dir = Path.Combine(_baseFolder, name);
+
+        Directory.CreateDirectory(dir);
+
+        return Path.Combine(dir, $"{logsname}.zip");
+    }
+    
+    public string? GetLogsPath(string logsname) => Directory.GetFiles(Path.Combine(_baseFolder, "Logs")).FirstOrDefault(x => x[(x.LastIndexOf('\\')+1)..x.LastIndexOf('.')] == logsname);
+
+    public string GetExtractedPath(string logsname) => Path.Combine(_baseFolder, "Extracted", logsname);
     
     public async Task<string> SaveAsync(
         string filename,
@@ -52,7 +73,15 @@ public class DataService(Client client, Random random, IConfiguration config)
 
         Directory.CreateDirectory(dir);
 
-        var zip = new SevenZipCompressor();
+        var zip = new SevenZipCompressor
+        {
+            EventSynchronization = EventSynchronizationStrategy.AlwaysAsynchronous,
+            CompressionMode = CompressionMode.Create,
+            ArchiveFormat = OutArchiveFormat.Zip,
+            CompressionMethod = CompressionMethod.Lzma2,
+            PreserveDirectoryRoot = true,
+            DirectoryStructure = true,
+        };
         var map = new Dictionary<string, Stream>();
 
         for (var i = 0; i < data.Length; i++)
@@ -89,7 +118,10 @@ public class DataService(Client client, Random random, IConfiguration config)
 
         Directory.CreateDirectory(extractFolder);
 
-        var zip = new SevenZipExtractor(filepath, password ?? "");
+        var zip = new SevenZipExtractor(filepath, password ?? "")
+        {
+            EventSynchronization = EventSynchronizationStrategy.AlwaysAsynchronous,
+        };
         
         try
         {
@@ -106,6 +138,7 @@ public class DataService(Client client, Random random, IConfiguration config)
         }
         catch (Exception e)
         {
+            Directory.Delete(extractFolder);
             Log.Error(e.ToString());
             await client.Messages_SendMessage(peer, $"Error while extracting files from {filename}", random.NextInt64());
             return null;
@@ -120,7 +153,7 @@ public class DataService(Client client, Random random, IConfiguration config)
     
     #region network
 
-    public async Task SendFileAsync(InputPeer peer, string filepath)
+    public async Task SendFileAsync(InputPeer peer, string filepath, string message = "")
     {
         var uploaded = await client.UploadFileAsync(filepath);
 
@@ -128,8 +161,9 @@ public class DataService(Client client, Random random, IConfiguration config)
             new InputMediaUploadedDocument(
                 uploaded,
                 ""),
-            "",
-            random.NextInt64());
+            message,
+            random.NextInt64(),
+            clear_draft: true);
     }
     
     public async Task<string?> DownloadFileFromMessageAsync(InputPeer peer, UpdateNewMessage update)

@@ -12,11 +12,13 @@ public static class ContainerBuilderExtensions
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json");
 
-        var build = configBuilder.Build();
-        
-        builder.RegisterInstance<IConfiguration>(build);
-        builder.RegisterInstance(build.GetRequiredSection("Web3").Get<Web3Config>()!);
-        builder.RegisterInstance(build.GetRequiredSection("ParsingConfig").Get<ParsingConfig>()!);
+        builder.RegisterInstance<IConfiguration>(configBuilder.Build());
+        builder.Register(x => x.Resolve<IConfiguration>().GetRequiredSection("ParsingConfig").Get<ParsingConfig>()!)
+            .SingleInstance()
+            .AsSelf();
+        builder.Register(x => x.Resolve<IConfiguration>().GetRequiredSection("Mega").Get<MegaConfig>()!)
+            .SingleInstance()
+            .AsSelf();
 
         return builder;
     }

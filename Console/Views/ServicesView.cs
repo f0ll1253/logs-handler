@@ -9,44 +9,34 @@ using Core.Parsers.Services;
 
 namespace Console.Views;
 
-public class ServicesView : ArgsView
+public class ServicesView(IRoot root,
+        DataService data,
+        Settings settings,
+        DiscordChecker discord,
+        IGVChecker igv,
+        CatmineChecker catmine)
+    : ArgsView(root)
 {
-    private readonly DataService _data;
-    private readonly Settings _settings;
-    
-    // checkers
-    private readonly DiscordChecker _discord;
-    private readonly IGVChecker _igv;
-    private readonly CatmineChecker _catmine;
+    [Command]
+    public Task Twitch() => data.SaveAsync(settings.Path[(settings.Path.LastIndexOf('\\') + 1)..], settings.Path.TwitchFromLogs());
 
-    public ServicesView(
-        IRoot root, 
-        DataService data, 
-        Settings settings, 
-        DiscordChecker discord, 
-        IGVChecker igv, 
-        CatmineChecker catmine) : base(root)
-    {
-        _data = data;
-        _settings = settings;
-        _discord = discord;
-        _igv = igv;
-        _catmine = catmine;
-    }
-    
     [Command]
     public async Task Discord()
     {
-        StreamWriter? invalid = await _data.CreateWriterAsync("invalid"), valid = await _data.CreateWriterAsync("valid");
-        var tokens = _settings.Path.DiscordByLogs().Distinct().ToArray();
+        StreamWriter? invalid = await data.CreateWriterAsync("invalid"), valid = await data.CreateWriterAsync("valid");
+        var tokens = settings.Path.DiscordByLogs().Distinct().ToArray();
         
-        await _data.SaveAsync("tokens", tokens);
+        await data.SaveAsync("tokens", tokens);
 
         if (invalid is null || valid is null)
         {
             _ExitWait();
             return;
         }
+        
+        System.Console.WriteLine("Check? (Y/n)");
+        
+        if (System.Console.ReadKey(false).Key != ConsoleKey.Y) return;
         
         async Task WriteInvalid(string token)
         {
@@ -69,7 +59,7 @@ public class ServicesView : ArgsView
                 
                 do
                 {
-                    check = await _discord.TryLoginAsync(token);
+                    check = await discord.TryLoginAsync(token);
                 } while (check is null);
 
                 if (check is false) await WriteInvalid(token);
@@ -85,9 +75,9 @@ public class ServicesView : ArgsView
     [Command]
     public async Task IGV()
     {
-        await foreach (var account in _data.ReadAccountsAsync("igv", name: "Accounts"))
+        await foreach (var account in data.ReadAccountsAsync("igv", name: "Accounts"))
         {
-            if (await _igv.TryLoginAsync(account.Username, account.Password) is {})
+            if (await igv.TryLoginAsync(account.Username, account.Password) is {})
                 System.Console.Out.WriteValidLine(account.ToStringShort());
             else
                 System.Console.Out.WriteInvalidLine(account.ToStringShort());
@@ -99,9 +89,9 @@ public class ServicesView : ArgsView
     [Command]
     public async Task Catmine()
     {
-        await foreach (var account in _data.ReadAccountsAsync("catmine", name: "Accounts"))
+        await foreach (var account in data.ReadAccountsAsync("catmine", name: "Accounts"))
         {
-            if (await _catmine.TryLoginAsync(account.Username, account.Password))
+            if (await catmine.TryLoginAsync(account.Username, account.Password))
                 System.Console.Out.WriteValidLine(account.ToStringShort());
             else
                 System.Console.Out.WriteInvalidLine(account.ToStringShort());

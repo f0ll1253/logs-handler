@@ -24,7 +24,11 @@ public class TwitchServiceCommand(Client client, DataService data, Random random
             return;
         }
 
-        var logspath = data.GetExtractedPath(Encoding.UTF8.GetString(update.data));
+        var logsname = Encoding.UTF8.GetString(update.data);
+        var logspath = data.GetExtractedPath(logsname);
+        
+        await client.EditMessageText(user, update.msg_id, $"Telegram\nParsing from {logsname}");
+        
         var filepath = await data.SaveAsync(
             logspath[(logspath.LastIndexOf('\\') + 1)..],
             logspath.TwitchFromLogs(),

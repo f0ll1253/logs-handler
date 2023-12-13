@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Splat;
@@ -87,15 +88,14 @@ public class App(Client client, IConfiguration config)
         }
     }
 
+    private static readonly Regex _cmd = new("(.*?)($| |\n)");
     private async Task HandleCallbackAsync(UpdateBotCallbackQuery update)
     {
         var messages = await client.Messages_GetMessages(update.msg_id);
         
         if (messages.Messages.FirstOrDefault() is not Message message) return;
 
-        var cmdend = message.message.IndexOf(' ');
-        
-        if (Locator.Current.GetService<ICallbackCommand>(message.message[..(cmdend == -1 ? message.message.Length : cmdend)]) is not {} cmd) return;
+        if (Locator.Current.GetService<ICallbackCommand>(_cmd.Match(message.message).Groups[1].Value) is not {} cmd) return;
 
         await cmd.Invoke(update, Users[update.user_id]);
     }

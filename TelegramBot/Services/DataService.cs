@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using CG.Web.MegaApiClient;
+using Core.Models;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using SevenZip;
@@ -11,13 +12,6 @@ namespace TelegramBot.Services;
 public class DataService(Client client, IMegaApiClient mega, Random random, IConfiguration config)
 {
     private readonly string _baseFolder = config["BaseFolder"]!;
-
-    public async Task<string> GetShareLinkAsync(string filepath)
-    {
-        var node = await mega.UploadFileAsync(filepath, (await mega.GetNodesAsync()).First());
-
-        return (await mega.GetDownloadLinkAsync(node)).ToString();
-    }
     
     public string CreateZipPath(
         string logsname,
@@ -62,26 +56,17 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
             .Select(x => x.Name);
     
     public async Task<string> SaveZipAsync(
-        string zipname,
+        string logsname,
         string filename,
         string subpath,
         IEnumerable<string>[] data,
         [CallerMemberName] string name = "")
     {
         // init dir
-        var dir = Path.Combine(_baseFolder, name, zipname);
+        var dir = Path.Combine(_baseFolder, name, logsname);
 
         Directory.CreateDirectory(dir);
-
-        var zip = new SevenZipCompressor
-        {
-            EventSynchronization = EventSynchronizationStrategy.AlwaysAsynchronous,
-            CompressionMode = CompressionMode.Create,
-            ArchiveFormat = OutArchiveFormat.Zip,
-            CompressionMethod = CompressionMethod.Lzma2,
-            PreserveDirectoryRoot = true,
-            DirectoryStructure = true,
-        };
+        
         var map = new Dictionary<string, Stream>();
 
         for (var i = 0; i < data.Length; i++)
@@ -94,14 +79,11 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
                 await writer.WriteLineAsync(str);
             }
             
-            writer.Flush();
-            memory.Position = 0;
-            
             map.Add($"{filename}{i}.txt", memory);
         }
-
+        
         var zippath = Path.Combine(dir, $"{subpath}.zip");
-        zip.CompressStreamDictionary(map, zippath);
+        await new ZipArchive(zippath).AddFilesAsync(map);
 
         return zippath;
     }
@@ -152,6 +134,13 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
     }
     
     #region network
+    
+    public async Task<string> GetShareLinkAsync(string filepath)
+    {
+        var node = await mega.UploadFileAsync(filepath, (await mega.GetNodesAsync()).First());
+
+        return (await mega.GetDownloadLinkAsync(node)).ToString();
+    }
 
     public async Task SendFileAsync(InputPeer peer, string filepath, string message = "")
     {

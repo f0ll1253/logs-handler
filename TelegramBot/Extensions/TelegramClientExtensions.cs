@@ -7,6 +7,12 @@ namespace TelegramBot.Extensions;
 
 public static class TelegramClientExtensions
 {
+    public static async Task EditMessageText(this Client client, InputPeer peer, int id, string message)
+    {
+        var msgToEdit = (Message) (await client.Messages_GetMessages(id)).Messages.First();
+        await client.Messages_EditMessage(peer, id, message, reply_markup: msgToEdit.reply_markup);
+    }
+    
     public static Task SendMessageAvailableLogs(this Client client,
         InputPeer peer,
         DataService data,

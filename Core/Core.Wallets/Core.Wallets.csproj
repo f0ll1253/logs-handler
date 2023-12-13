@@ -9,7 +9,6 @@
 
     <ItemGroup>
       <PackageReference Include="BscScanner" Version="0.1.3" />
-      <PackageReference Include="MemoryPack.Core" Version="1.9.16" />
       <PackageReference Include="Nethereum.HdWallet" Version="4.17.1" />
       <PackageReference Include="Nethereum.Web3" Version="4.17.1" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

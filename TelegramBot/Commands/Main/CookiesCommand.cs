@@ -1,6 +1,8 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using Core.Models.Configs;
 using Core.Parsers;
+using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TelegramBot.Services;
 using TL;
@@ -8,52 +10,71 @@ using WTelegram;
 
 namespace TelegramBot.Commands.Main;
 
-public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService data, Random random) : ICommand
+public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService data) : ICommand, ICallbackCommand
 {
     public bool AuthorizedOnly { get; } = true;
 
-    private static readonly Regex _args = new("/cookies \"(.*?)\"( \"(.*?)\")?");
     public Task Invoke(UpdateNewMessage update, User user)
     {
-        if (update.message is Message msg)
-            if (msg.message.StartsWith("/cookies"))
-            {
-                var args = _args.Match(msg.message);
-                var archivepath = data.GetLogsPath(args.Groups[1].Value);
+        App.Hooks.Add(update.message.Peer.ID, HandleCookiesAsync);
 
-                if (archivepath is null) return client.Messages_SendMessage(user, $"Archive {args.Groups[1].Value} doesn't exists", random.NextInt64());
-
-                return ProcessArchive(user, archivepath, args.Groups[3].Success ? args.Groups[3].Value : null);
-            }
-        
-        App.Default.Add(update.message.Peer.ID, HandleCookiesAsync);
-
-        return client.Messages_SendMessage(
+        return client.SendMessageAvailableLogs(
             user,
-            "Send zip/rar file with logs",
-            random.NextInt64(),
-            reply_markup: App.CancelReplyKeyboardMarkup);
+            data,
+            "Cookies\nSend zip/rar file with logs or select downloaded cookies",
+            reply_markup: new []
+            {
+                new KeyboardButtonRow
+                {
+                    buttons = new[]
+                    {
+                        new KeyboardButtonCallback
+                        {
+                            text = "Cancel",
+                            data = "Cancel"u8.ToArray()
+                        }
+                    }
+                }
+            });
     }
-    
+
+    public async Task Invoke(UpdateBotCallbackQuery update, User user)
+    {
+        if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not {} logsname) return;
+
+        await ProcessArchive(user, logsname, null);
+    }
+
     private async Task HandleCookiesAsync(UpdateNewMessage update, User user)
     {
-        // download
-        var filepath = await data.DownloadFileFromMessageAsync(user, update);
+        var msg = update.message as Message;
         
-        if (filepath is null) return;
+        if (msg?.message is not {Length:>0} filepath)
+        {
+            filepath = await data.DownloadFileFromMessageAsync(user, update);
+
+            if (filepath is null) return;
+        }
 
         await ProcessArchive(user, filepath, GetPassword(((Message) update.message).message));
     }
 
-    private async Task ProcessArchive(InputPeer peer, string filepath, string? password)
+    private async Task ProcessArchive(InputPeer peer, string logsname, string? password)
     {
-        //  extracting
-        if (await data.ExtractFilesAsync(peer, filepath, password) is not { } dir) return;
+        if (data.GetLogsPath(logsname) is not { } zippath || await data.ExtractFilesAsync(peer, zippath, password) is not { } dir)
+        {
+            dir = data.GetExtractedPath(logsname);
+            
+            if (!Directory.Exists(dir)) return;
+        }
 
-        // parsing
-        var filename = filepath[(filepath.LastIndexOf('\\') + 1)..filepath.LastIndexOf('.')];
+        await ParseCookies(peer, logsname, dir);
+    }
 
-        await client.Messages_SendMessage(peer, $"Start parsing cookies from {filename}", random.NextInt64());
+    private async Task ParseCookies(InputPeer peer, string filename, string dir)
+    {
+
+        await client.Messages_SendMessage(peer, $"Start parsing cookies from {filename}", Random.Shared.NextInt64());
 
         foreach (var (cookie, cookies) in cfgParse.Cookies.CookiesFromLogs(dir))
         {
@@ -67,16 +88,16 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
             await data.SendFileAsync(peer, path);
         }
 
-        await client.Messages_SendMessage(peer, $"{filename} successfully processed", random.NextInt64());
+        await client.Messages_SendMessage(peer, $"{filename} successfully processed",Random.Shared.NextInt64());
     }
 
     private static readonly Regex _password = new(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)");
     private string? GetPassword(string text)
     {
-        var password = _password.Match(text).Groups[4].Value;
+        var password = _password.Match(text).Groups[4];
 
-        if (password.ToLower() is "none" or "\u2796") return null;
+        if (!password.Success || password.Value.ToLower() is "none" or "\u2796") return null;
 
-        return password;
+        return password.Value;
     }
 }

@@ -1,8 +1,10 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Splat;
 using TelegramBot.Data;
+using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TL;
 using WTelegram;
@@ -15,7 +17,7 @@ public class App(Client client, IConfiguration config)
     private static Dictionary<long, User> Users { get; } = new();
     private static Dictionary<long, ChatBase> Chats { get; } = new();
     
-    public static Dictionary<long, Func<UpdateNewMessage, User, Task>> Default { get; } = new();
+    public static Dictionary<long, Func<UpdateNewMessage, User, Task>> Hooks { get; } = new();
     public static User Me { get; private set; }
 
     public static ReplyKeyboardMarkup MainReplyKeyboardMarkup { get; } = new()
@@ -34,24 +36,6 @@ public class App(Client client, IConfiguration config)
                     {
                         text = "Services"
                     },
-                }
-            }
-        },
-        flags = ReplyKeyboardMarkup.Flags.resize
-    };
-
-    public static ReplyKeyboardMarkup CancelReplyKeyboardMarkup { get; } = new()
-    {
-        rows = new[]
-        {
-            new KeyboardButtonRow
-            {
-                buttons = new[]
-                {
-                    new KeyboardButton
-                    {
-                        text = "Cancel"
-                    }
                 }
             }
         },
@@ -95,6 +79,8 @@ public class App(Client client, IConfiguration config)
         
         if (messages.Messages.FirstOrDefault() is not Message message) return;
 
+        if (Encoding.UTF8.GetString(update.data) == "Cancel") { await RemoveHook(update.user_id, update.msg_id, client); return; }
+
         if (Locator.Current.GetService<ICallbackCommand>(_cmd.Match(message.message).Groups[1].Value) is not {} cmd) return;
 
         await cmd.Invoke(update, Users[update.user_id]);
@@ -107,14 +93,11 @@ public class App(Client client, IConfiguration config)
         
         var random = Locator.Current.GetService<Random>()!;
         
-        if (Default.TryGetValue(update.message.Peer.ID, out var func))
+        if (Hooks.TryGetValue(message.Peer.ID, out var func))
         {
             if (message.message == "Cancel")
-            {
-                Default.Remove(update.message.Peer.ID);
-                await client.Messages_SendMessage(Users[message.Peer.ID], "Action canceled", random.NextInt64(), reply_markup: MainReplyKeyboardMarkup);
-            }
-            else 
+                await RemoveHook(message.Peer.ID, message.ID, client);
+            else
                 await func.Invoke(update, Users[message.Peer.ID]);
             
             return;
@@ -126,16 +109,23 @@ public class App(Client client, IConfiguration config)
 
         if (Locator.Current.GetService<ICommand>(command == "Back" ? "/start" : command) is not { } cmd)
         {
-            await client.Messages_SendMessage(Users[message.Peer.ID], "Command not found", random.NextInt64(), reply_markup: MainReplyKeyboardMarkup);
+            await client.Messages_SendMessage(Users[message.Peer.ID], "Command not found", Random.Shared.NextInt64(), reply_markup: MainReplyKeyboardMarkup);
             return;
         }
 
         if (cmd.AuthorizedOnly && user is not { IsApproved: true })
         {
-            await client.Messages_SendMessage(Users[message.Peer.ID], "Permission denied", random.NextInt64());
+            await client.Messages_SendMessage(Users[message.Peer.ID], "Permission denied", Random.Shared.NextInt64());
             return;
         }
         
         await cmd.Invoke(update, Users[message.Peer.ID]);
+    }
+
+    // Helpers
+    private static Task RemoveHook(long userId, int messageId, Client client)
+    {
+        Hooks.Remove(userId);
+        return client.EditMessage(Users[userId], messageId, "Action canceled", MainReplyKeyboardMarkup);
     }
 }

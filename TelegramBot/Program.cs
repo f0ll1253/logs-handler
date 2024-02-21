@@ -96,9 +96,6 @@ public static class Program
         builder.RegisterType<App>()
             .SingleInstance()
             .AsSelf();
-        builder.RegisterType<Random>()
-            .SingleInstance()
-            .AsSelf();
         builder.RegisterType<DataService>()
             .OnActivated(x =>
             {
@@ -145,7 +142,7 @@ public static class Program
         // main
         builder.RegisterType<CookiesCommand>()
             .Named<ICommand>("Cookies")
-            .Named<ICommand>("/cookies");
+            .Named<ICallbackCommand>("Cookies");
         
         // services
         builder.RegisterType<ServicesCommand>()

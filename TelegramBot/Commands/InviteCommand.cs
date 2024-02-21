@@ -5,7 +5,7 @@ using WTelegram;
 
 namespace TelegramBot.Commands;
 
-public class InviteCommand(Client client, AppDbContext context, Random random) : ICommand
+public class InviteCommand(Client client, AppDbContext context) : ICommand
 {
     public bool AuthorizedOnly { get; } = false;
     
@@ -16,7 +16,7 @@ public class InviteCommand(Client client, AppDbContext context, Random random) :
 
         if (codeId is null)
         {
-            await client.Messages_SendMessage(user, "Code id not found", random.NextInt64());
+            await client.Messages_SendMessage(user, "Code id not found", Random.Shared.NextInt64());
             
             return;
         }
@@ -25,7 +25,7 @@ public class InviteCommand(Client client, AppDbContext context, Random random) :
 
         if (code is not { IsValid: true })
         {
-            await client.Messages_SendMessage(user, "Invite code invalid", random.NextInt64());
+            await client.Messages_SendMessage(user, "Invite code invalid", Random.Shared.NextInt64());
             
             return;
         }
@@ -36,7 +36,7 @@ public class InviteCommand(Client client, AppDbContext context, Random random) :
             context.Update(code);
             await context.SaveChangesAsync();
             
-            await client.Messages_SendMessage(user, "Invite code invalid", random.NextInt64());
+            await client.Messages_SendMessage(user, "Invite code invalid", Random.Shared.NextInt64());
             
             return;
         }
@@ -48,6 +48,6 @@ public class InviteCommand(Client client, AppDbContext context, Random random) :
         });
         await context.SaveChangesAsync();
         
-        await client.Messages_SendMessage(user, "Invite code was successfully verified", random.NextInt64());
+        await client.Messages_SendMessage(user, "Invite code was successfully verified", Random.Shared.NextInt64());
     }
 }

@@ -8,7 +8,7 @@ public static class Cookies
 {
     public static IDictionary<Cookie, IEnumerable<IEnumerable<string>>> CookiesFromLogs(this IEnumerable<Cookie> domains, string path) 
         => Directory.GetDirectories(path)
-        .SelectPerThread(domains.CookiesFromLog)
+        .SelectPerTask(domains.CookiesFromLog)
         .SelectMany(x => x)
         .ToLookup(x => x.Key)
         .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value).Where(x => x.Any()));

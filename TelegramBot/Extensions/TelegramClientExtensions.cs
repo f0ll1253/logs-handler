@@ -7,22 +7,20 @@ namespace TelegramBot.Extensions;
 
 public static class TelegramClientExtensions
 {
-    public static async Task EditMessageText(this Client client, InputPeer peer, int id, string message)
-    {
-        var msgToEdit = (Message) (await client.Messages_GetMessages(id)).Messages.First();
-        await client.Messages_EditMessage(peer, id, message, reply_markup: msgToEdit.reply_markup);
-    }
+    public static async Task<Message> FindMessage(this Client client, int id) => (Message) (await client.Messages_GetMessages(id)).Messages.First();
     
+    public static async Task EditMessage(this Client client, InputPeer peer, int id, string message, ReplyMarkup? reply_markup = null) => await client.Messages_EditMessage(peer, id, message, reply_markup: reply_markup ?? (await client.FindMessage(id)).reply_markup);
+
     public static Task SendMessageAvailableLogs(this Client client,
         InputPeer peer,
         DataService data,
-        Random random,
-        string message)
+        string message,
+        IEnumerable<KeyboardButtonRow>? reply_markup = null)
     {
         return client.Messages_SendMessage(
             peer,
             message,
-            random.NextInt64(),
+            Random.Shared.NextInt64(),
             reply_markup: new ReplyInlineMarkup
             {
                 rows = data.AvailableLogs(count: 5).Select(x => new KeyboardButtonRow
@@ -47,42 +45,58 @@ public static class TelegramClientExtensions
                             }
                         }
                     })
+                    .Union(reply_markup ?? ArraySegment<KeyboardButtonRow>.Empty)
                     .ToArray()
             });
     }
 
-    public static Task SendCallbackAvailableLogs(this Client client,
+    public static async Task<string?> SendCallbackAvailableLogsOrGetPath(this Client client,
         InputPeer peer,
         DataService data,
         int messageid,
         byte[] updatebytes)
     {
-        var buttons = data.LogsToButtons(updatebytes[0]);
-            
-        return client.Messages_EditMessage(
-            peer,
-            messageid,
-            reply_markup: new ReplyInlineMarkup
-            {
-                rows = buttons
-                    .Append(new KeyboardButtonRow
-                    {
-                        buttons = new[]
+        if (updatebytes.Length == 1)
+        {
+            var buttons = data.LogsToButtons(updatebytes[0]);
+            var markup = (ReplyInlineMarkup) (await client.FindMessage(messageid)).reply_markup;
+
+            await client.Messages_EditMessage(
+                peer,
+                messageid,
+                reply_markup: new ReplyInlineMarkup
+                {
+                    rows = buttons
+                        .Append(new KeyboardButtonRow
                         {
-                            updatebytes[0] == 0 ? null : new KeyboardButtonCallback
-                            {
-                                text = "\u25c0\ufe0f",
-                                data = new[] { (byte) (updatebytes[0] - 1) }
-                            },
-                            buttons.Count() == 5 ? new KeyboardButtonCallback
-                            {
-                                text = "\u25b6\ufe0f",
-                                data = new[] { (byte) (updatebytes[0] + 1) }
-                            } : null
-                        }.Where(x => x is not null).ToArray()
-                    })
-                    .ToArray()
-            });
+                            buttons = new[]
+                                {
+                                    updatebytes[0] == 0
+                                        ? null
+                                        : new KeyboardButtonCallback
+                                        {
+                                            text = "\u25c0\ufe0f",
+                                            data = new[] { (byte) (updatebytes[0] - 1) }
+                                        },
+                                    buttons.Count() == 5
+                                        ? new KeyboardButtonCallback
+                                        {
+                                            text = "\u25b6\ufe0f",
+                                            data = new[] { (byte) (updatebytes[0] + 1) }
+                                        }
+                                        : null
+                                }
+                                .Where(x => x is not null)
+                                .ToArray()
+                        })
+                        .Union(markup.rows[(buttons.Count() + 1)..])
+                        .ToArray()
+                });
+            
+            return null;
+        }
+
+        return Encoding.UTF8.GetString(updatebytes);
     }
     
     private static IEnumerable<KeyboardButtonRow> LogsToButtons(this DataService data, int start = 0, int count = 5) 

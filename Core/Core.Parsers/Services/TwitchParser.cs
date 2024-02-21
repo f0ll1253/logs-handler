@@ -7,7 +7,7 @@ public static class TwitchParser
 {
     public static IEnumerable<string> TwitchFromLogs(this string logspath)
         => Directory.GetDirectories(logspath)
-            .SelectPerThread(TwitchFromLog)
+            .SelectPerTask(TwitchFromLog)
             .SelectMany(x => x);
     
     public static IEnumerable<string> TwitchFromLog(this string logpath)

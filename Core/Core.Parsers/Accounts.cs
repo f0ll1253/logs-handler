@@ -9,7 +9,7 @@ public static class Accounts
 {
     public static IDictionary<string, IEnumerable<Account>> AccountsFromLogs(this IEnumerable<string> domains, string path)
         => Directory.GetDirectories(path)
-            .SelectPerThread(domains.AccountsFromLog)
+            .SelectPerTask(domains.AccountsFromLog)
             .SelectMany(x => x)
             .ToLookup(x => x.Key)
             .ToDictionary(x => x.Key, x => x.SelectMany(x => x.Value));
@@ -43,7 +43,9 @@ public static class Accounts
     
     public static IEnumerable<Account> AccountsFromLogs(this string domain, string path)
         => Directory.GetDirectories(path)
-            .SelectMany(domain.AccountsFromLog);
+            .SelectPerTask(domain.AccountsFromLog)
+            .SelectMany(x => x)
+            .DistinctBy(x => x.ToStringShort());
     
     public static IEnumerable<Account> AccountsFromLog(this string domain, string path)
     {

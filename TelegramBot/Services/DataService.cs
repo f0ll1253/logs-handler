@@ -9,7 +9,7 @@ using WTelegram;
 
 namespace TelegramBot.Services;
 
-public class DataService(Client client, IMegaApiClient mega, Random random, IConfiguration config)
+public class DataService(Client client, IMegaApiClient mega, IConfiguration config)
 {
     private readonly string _baseFolder = config["BaseFolder"]!;
     
@@ -96,7 +96,7 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
         
         if (Directory.Exists(extractFolder)) return extractFolder;
 
-        await client.Messages_SendMessage(peer, $"Extracting files from {filename}", random.NextInt64());
+        await client.Messages_SendMessage(peer, $"Extracting files from {filename}", Random.Shared.NextInt64());
 
         Directory.CreateDirectory(extractFolder);
 
@@ -122,7 +122,7 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
         {
             Directory.Delete(extractFolder);
             Log.Error(e.ToString());
-            await client.Messages_SendMessage(peer, $"Error while extracting files from {filename}", random.NextInt64());
+            await client.Messages_SendMessage(peer, $"Error while extracting files from {filename}", Random.Shared.NextInt64());
             return null;
         }
         finally
@@ -151,7 +151,7 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
                 uploaded,
                 ""),
             message,
-            random.NextInt64(),
+            Random.Shared.NextInt64(),
             clear_draft: true);
     }
     
@@ -161,7 +161,7 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
 
         if (!message.flags.HasFlag(Message.Flags.has_media))
         {
-            await client.Messages_SendMessage(peer, "Error zip/rar archive not found", random.NextInt64());
+            await client.Messages_SendMessage(peer, "Error zip/rar archive not found", Random.Shared.NextInt64());
             return null;
         }
 
@@ -170,15 +170,15 @@ public class DataService(Client client, IMegaApiClient mega, Random random, ICon
 
         if (document.Filename.Split('.').LastOrDefault() is not ("zip" or "rar" or "7z"))
         {
-            await client.Messages_SendMessage(peer, "Error zip/rar archive not found", random.NextInt64());
+            await client.Messages_SendMessage(peer, "Error zip/rar archive not found", Random.Shared.NextInt64());
             return null;
         }
-
+        
         var filepath = Path.Combine(_baseFolder, "Logs", document.Filename);
 
         if (File.Exists(filepath)) return filepath;
         
-        await client.Messages_SendMessage(peer, "Downloading file", random.NextInt64());
+        await client.Messages_SendMessage(peer, "Downloading file", Random.Shared.NextInt64());
         
         await using var file = new FileStream(filepath, FileMode.Create);
         await client.DownloadFileAsync(document, file);

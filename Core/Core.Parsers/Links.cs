@@ -8,7 +8,7 @@ public static class Links
 {
     public static IEnumerable<Account> LinksFromLogs(this IEnumerable<string> links, string path)
         => Directory.GetDirectories(path)
-            .SelectPerThread(links.LinksFromLog)
+            .SelectPerTask(links.LinksFromLog)
             .SelectMany(x => x)
             .Where(x => x is not null)
             .DistinctBy(x =>

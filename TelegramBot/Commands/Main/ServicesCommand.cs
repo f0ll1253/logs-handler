@@ -4,7 +4,7 @@ using WTelegram;
 
 namespace TelegramBot.Commands.Main;
 
-public class ServicesCommand(Client client, Random random) : ICommand
+public class ServicesCommand(Client client) : ICommand
 {
     public bool AuthorizedOnly { get; } = true;
 
@@ -13,7 +13,7 @@ public class ServicesCommand(Client client, Random random) : ICommand
         return client.Messages_SendMessage(
             user,
             "Available Services",
-            random.NextInt64(),
+            Random.Shared.NextInt64(),
             reply_markup: new ReplyKeyboardMarkup
             {
                 rows = new []

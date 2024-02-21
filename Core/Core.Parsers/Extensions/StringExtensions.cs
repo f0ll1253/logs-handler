@@ -41,39 +41,39 @@ internal static class StringExtensions
         try
         {
             url = line["URL: ".Length..line.Length];
+            
+            if (!urlPredicate?.Invoke(url) ?? false) return null;
         }
         catch
         {
             return null;
         }
-
-        if (!urlPredicate?.Invoke(url) ?? false) return null;
 
         username = reader.ReadLine();
 
         try
         {
             username = username?[(username.IndexOf(' ')+1)..username.Length];
+            
+            if (username is null || (!usernamePredicate?.Invoke(username) ?? false) || username == "UNKNOWN") return null;
         }
         catch
         {
             return null;
         }
-        
-        if (username is null || (!usernamePredicate?.Invoke(username) ?? false) || username == "UNKNOWN") return null;
                 
         password = reader.ReadLine();
 
         try
         {
             password = password?[(password.IndexOf(' ')+1)..password.Length];
+            
+            if (password is null || !_password.IsMatch(password) || (!passwordPredicate?.Invoke(password) ?? false)) return null;
         }
         catch
         {
             return null;
         }
-        
-        if (password is null || !_password.IsMatch(password) || (!passwordPredicate?.Invoke(password) ?? false)) return null;
 
         return new Account(username, password, url, logpath);
     }

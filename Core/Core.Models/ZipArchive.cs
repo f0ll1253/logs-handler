@@ -8,7 +8,7 @@ public class ZipArchive(string zippath)
     private readonly Regex _isMarked = new(@" (\([0-9]+\))$");
     private readonly SevenZipCompressor _compressor = new()
     {
-        EventSynchronization = EventSynchronizationStrategy.Default,
+        EventSynchronization = EventSynchronizationStrategy.AlwaysAsynchronous,
         CompressionMode = CompressionMode.Create,
         ArchiveFormat = OutArchiveFormat.Zip,
         CompressionMethod = CompressionMethod.Lzma2,
@@ -36,11 +36,11 @@ public class ZipArchive(string zippath)
             }
     }
     
-    public async Task AddDirectoryAsync(string path)
+    public async Task<bool> AddDirectoryAsync(string path)
     {
         var info = new DirectoryInfo(path);
         
-        if (!info.Exists || info.GetFileSystemInfos().Length == 0) return;
+        if (!info.Exists || info.GetFileSystemInfos().Length == 0) return false;
 
         if (Entities.Contains(info.Name))
         {
@@ -54,5 +54,7 @@ public class ZipArchive(string zippath)
 
         await _compressor.CompressDirectoryAsync(path, zippath);
         _compressor.CompressionMode = CompressionMode.Append;
+
+        return true;
     }
 }

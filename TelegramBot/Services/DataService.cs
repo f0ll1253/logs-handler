@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
+using Aspose.Zip.SevenZip;
 using CG.Web.MegaApiClient;
-using Core.Models;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using SevenZip;
 using TL;
 using WTelegram;
 
@@ -63,11 +62,12 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         [CallerMemberName] string name = "")
     {
         // init dir
-        string dir = Path.Combine(this._baseFolder, name, logsname);
+        string dir = Path.Combine(this._baseFolder, name, logsname),
+               archive = Path.Combine(dir, $"{subpath}.zip");;
 
         Directory.CreateDirectory(dir);
 
-        var map = new Dictionary<string, Stream>();
+        using var zip = new SevenZipArchive();
 
         for (int i = 0; i < data.Length; i++)
         {
@@ -76,44 +76,38 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 
             foreach (string str in data[i]) await writer.WriteLineAsync(str);
 
-            map.Add($"{filename}{i}.txt", memory);
+            zip.CreateEntry($"{filename}{i}.txt", memory);
         }
 
-        string zippath = Path.Combine(dir, $"{subpath}.zip");
-        await new ZipArchive(zippath).AddFilesAsync(map);
+        zip.Save(archive);
 
-        return zippath;
+        return archive;
     }
 
     public async Task<string?> ExtractFilesAsync(InputPeer peer, string filepath, string? password)
     {
         var fileinfo = new FileInfo(filepath);
         string filename = fileinfo.Name[..fileinfo.Name.LastIndexOf('.')];
-        string extractFolder = Path.Combine(this._baseFolder, "Extracted", filename);
+        string destination = Path.Combine(this._baseFolder, "Extracted", filename);
 
-        if (Directory.Exists(extractFolder)) return extractFolder;
+        if (Directory.Exists(destination)) return destination;
 
         await client.Messages_SendMessage(peer, $"Extracting files from {filename}", Random.Shared.NextInt64());
 
-        Directory.CreateDirectory(extractFolder);
+        Directory.CreateDirectory(destination);
 
-        var zip = new SevenZipExtractor(filepath, password ?? "")
-        {
-            EventSynchronization = EventSynchronizationStrategy.AlwaysAsynchronous
-        };
-
+        var zip = new SevenZipArchive(filepath, password);
+        
         try
         {
-            if (!zip.Check()) throw new Exception($"Invalid password: {password}");
-
-            if (zip.ArchiveFileData.First().FileName.Contains(extractFolder[(extractFolder.LastIndexOf('\\') + 1)..]))
-                await zip.ExtractArchiveAsync(extractFolder[..extractFolder.LastIndexOf('\\')]);
+            if (zip.Entries.Any(x => x.IsDirectory && x.Name == destination[(destination.LastIndexOf('\\') + 1)..]))
+                zip.ExtractToDirectory(destination[..destination.LastIndexOf('\\')]);
             else
-                await zip.ExtractArchiveAsync(extractFolder);
+                zip.ExtractToDirectory(destination);
         }
         catch (Exception e)
         {
-            Directory.Delete(extractFolder);
+            Directory.Delete(destination);
             Log.Error(e.ToString());
             await client.Messages_SendMessage(peer, $"Error while extracting files from {filename}",
                 Random.Shared.NextInt64());
@@ -124,7 +118,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
             zip.Dispose();
         }
 
-        return extractFolder;
+        return destination;
     }
 
     #region network

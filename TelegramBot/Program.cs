@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Serilog;
 using Serilog.Events;
-using SevenZip;
 using Splat;
 using Splat.Autofac;
 using TelegramBot.Commands;
@@ -53,11 +52,6 @@ public static class Program
 
     private static Task Initialize()
     {
-        // initialize zip
-        string path = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase!,
-            Environment.Is64BitProcess ? "x64" : "x86", "7z.dll");
-        SevenZipBase.SetLibraryPath(path);
-
         Program.ConfigureLogging();
 
         var builder = new ContainerBuilder();

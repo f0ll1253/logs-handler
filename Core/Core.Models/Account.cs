@@ -7,11 +7,12 @@ public record Account(
     string Log = ""
 ) : IDisposable
 {
-    public override string ToString() => $"{Username}:{Password}:{Url}";
-    public string ToStringShort() => $"{Username}:{Password}";
-
-    public void Dispose()
-    {
+    public void Dispose() =>
         GC.SuppressFinalize(this);
-    }
+
+    public override string ToString() =>
+        $"{Username}:{Password}:{Url}";
+
+    public string ToStringShort() =>
+        $"{Username}:{Password}";
 }

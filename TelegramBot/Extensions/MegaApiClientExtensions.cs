@@ -9,7 +9,7 @@ public static class MegaApiClientExtensions
     public static MegaApiClient.LogonSessionToken LoginByCredentials(this IMegaApiClient client, MegaConfig config)
     {
         string? mfa;
-            
+
         do
         {
             Console.Clear();

@@ -14,21 +14,21 @@ public enum ProxyType
 
 public class ProxyPool
 {
+    private readonly List<Proxy> _proxies = [];
     private readonly int _timeout;
     private readonly ProxyType _type;
-    private readonly List<Proxy> _proxies = new ();
-    private int _last = 0;
+    private int _last;
 
     public ProxyPool(int timeout = 5000, ProxyType type = ProxyType.Http)
     {
-        _timeout = timeout;
-        _type = type;
+        this._timeout = timeout;
+        this._type = type;
     }
 
     public void Clear()
     {
-        _proxies.Clear();
-        _last = 0;
+        this._proxies.Clear();
+        this._last = 0;
     }
 
     public async Task LoadAsync(string file)
@@ -36,14 +36,14 @@ public class ProxyPool
         if (!File.Exists(file)) throw new Exception("Proxies file doesn't exists");
 
         using var reader = new StreamReader(file);
-        
+
         Clear();
-        
+
         while (!reader.EndOfStream)
         {
-            var args = (await reader.ReadLineAsync())?.Replace('@', ':').Split(':');
-            
-            if (args is not {Length:>=2}) continue;
+            string[]? args = (await reader.ReadLineAsync())?.Replace('@', ':').Split(':');
+
+            if (args is not { Length: >= 2 }) continue;
 
             switch (args.Length)
             {
@@ -56,40 +56,41 @@ public class ProxyPool
             }
         }
     }
-    
+
     public void AddRange(IEnumerable<Proxy> arr)
     {
         foreach (var proxy in arr) Add(proxy);
     }
-    
+
     public bool Add(Proxy proxy)
     {
         if (string.IsNullOrEmpty(proxy.Host) || proxy.Port <= 0) return false;
-        
-        _proxies.Add(proxy);
-        
+
+        this._proxies.Add(proxy);
+
         return true;
     }
 
-    public async Task<HttpClient> TakeClient(AuthenticationHeaderValue? authorization = null) 
-        => new(await TakeHandler(), true)
-    {
-        DefaultRequestHeaders =
+    public async Task<HttpClient> TakeClient(AuthenticationHeaderValue? authorization = null) =>
+        new(await TakeHandler(), true)
         {
-            Authorization = authorization
-        }
-    };
+            DefaultRequestHeaders =
+            {
+                Authorization = authorization
+            }
+        };
 
-    public async Task<HttpClientHandler> TakeHandler() 
-        => new()
-    {
-        Proxy = await TakeWebProxy(),
-        UseProxy = true,
-        AllowAutoRedirect = false,
-        SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
-    };
+    public async Task<HttpClientHandler> TakeHandler() =>
+        new()
+        {
+            Proxy = await TakeWebProxy(),
+            UseProxy = true,
+            AllowAutoRedirect = false,
+            SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
+        };
 
-    public async Task<string> TakeProxyString() => (await _TakeProxy()).ToString();
+    public async Task<string> TakeProxyString() =>
+        (await _TakeProxy()).ToString();
 
     public async Task<WebProxy> TakeWebProxy()
     {
@@ -97,31 +98,31 @@ public class ProxyPool
 
         return _CreateWebProxy(proxy);
     }
-    
+
     private async Task<Proxy> _TakeProxy()
     {
-        if (_proxies.Count == 0) throw new Exception("Proxies not loaded");
-        
-        if (_last >= _proxies.Count) _last = 0;
+        if (this._proxies.Count == 0) throw new Exception("Proxies not loaded");
 
-        if (_proxies.Count == 1) return _proxies.First();
-        
+        if (this._last >= this._proxies.Count) this._last = 0;
+
+        if (this._proxies.Count == 1) return this._proxies.First();
+
         Proxy? proxy = null;
 
         do
         {
-            if (proxy is not null) _proxies.Remove(proxy);
-            
-            proxy = _proxies[_last];
+            if (proxy is { }) this._proxies.Remove(proxy);
+
+            proxy = this._proxies[this._last];
         } while (!await _ProxyAvailable(proxy));
 
-        _last++;
+        this._last++;
 
         return proxy;
     }
 
-    private WebProxy _CreateWebProxy(Proxy proxy)
-        => new()
+    private WebProxy _CreateWebProxy(Proxy proxy) =>
+        new()
         {
             Address = new Uri($"{_GetProtocol()}://{proxy.Host}:{proxy.Port}"),
             BypassProxyOnLocal = false,
@@ -139,15 +140,15 @@ public class ProxyPool
                 Address = new Uri($"{_GetProtocol()}://{proxy.Host}:{proxy.Port}"),
                 BypassProxyOnLocal = false,
                 UseDefaultCredentials = false,
-            
+
                 Credentials = new NetworkCredential(proxy.Login, proxy.Password)
             },
             UseProxy = true,
             AllowAutoRedirect = false,
-            SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13,
+            SslProtocols = SslProtocols.None | SslProtocols.Tls12 | SslProtocols.Tls13
         }, true);
-        
-        http.Timeout = TimeSpan.FromMilliseconds(_timeout);
+
+        http.Timeout = TimeSpan.FromMilliseconds(this._timeout);
 
         try
         {
@@ -157,16 +158,17 @@ public class ProxyPool
         {
             return false;
         }
-        
+
         return true;
     }
 
-    private string _GetProtocol() => _type switch
-    {
-        ProxyType.Http => "http",
-        ProxyType.Https => "https"
-        // todo add other proxy types
-    };
+    private string _GetProtocol() =>
+        this._type switch
+        {
+            ProxyType.Http  => "http",
+            ProxyType.Https => "https"
+            // todo add other proxy types
+        };
 }
 
 public record Proxy(
@@ -176,5 +178,6 @@ public record Proxy(
     string Password = ""
 )
 {
-    public override string ToString() => $"{(string.IsNullOrEmpty(Login) ? "" : $"{Login}:{Password}@")}{Host}:{Port}";
+    public override string ToString() =>
+        $"{(string.IsNullOrEmpty(Login) ? "" : $"{Login}:{Password}@")}{Host}:{Port}";
 }

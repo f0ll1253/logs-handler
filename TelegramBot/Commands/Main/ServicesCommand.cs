@@ -8,20 +8,19 @@ public class ServicesCommand(Client client) : ICommand
 {
     public bool AuthorizedOnly { get; } = true;
 
-    public Task Invoke(UpdateNewMessage update, User user)
-    {
-        return client.Messages_SendMessage(
+    public Task Invoke(UpdateNewMessage update, User user) =>
+        client.Messages_SendMessage(
             user,
             "Available Services",
             Random.Shared.NextInt64(),
             reply_markup: new ReplyKeyboardMarkup
             {
-                rows = new []
-                {
+                rows =
+                [
                     new KeyboardButtonRow
                     {
-                        buttons = new []
-                        {
+                        buttons =
+                        [
                             new KeyboardButton
                             {
                                 text = "Twitch"
@@ -30,20 +29,19 @@ public class ServicesCommand(Client client) : ICommand
                             {
                                 text = "Telegram"
                             }
-                        }
+                        ]
                     },
                     new KeyboardButtonRow
                     {
-                        buttons = new []
-                        {
+                        buttons =
+                        [
                             new KeyboardButton
                             {
                                 text = "Back"
                             }
-                        }
+                        ]
                     }
-                },
+                ],
                 flags = ReplyKeyboardMarkup.Flags.resize
             });
-    }
 }

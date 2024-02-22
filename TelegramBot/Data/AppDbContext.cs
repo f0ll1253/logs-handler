@@ -4,10 +4,8 @@ namespace TelegramBot.Data;
 
 public sealed class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) =>
         Database.EnsureCreated();
-    }
 
     public DbSet<User> Users { get; set; }
     public DbSet<InviteCode> InviteCodes { get; set; }
@@ -25,7 +23,7 @@ public sealed class AppDbContext : DbContext
             x.Property(x => x.Id).IsRequired();
             x.ToTable("InviteCodes");
         });
-        
+
         base.OnModelCreating(builder);
     }
 }

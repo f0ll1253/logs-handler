@@ -1,15 +1,19 @@
 using System.Text.RegularExpressions;
 using Core.Models.Configs;
 using Core.Parsers;
+using TelegramBot.Data;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TelegramBot.Services;
 using TL;
 using WTelegram;
 
+using File = TelegramBot.Data.File;
+using User = TL.User;
+
 namespace TelegramBot.Commands.Main;
 
-public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService data) : ICommand, ICallbackCommand
+public class CookiesCommand(Client client, AppDbContext context, ParsingConfig cfgParse, DataService data) : ICommand, ICallbackCommand
 {
     private static readonly Regex _password = new(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)");
 
@@ -58,11 +62,19 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
             if (filepath is null) return;
         }
 
-        await ProcessArchive(update.message.ID, user, filepath, GetPassword(((Message)update.message).message));
+        string? password =
+            _password.Match(((Message)update.message).message).Groups[4]
+                is { Success: true, Value: not "none" and "\u2796" } result
+                ? result.Value
+                : null;
+        
+        await ProcessArchive(update.message.ID, user, filepath, password);
     }
 
     private async Task ProcessArchive(int messageId, InputPeer peer, string logsname, string? password)
     {
+        await client.EditMessage(peer, messageId, $"Cookies\nStart parsing cookies from {logsname}");
+        
         if (data.GetLogsPath(logsname) is not { } zippath ||
             await data.ExtractFilesAsync(peer, zippath, password) is not { } dir)
         {
@@ -71,46 +83,63 @@ public class CookiesCommand(Client client, ParsingConfig cfgParse, DataService d
             if (!Directory.Exists(dir)) return;
         }
 
-        await ParseCookies(messageId, peer, logsname, dir);
+        var files = await ParseCookies(logsname, dir);
+        
+        await client.EditMessage(peer, messageId, $"Cookies\n{logsname} successfully processed");
+        
+        var messages = await client.SendAlbumAsync(peer,
+            files
+                .Select(x => new InputMediaUploadedDocument(x, "application/zip"))
+                .ToArray(),
+            caption: $"#Cookies\n{logsname}",
+            entities: 
+            [
+                new MessageEntityHashtag
+                {
+                    length = "#Cookies".Length,
+                    offset = 0
+                }
+            ]
+        );
+
+        await SaveFilesData(messages, logsname);
     }
 
-    private async Task ParseCookies(int messageId, InputPeer peer, string filename, string dir)
+    private async Task<IEnumerable<InputFileBase>> ParseCookies(string filename, string logs)
     {
         var files = new List<InputFileBase>();
         
-        await client.EditMessage(peer, messageId, $"Cookies\nStart parsing cookies from {filename}");
-
-        foreach ((var cookie, var cookies) in cfgParse.Cookies.CookiesFromLogs(dir))
+        foreach ((var cookie, var cookies) in cfgParse.Cookies.CookiesFromLogs(logs))
         {
             string path = await data.SaveZipAsync(
-                dir[(dir.LastIndexOf('\\') + 1)..],
+                new DirectoryInfo(logs).Name,
                 "cookies",
                 cookie.Domains.First(),
                 cookies.ToArray(),
                 "Cookies");
-
+            
             files.Add(await client.UploadFileAsync(path));
         }
-        
-        await client.EditMessage(peer, messageId, $"Cookies\n{filename} successfully processed");
 
-        await client.Messages_SendMultiMedia(peer,
-            multi_media: files
-                .Select(x => new InputSingleMedia
-                {
-                    media = new InputMediaUploadedDocument(x, "application/zip"),
-                    random_id = Random.Shared.NextInt64()
-                })
-                .ToArray()
-            );
+        return files;
     }
-
-    private string? GetPassword(string text)
+    
+    private async Task SaveFilesData(Message[] messages, string logsname)
     {
-        var password = _password.Match(text).Groups[4];
+        var medias = messages
+                     .Select(x => (MessageMediaDocument)x.media)
+                     .Select(x => (Document)x.document);
 
-        if (!password.Success || password.Value.ToLower() is "none" or "\u2796") return null;
+        await context.AddRangeAsync(medias.Select(x => new File
+        {
+            Id = x.id,
+            AccessHash = x.access_hash,
+            FileReference = x.file_reference,
+            Type = new FileInfo(x.Filename).Name,
+            Category = "Cookies",
+            LogsName = logsname
+        }));
 
-        return password.Value;
+        await context.SaveChangesAsync();
     }
 }

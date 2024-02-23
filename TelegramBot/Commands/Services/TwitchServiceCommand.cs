@@ -14,13 +14,13 @@ public class TwitchServiceCommand(Client client, DataService data) : ICommand, I
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
 
-        string logspath = data.GetExtractedPath(logsname);
+        string logs = data.GetExtractedPath(logsname);
 
         await client.EditMessage(user, update.msg_id, $"Telegram\nParsing from {logsname}");
 
         string filepath = await data.SaveAsync(
-            logspath[(logspath.LastIndexOf('\\') + 1)..],
-            logspath.TwitchFromLogs(),
+            new DirectoryInfo(logsname).Name,
+            logs.TwitchFromLogs(),
             "Twitch");
 
         await data.SendFileAsync(user, filepath);

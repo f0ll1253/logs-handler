@@ -18,39 +18,24 @@ using TelegramBot.Models;
 using TelegramBot.Services;
 using WTelegram;
 
+using File = System.IO.File;
+
 namespace TelegramBot;
 
 public static class Program
 {
     public static async Task Main(string[] args)
     {
-        await Program.Initialize();
-
-        Task.Run(async () =>
-        {
-            while (true)
-            {
-                string? str = Console.ReadLine();
-
-                if (string.IsNullOrEmpty(str)) continue;
-
-                if (str == "/create invitecode")
-                {
-                    var code = new InviteCode { Expire = DateTime.UtcNow.Ticks + TimeSpan.FromSeconds(3600).Ticks };
-                    var context = Locator.Current.GetService<AppDbContext>()!;
-                    await context.AddAsync(code);
-                    await context.SaveChangesAsync();
-
-                    Log.Information(
-                        $"Generated new invite code: {code.Id} \t Code will expire: {DateTime.FromFileTimeUtc(code.Expire).ToShortTimeString()}");
-                }
-            }
-        });
+        await Program.InitializeServices();
+        await Program.InitializeDatabase();
+        Program.StartHookConsoleCommands();
 
         await Locator.Current.GetService<App>()!.Run();
     }
 
-    private static Task Initialize()
+    #region Initialize Services
+
+    private static Task InitializeServices()
     {
         Program.ConfigureLogging();
 
@@ -155,5 +140,52 @@ public static class Program
                .Named<ICallbackCommand>("Telegram");
 
         return builder;
+    }
+
+    #endregion
+
+    private static async Task InitializeDatabase()
+    {
+        var context = Locator.Current.GetService<AppDbContext>()!;
+
+        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
+
+        if (!context.Users!.Any())
+            context.Users!.Add(new User
+            {
+                id = 6572189077,
+                IsApproved = true
+            });
+
+        await context.SaveChangesAsync();
+    }
+
+    private static void StartHookConsoleCommands()
+    {
+        async Task? HookCommands()
+        {
+            while (true)
+            {
+                string? str = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(str)) continue;
+
+                if (str == "/create invitecode")
+                {
+                    var code = new InviteCode
+                    {
+                        Expire = DateTime.UtcNow.Ticks + TimeSpan.FromSeconds(3600).Ticks
+                    };
+                    var context = Locator.Current.GetService<AppDbContext>()!;
+                    await context.AddAsync(code);
+                    await context.SaveChangesAsync();
+
+                    Log.Information($"Generated new invite code: {code.Id} \t Code will expire: {DateTime.FromFileTimeUtc(code.Expire).ToShortTimeString()}");
+                }
+            }
+        }
+
+        Task.Run(HookCommands);
     }
 }

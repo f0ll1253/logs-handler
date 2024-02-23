@@ -25,7 +25,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 
     public string? GetLogsPath(string logsname) =>
         Directory.GetFiles(Path.Combine(this._baseFolder, "Logs"))
-                 .FirstOrDefault(x => x[(x.LastIndexOf('\\') + 1)..x.LastIndexOf('.')] == logsname);
+                 .FirstOrDefault(x => new DirectoryInfo(x).Name == logsname);
 
     public string GetExtractedPath(string logsname) =>
         Path.Combine(this._baseFolder, "Extracted", logsname);
@@ -59,7 +59,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         string filename,
         string subpath,
         IEnumerable<string>[] data,
-        [CallerMemberName] string name = "")
+        string name)
     {
         // init dir
         string dir = Path.Combine(this._baseFolder, name, logsname),
@@ -88,26 +88,28 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
     {
         var fileinfo = new FileInfo(filepath);
         string filename = fileinfo.Name[..fileinfo.Name.LastIndexOf('.')];
-        string destination = Path.Combine(this._baseFolder, "Extracted", filename);
+        string destinationPath = Path.Combine(this._baseFolder, "Extracted", filename);
 
-        if (Directory.Exists(destination)) return destination;
+        if (Directory.Exists(destinationPath)) return destinationPath;
 
         await client.Messages_SendMessage(peer, $"Extracting files from {filename}", Random.Shared.NextInt64());
 
-        Directory.CreateDirectory(destination);
+        Directory.CreateDirectory(destinationPath);
 
         var zip = new SevenZipArchive(filepath, password);
         
         try
         {
-            if (zip.Entries.Any(x => x.IsDirectory && x.Name == destination[(destination.LastIndexOf('\\') + 1)..]))
-                zip.ExtractToDirectory(destination[..destination.LastIndexOf('\\')]);
+            var destinationInfo = new DirectoryInfo(destinationPath);
+            
+            if (zip.Entries.Any(x => x.IsDirectory && x.Name == destinationInfo.Name))
+                zip.ExtractToDirectory(destinationInfo.Parent!.FullName);
             else
-                zip.ExtractToDirectory(destination);
+                zip.ExtractToDirectory(destinationPath);
         }
         catch (Exception e)
         {
-            Directory.Delete(destination);
+            Directory.Delete(destinationPath);
             Log.Error(e.ToString());
             await client.Messages_SendMessage(peer, $"Error while extracting files from {filename}",
                 Random.Shared.NextInt64());
@@ -118,7 +120,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
             zip.Dispose();
         }
 
-        return destination;
+        return destinationPath;
     }
 
     #region network

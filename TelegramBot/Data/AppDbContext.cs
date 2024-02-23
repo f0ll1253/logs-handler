@@ -2,13 +2,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TelegramBot.Data;
 
-public sealed class AppDbContext : DbContext
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) =>
-        Database.EnsureCreated();
-
-    public DbSet<User> Users { get; set; }
-    public DbSet<InviteCode> InviteCodes { get; set; }
+    public DbSet<User>? Users { get; set; }
+    public DbSet<InviteCode>? InviteCodes { get; set; }
+    public DbSet<File>? Files { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -22,6 +20,12 @@ public sealed class AppDbContext : DbContext
         {
             x.Property(x => x.Id).IsRequired();
             x.ToTable("InviteCodes");
+        });
+        
+        builder.Entity<File>(x =>
+        {
+            x.Property(x => x.Id).IsRequired();
+            x.ToTable("Files");
         });
 
         base.OnModelCreating(builder);

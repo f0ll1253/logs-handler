@@ -17,28 +17,6 @@ public partial class App(Client client, IConfiguration config, DataService data)
     private static Dictionary<long, User> Users { get; } = new();
     private static Dictionary<long, ChatBase> Chats { get; } = new();
 
-    public static ReplyKeyboardMarkup MainReplyKeyboardMarkup { get; } = new()
-    {
-        rows =
-        [
-            new KeyboardButtonRow
-            {
-                buttons =
-                [
-                    new KeyboardButton
-                    {
-                        text = "Cookies"
-                    },
-                    new KeyboardButton
-                    {
-                        text = "Services"
-                    }
-                ]
-            }
-        ],
-        flags = ReplyKeyboardMarkup.Flags.resize
-    };
-
     public async Task Run()
     {
         Log.Information("Views was initialized");
@@ -78,8 +56,8 @@ public partial class App(Client client, IConfiguration config, DataService data)
 
         if (messages.Messages.FirstOrDefault() is not Message message) return;
 
-        if (Locator.Current.GetService<ICallbackCommand>(_cmd.Match(message.message).Groups[1].Value) is not
-            { } cmd) return;
+        if (Locator.Current.GetService<ICallbackCommand>(_cmd.Match(message.message).Groups[1].Value) is not { } cmd)
+            return;
 
         await cmd.Invoke(update, App.Users[update.user_id]);
     }
@@ -112,11 +90,7 @@ public partial class App(Client client, IConfiguration config, DataService data)
         var user = await Locator.Current.GetService<AppDbContext>()!.FindAsync<Data.User>(message.Peer.ID);
 
         if (Locator.Current.GetService<ICommand>(command == "Back" ? "/start" : command) is not { } cmd)
-        {
-            await client.Messages_SendMessage(App.Users[message.Peer.ID], "Command not found",
-                Random.Shared.NextInt64(), reply_markup: App.MainReplyKeyboardMarkup);
             return;
-        }
 
         if (cmd.AuthorizedOnly && user is not { IsApproved: true })
         {

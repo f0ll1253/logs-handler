@@ -10,7 +10,7 @@ public class StartCommand(Client client, AppDbContext context) : ICommand
 {
     public bool AuthorizedOnly { get; } = false;
 
-    public async Task Invoke(UpdateNewMessage update, User user)
+    async Task ICommand.Invoke(UpdateNewMessage update, User user)
     {
         var dbuser = await context.FindAsync<Data.User>(update.message.Peer.ID);
 
@@ -23,6 +23,26 @@ public class StartCommand(Client client, AppDbContext context) : ICommand
         }
 
         await client.Messages_SendMessage(user, $"Hello {user.first_name}!", new Random().NextInt64(),
-            reply_markup: App.MainReplyKeyboardMarkup);
+            reply_markup: new ReplyKeyboardMarkup
+            {
+                rows =
+                [
+                    new KeyboardButtonRow
+                    {
+                        buttons =
+                        [
+                            new KeyboardButton
+                            {
+                                text = "Cookies"
+                            },
+                            new KeyboardButton
+                            {
+                                text = "Services"
+                            }
+                        ]
+                    }
+                ],
+                flags = ReplyKeyboardMarkup.Flags.resize
+            });
     }
 }

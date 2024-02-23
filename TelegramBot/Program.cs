@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System.Text;
+using Autofac;
 using CG.Web.MegaApiClient;
 using Core.Models.Configs;
 using Core.Models.Extensions;
@@ -37,6 +38,7 @@ public static class Program
 
     private static Task InitializeServices()
     {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Program.ConfigureLogging();
 
         var builder = new ContainerBuilder();

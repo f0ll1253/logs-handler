@@ -1,5 +1,5 @@
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
-using Aspose.Zip.SevenZip;
 using CG.Web.MegaApiClient;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -10,32 +10,21 @@ namespace TelegramBot.Services;
 
 public class DataService(Client client, IMegaApiClient mega, IConfiguration config)
 {
-    private readonly string _baseFolder = config["BaseFolder"]!;
-
-    public string CreateZipPath(
-        string logsname,
-        [CallerMemberName] string name = "")
-    {
-        string dir = Path.Combine(this._baseFolder, name);
-
-        Directory.CreateDirectory(dir);
-
-        return Path.Combine(dir, $"{logsname}.zip");
-    }
+    public string BaseFolder { get; } = config["BaseFolder"]!;
 
     public string? GetLogsPath(string logsname) =>
-        Directory.GetFiles(Path.Combine(this._baseFolder, "Logs"))
+        Directory.GetFiles(Path.Combine(BaseFolder, "Logs"))
                  .FirstOrDefault(x => new DirectoryInfo(x).Name == logsname);
 
     public string GetExtractedPath(string logsname) =>
-        Path.Combine(this._baseFolder, "Extracted", logsname);
+        Path.Combine(BaseFolder, "Extracted", logsname);
 
     public async Task<string> SaveAsync(
         string filename,
         IEnumerable<string> lines,
         [CallerMemberName] string name = "")
     {
-        var file = new FileInfo(Path.Combine(this._baseFolder, name, $"{filename}.txt"));
+        var file = new FileInfo(Path.Combine(BaseFolder, name, $"{filename}.txt"));
 
         file.Directory?.Create();
 
@@ -48,7 +37,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
     }
 
     public IEnumerable<string> AvailableLogs(int start = 0, int count = -1) =>
-        Directory.GetDirectories(Path.Combine(this._baseFolder, "Extracted"))
+        Directory.GetDirectories(Path.Combine(BaseFolder, "Extracted"))
                  .Select(x => new DirectoryInfo(x))
                  .OrderByDescending(x => x.CreationTimeUtc)
                  .Take(count == -1 ? Range.All : new Range(start * count, start * count + count))
@@ -62,24 +51,22 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         string name)
     {
         // init dir
-        string dir = Path.Combine(this._baseFolder, name, logsname),
+        string dir = Path.Combine(BaseFolder, name, logsname),
                archive = Path.Combine(dir, $"{subpath}.zip");;
 
         Directory.CreateDirectory(dir);
 
-        using var zip = new SevenZipArchive();
+        using var zip = ZipFile.Open(archive, ZipArchiveMode.Create);
 
         for (int i = 0; i < data.Length; i++)
         {
-            var memory = new MemoryStream();
-            var writer = new StreamWriter(memory);
+            var entry = zip.CreateEntry($"{filename}{i}.txt");
 
-            foreach (string str in data[i]) await writer.WriteLineAsync(str);
-
-            zip.CreateEntry($"{filename}{i}.txt", memory);
+            using (var stream = entry.Open())
+                using (var writer = new StreamWriter(stream))
+                    foreach (string str in data[i])
+                        await writer.WriteLineAsync(str);
         }
-
-        zip.Save(archive);
 
         return archive;
     }
@@ -88,22 +75,24 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
     {
         var fileinfo = new FileInfo(filepath);
         string filename = fileinfo.Name[..fileinfo.Name.LastIndexOf('.')];
-        string destinationPath = Path.Combine(this._baseFolder, "Extracted", filename);
+        string destinationPath = Path.Combine(BaseFolder, "Extracted", filename);
 
         if (Directory.Exists(destinationPath)) return destinationPath;
 
         Directory.CreateDirectory(destinationPath);
 
-        var zip = new SevenZipArchive(filepath, password);
+        using var zip = Ionic.Zip.ZipFile.Read(filepath);
+
+        zip.Password = password ?? "";
         
         try
         {
             var destinationInfo = new DirectoryInfo(destinationPath);
             
-            if (zip.Entries.Any(x => x.IsDirectory && x.Name == destinationInfo.Name))
-                zip.ExtractToDirectory(destinationInfo.Parent!.FullName);
+            if (zip.Entries.Any(x => x.IsDirectory && x.FileName == destinationInfo.Name))
+                zip.ExtractAll(destinationInfo.Parent!.FullName);
             else
-                zip.ExtractToDirectory(destinationPath);
+                zip.ExtractAll(destinationPath);
         }
         catch (Exception e)
         {
@@ -146,7 +135,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         if (document.mime_type is not ("zip" or "rar" or "7z"))
             return null;
 
-        string filepath = Path.Combine(this._baseFolder, "Logs", document.Filename);
+        string filepath = Path.Combine(BaseFolder, "Logs", document.Filename);
 
         if (File.Exists(filepath))
             return filepath;

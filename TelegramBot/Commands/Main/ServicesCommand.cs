@@ -8,7 +8,7 @@ public class ServicesCommand(Client client) : ICommand
 {
     public bool AuthorizedOnly { get; } = true;
 
-    public Task Invoke(UpdateNewMessage update, User user) =>
+    Task ICommand.Invoke(UpdateNewMessage update, User user) =>
         client.Messages_SendMessage(
             user,
             "Available Services",

@@ -17,8 +17,8 @@ public static class TelegramClientExtensions
 
     public static Task SendMessageAvailableLogs(this Client client,
         InputPeer peer,
-        DataService data,
         string message,
+        DataService data,
         IEnumerable<KeyboardButtonRow>? reply_markup = null)
     {
         var logs = data.AvailableLogs(count: 5);
@@ -65,47 +65,44 @@ public static class TelegramClientExtensions
         int messageid,
         byte[] updatebytes)
     {
-        if (updatebytes.Length == 1)
-        {
-            var buttons = data.LogsToButtons(updatebytes[0]);
-            var markup = (ReplyInlineMarkup)(await client.FindMessage(messageid)).reply_markup;
+        if (updatebytes.Length != 1) return Encoding.UTF8.GetString(updatebytes);
 
-            await client.Messages_EditMessage(
-                peer,
-                messageid,
-                reply_markup: new ReplyInlineMarkup
-                {
-                    rows = buttons
-                           .Append(new KeyboardButtonRow
-                           {
-                               buttons = new[]
-                                         {
-                                             updatebytes[0] == 0
-                                                 ? null
-                                                 : new KeyboardButtonCallback
-                                                 {
-                                                     text = "\u25c0\ufe0f",
-                                                     data = [(byte)(updatebytes[0] - 1)]
-                                                 },
-                                             buttons.Count() == 5
-                                                 ? new KeyboardButtonCallback
-                                                 {
-                                                     text = "\u25b6\ufe0f",
-                                                     data = [(byte)(updatebytes[0] + 1)]
-                                                 }
-                                                 : null
-                                         }
-                                         .Where(x => x is { })
-                                         .ToArray()
-                           })
-                           .Union(markup.rows[(buttons.Count() + 1)..])
-                           .ToArray()
-                });
+        var buttons = data.LogsToButtons(updatebytes[0]);
+        var markup = (ReplyInlineMarkup)(await client.FindMessage(messageid)).reply_markup;
 
-            return null;
-        }
+        await client.Messages_EditMessage(
+            peer,
+            messageid,
+            reply_markup: new ReplyInlineMarkup
+            {
+                rows = buttons
+                       .Append(new KeyboardButtonRow
+                       {
+                           buttons = new[]
+                                     {
+                                         updatebytes[0] == 0
+                                             ? null
+                                             : new KeyboardButtonCallback
+                                             {
+                                                 text = "\u25c0\ufe0f",
+                                                 data = [(byte)(updatebytes[0] - 1)]
+                                             },
+                                         buttons.Count() == 5
+                                             ? new KeyboardButtonCallback
+                                             {
+                                                 text = "\u25b6\ufe0f",
+                                                 data = [(byte)(updatebytes[0] + 1)]
+                                             }
+                                             : null
+                                     }
+                                     .Where(x => x is { })
+                                     .ToArray()
+                       })
+                       .Union(markup.rows[(buttons.Count() + 1)..])
+                       .ToArray()
+            });
 
-        return Encoding.UTF8.GetString(updatebytes);
+        return null;
     }
 
     private static IEnumerable<KeyboardButtonRow> LogsToButtons(this DataService data, int start = 0, int count = 5) =>

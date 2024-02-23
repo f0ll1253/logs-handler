@@ -18,10 +18,7 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
     public bool AuthorizedOnly { get; } = true;
 
     Task ICommand.Invoke(UpdateNewMessage update, User user) =>
-        client.SendMessageAvailableLogs(
-            user,
-            data,
-            "Cookies\nSelect logs");
+        client.SendMessageAvailableLogs(user, "Cookies\nSelect logs", data);
 
     async Task ICallbackCommand.Invoke(UpdateBotCallbackQuery update, User user)
     {

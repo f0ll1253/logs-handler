@@ -10,7 +10,7 @@ public class InviteCommand(Client client, AppDbContext context) : ICommand
 {
     public bool AuthorizedOnly { get; } = false;
 
-    async Task ICommand.Invoke(UpdateNewMessage update, User user)
+    public async Task Invoke(UpdateNewMessage update, User user)
     {
         var message = (Message)update.message;
         string? codeId = message.message.Split(' ').ElementAtOrDefault(1);

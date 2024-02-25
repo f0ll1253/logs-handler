@@ -10,7 +10,7 @@ public class StartCommand(Client client, AppDbContext context) : ICommand
 {
     public bool AuthorizedOnly { get; } = false;
 
-    async Task ICommand.Invoke(UpdateNewMessage update, User user)
+    public async Task Invoke(UpdateNewMessage update, User user)
     {
         var dbuser = await context.FindAsync<Data.User>(update.message.Peer.ID);
 

@@ -15,7 +15,7 @@ public static class TelegramClientExtensions
         await client.Messages_EditMessage(peer, id, message,
             reply_markup: reply_markup ?? (await client.FindMessage(id)).reply_markup);
 
-    public static Task SendMessageAvailableLogs(this Client client,
+    public static Task SendAvailableLogs(this Client client,
         InputPeer peer,
         string message,
         DataService data,

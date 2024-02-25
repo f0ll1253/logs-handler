@@ -67,7 +67,7 @@ public partial class App(Client client, IConfiguration config, DataService data)
         if (update.message is not Message message)
             return;
 
-        if (message is { flags: Message.Flags.has_media, media: MessageMediaDocument { document: Document document } })
+        if (message is { media: MessageMediaDocument { document: Document document } })
         {
             string? filepath = await data.DownloadDocumentAsync(document);
 
@@ -75,12 +75,32 @@ public partial class App(Client client, IConfiguration config, DataService data)
 
             string? password =
                 App.RegexPassword()
-                   .Match(((Message)update.message).message).Groups[4]
-                    is { Success: true, Value: not "none" and "\u2796" } result
+                   .Match(((Message)update.message).message).Groups[6]
+                    is { Success: true, Value: not "none" and not "\u2796" } result
                     ? result.Value
                     : null;
 
-            data.ExtractFiles(filepath, password);
+            string? extractedPath = null;
+
+            try
+            {
+                extractedPath = data.ExtractFiles(filepath, password);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString());
+
+#if DEBUG
+                await client.Messages_SendMessage(Users[message.Peer.ID], $"Error while extracting from {new FileInfo(filepath).Name}",
+                    Random.Shared.NextInt64());
+#endif
+            }
+            
+            if (extractedPath is not null)
+            {
+                await client.Messages_SendMessage(Users[message.Peer.ID], $"Archive downloaded {new DirectoryInfo(extractedPath).Name}",
+                    Random.Shared.NextInt64());
+            }
             
             return;
         }
@@ -102,6 +122,6 @@ public partial class App(Client client, IConfiguration config, DataService data)
         await cmd.Invoke(update, App.Users[message.Peer.ID]);
     }
 
-    [GeneratedRegex(@"(P|p)?ass(word)?.?[a-zA-Z0-9]*?\s?(:|-)?\s?(.+)($|\n)")]
+    [GeneratedRegex(@"(P|p)?ass(word)?\s?(:|-)?(\s\(.+?\)\s)?(\n|\s)?\s?(.+)($|\n)")]
     private static partial Regex RegexPassword();
 }

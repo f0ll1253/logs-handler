@@ -4,11 +4,11 @@ using Core.Parsers.Extensions;
 
 namespace Core.Parsers;
 
-public static class Links
+public static class Requests
 {
-    public static IEnumerable<Account> LinksFromLogs(this IEnumerable<string> links, string path) =>
+    public static IEnumerable<Account> RequestsFromLogs(this IEnumerable<string> links, string path) =>
         Directory.GetDirectories(path)
-                 .SelectPerTask(links.LinksFromLog)
+                 .SelectPerTask(links.RequestsFromLog)
                  .SelectMany(x => x)
                  .Where(x => x is { })
                  .DistinctBy(x =>
@@ -19,7 +19,7 @@ public static class Links
                             x.Url["https:\\".Length..(domainend == -1 ? x.Url.Length : domainend)];
                  })!;
 
-    public static IEnumerable<Account?> LinksFromLog(this IEnumerable<string> links, string path)
+    public static IEnumerable<Account?> RequestsFromLog(this IEnumerable<string> links, string path)
     {
         if (!Directory.Exists(path)) throw new DirectoryNotFoundException(path);
 

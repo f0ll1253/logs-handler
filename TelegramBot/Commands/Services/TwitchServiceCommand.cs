@@ -11,11 +11,11 @@ public class TwitchServiceCommand(Client client, DataService data) : ICommand, I
 {
     public bool AuthorizedOnly { get; } = true;
 
-    Task ICommand.Invoke(UpdateNewMessage update, User user) =>
-        client.SendMessageAvailableLogs(user, "Twitch", data);
+    public Task Invoke(UpdateNewMessage update, User user) =>
+        client.SendAvailableLogs(user, "Twitch", data);
     
     // ◀️▶️
-    async Task ICallbackCommand.Invoke(UpdateBotCallbackQuery update, User user)
+    public async Task Invoke(UpdateBotCallbackQuery update, User user)
     {
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;

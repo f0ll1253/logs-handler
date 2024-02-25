@@ -1,8 +1,12 @@
-using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CG.Web.MegaApiClient;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using SharpCompress.Archives;
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using SharpCompress.Writers.Zip;
 using TL;
 using WTelegram;
 
@@ -52,23 +56,32 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
     {
         // init dir
         string dir = Path.Combine(BaseFolder, name, logsname),
-               archive = Path.Combine(dir, $"{subpath}.zip");;
+               path = Path.Combine(dir, $"{subpath}.zip");;
 
         Directory.CreateDirectory(dir);
 
-        using var zip = ZipFile.Open(archive, ZipArchiveMode.Create);
-
+        using var zip = ArchiveFactory.Create(ArchiveType.Zip);
+        
         for (int i = 0; i < data.Length; i++)
         {
-            var entry = zip.CreateEntry($"{filename}{i}.txt");
-
-            using (var stream = entry.Open())
-                using (var writer = new StreamWriter(stream))
-                    foreach (string str in data[i])
-                        await writer.WriteLineAsync(str);
+            var stream = new MemoryStream();
+            
+            using (var writer = new StreamWriter(stream, leaveOpen: true))
+            {
+                await writer.WriteAsync(string.Join('\n', data[i]));
+            }
+            
+            stream.Position = 0;
+            
+            zip.AddEntry($"{filename}{i}.txt", stream, true);
         }
+        
+        zip.SaveTo(path, new ZipWriterOptions(CompressionType.LZMA)
+        {
+            LeaveStreamOpen = true
+        });
 
-        return archive;
+        return path;
     }
 
     public string? ExtractFiles(string filepath, string? password)
@@ -81,30 +94,27 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 
         Directory.CreateDirectory(destinationPath);
 
-        using var zip = Ionic.Zip.ZipFile.Read(filepath);
-
-        zip.Password = password ?? "";
+        using var archive = ArchiveFactory.Open(filepath, new ReaderOptions
+        {
+            Password = password,
+            LookForHeader = true,
+            DisableCheckIncomplete = true
+        });
         
+        var destinationInfo = new DirectoryInfo(destinationPath);
+
         try
         {
-            var destinationInfo = new DirectoryInfo(destinationPath);
-            
-            if (zip.Entries.Any(x => x.IsDirectory && x.FileName == destinationInfo.Name))
-                zip.ExtractAll(destinationInfo.Parent!.FullName);
-            else
-                zip.ExtractAll(destinationPath);
+            archive.ExtractToDirectory(archive.Entries.Any(x => x.IsDirectory && x.Key == destinationInfo.Name)
+                ? destinationInfo.Parent!.FullName
+                : destinationInfo.FullName);
         }
-        catch (Exception e)
+        catch
         {
-            Directory.Delete(destinationPath);
-            Log.Error(e.ToString());
-            return null;
+            Directory.Delete(destinationPath, true);
+            throw;
         }
-        finally
-        {
-            zip.Dispose();
-        }
-
+        
         return destinationPath;
     }
 
@@ -132,7 +142,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 
     public async Task<string?> DownloadDocumentAsync(Document document)
     {
-        if (document.mime_type is not ("zip" or "rar" or "7z"))
+        if (document.mime_type is not ("application/zip" or "application/vnd.rar"))
             return null;
 
         string filepath = Path.Combine(BaseFolder, "Logs", document.Filename);

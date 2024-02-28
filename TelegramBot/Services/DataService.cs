@@ -1,20 +1,45 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using CG.Web.MegaApiClient;
 using Microsoft.Extensions.Configuration;
-using Serilog;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Writers.Zip;
+using TelegramBot.Data;
 using TL;
 using WTelegram;
+using File = System.IO.File;
 
 namespace TelegramBot.Services;
 
-public class DataService(Client client, IMegaApiClient mega, IConfiguration config)
+public class DataService(Client client, IMegaApiClient mega, IConfiguration config, AppDbContext context)
 {
     public string BaseFolder { get; } = config["BaseFolder"]!;
+
+    public async Task SendFilesAsync(InputPeer peer, IEnumerable<string> files, string hashTag, string logsname)
+    {
+        if (files.Count() == 0)
+            return;
+        
+        var messages = await client.SendAlbumAsync(peer,
+            await files
+                  .ToAsyncEnumerable()
+                  .SelectAwait(async x => await client.UploadFileAsync(x))
+                  .Select(x => new InputMediaUploadedDocument(x, "application/zip"))
+                  .ToArrayAsync(),
+            caption: $"#{hashTag}\n{logsname}",
+            entities:
+            [
+                new MessageEntityHashtag
+                {
+                    length = $"#{hashTag}".Length,
+                    offset = 0
+                }
+            ]
+        );
+
+        await SaveFilesData(messages, logsname);
+    }
 
     public string? GetLogsPath(string logsname) =>
         Directory.GetFiles(Path.Combine(BaseFolder, "Logs"))
@@ -157,4 +182,23 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
     }
 
     #endregion
+    
+    private async Task SaveFilesData(Message[] messages, string logsname)
+    {
+        var medias = messages
+                     .Select(x => (MessageMediaDocument)x.media)
+                     .Select(x => (Document)x.document);
+
+        await context.AddRangeAsync(medias.Select(x => new TelegramBot.Data.File
+        {
+            Id = x.id,
+            AccessHash = x.access_hash,
+            FileReference = x.file_reference,
+            Type = x.Filename,
+            Category = "Cookies",
+            LogsName = logsname
+        }));
+
+        await context.SaveChangesAsync();
+    }
 }

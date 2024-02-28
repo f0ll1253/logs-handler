@@ -130,6 +130,9 @@ public static class Program
         builder.RegisterType<CookiesCommand>()
                .Named<ICommand>("Cookies")
                .Named<ICallbackCommand>("Cookies");
+        builder.RegisterType<AccountsCommand>()
+               .Named<ICommand>("Accounts")
+               .Named<ICallbackCommand>("Accounts");
 
         // services
         builder.RegisterType<ServicesCommand>()

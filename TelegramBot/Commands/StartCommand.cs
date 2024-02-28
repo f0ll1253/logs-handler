@@ -40,7 +40,17 @@ public class StartCommand(Client client, AppDbContext context) : ICommand
                                 text = "Services"
                             }
                         ]
-                    }
+                    },
+                    new KeyboardButtonRow
+                    {
+                        buttons =
+                        [
+                            new KeyboardButton
+                            {
+                                text = "Accounts"
+                            },
+                        ]
+                    },
                 ],
                 flags = ReplyKeyboardMarkup.Flags.resize
             });

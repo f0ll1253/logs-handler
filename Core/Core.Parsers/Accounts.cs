@@ -20,7 +20,7 @@ public static class Accounts
     public static IDictionary<string, IEnumerable<Account>> AccountsFromLog(
         this IEnumerable<string> domains, string path)
     {
-        string file = Path.Combine(path, "Passwords.txt");
+        string file = Path.Combine(path, "passwords.txt");
 
         if (!File.Exists(file)) return new Dictionary<string, IEnumerable<Account>>();
 

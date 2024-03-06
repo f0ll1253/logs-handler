@@ -66,18 +66,10 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
     private async Task ProcessArchive(int messageId, InputPeer peer, string logsname, string? password)
     {
         await client.EditMessage(peer, messageId, $"Cookies\nStart parsing cookies from {logsname}");
+
+        await data.SendFilesAsync(peer, ParseCookies(data.GetExtractedPath(logsname)).ToEnumerable(), "Cookies", logsname);
         
-        if (data.GetLogsPath(logsname) is not { } zippath ||
-            data.ExtractFiles(zippath, password) is not { } dir)
-        {
-            dir = data.GetExtractedPath(logsname);
-
-            if (!Directory.Exists(dir)) return;
-        }
-
         await client.EditMessage(peer, messageId, $"Cookies\n{logsname} successfully processed");
-
-        await data.SendFilesAsync(peer, ParseCookies(dir).ToEnumerable(), "Cookies", logsname);
     }
 
     private IAsyncEnumerable<string> ParseCookies(string logs) =>

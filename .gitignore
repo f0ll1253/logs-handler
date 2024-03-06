@@ -6,3 +6,6 @@ riderModule.iml
 /_ReSharper.Caches/
 FodyWeavers.*
 *sln.DotSettings*
+log.txt
+mega.json
+*.db

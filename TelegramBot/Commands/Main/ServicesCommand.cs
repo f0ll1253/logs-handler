@@ -37,6 +37,16 @@ public class ServicesCommand(Client client) : ICommand
                         [
                             new KeyboardButton
                             {
+                                text = "Discord"
+                            }
+                        ]
+                    },
+                    new KeyboardButtonRow
+                    {
+                        buttons =
+                        [
+                            new KeyboardButton
+                            {
                                 text = "Back"
                             }
                         ]

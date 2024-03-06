@@ -143,6 +143,9 @@ public static class Program
         builder.RegisterType<TelegramServiceCommand>()
                .Named<ICommand>("Telegram")
                .Named<ICallbackCommand>("Telegram");
+        builder.RegisterType<DiscordServiceCommand>()
+               .Named<ICommand>("Discord")
+               .Named<ICallbackCommand>("Discord");
 
         return builder;
     }

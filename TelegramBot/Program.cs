@@ -2,7 +2,6 @@
 using Autofac;
 using CG.Web.MegaApiClient;
 using Core.Models.Configs;
-using Core.Models.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;

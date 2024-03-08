@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using CG.Web.MegaApiClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -16,42 +16,25 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 {
     public string BaseFolder { get; } = config["BaseFolder"]!;
 
-    public async Task SendFilesAsync(InputPeer peer, IEnumerable<string> files, string hashTag, string logsname)
-    {
-        if (files.Count() == 0)
-            return;
-        
-        var messages = await client.SendAlbumAsync(peer,
-            await files
-                  .ToAsyncEnumerable()
-                  .SelectAwait(async x => await client.UploadFileAsync(x))
-                  .Select(x => new InputMediaUploadedDocument(x, "application/zip"))
-                  .ToArrayAsync(),
-            caption: $"#{hashTag}\n{logsname}",
-            entities:
-            [
-                new MessageEntityHashtag
-                {
-                    length = $"#{hashTag}".Length,
-                    offset = 0
-                }
-            ]
-        );
-
-        await SaveFilesData(messages, logsname);
-    }
-
-    public string? GetLogsPath(string logsname) =>
-        Directory.GetFiles(Path.Combine(BaseFolder, "Logs"))
-                 .FirstOrDefault(x => new DirectoryInfo(x).Name == logsname);
-
     public string GetExtractedPath(string logsname) =>
         Path.Combine(BaseFolder, "Extracted", logsname);
+
+    public string GetServicePath(string logsname, string name) =>
+        Path.Combine(BaseFolder, name, logsname);
+
+    public IEnumerable<string> AvailableLogs(int start = 0, int count = -1) =>
+        Directory.GetDirectories(Path.Combine(BaseFolder, "Extracted"))
+                 .Select(x => new DirectoryInfo(x))
+                 .OrderByDescending(x => x.CreationTimeUtc)
+                 .Take(count == -1 ? Range.All : new Range(start * count, start * count + count))
+                 .Select(x => x.Name);
+
+    #region data manipulation
 
     public async Task<string> SaveAsync(
         string filename,
         IEnumerable<string> lines,
-        [CallerMemberName] string name = "")
+        string name = "")
     {
         var file = new FileInfo(Path.Combine(BaseFolder, name, $"{filename}.txt"));
 
@@ -64,14 +47,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 
         return file.FullName;
     }
-
-    public IEnumerable<string> AvailableLogs(int start = 0, int count = -1) =>
-        Directory.GetDirectories(Path.Combine(BaseFolder, "Extracted"))
-                 .Select(x => new DirectoryInfo(x))
-                 .OrderByDescending(x => x.CreationTimeUtc)
-                 .Take(count == -1 ? Range.All : new Range(start * count, start * count + count))
-                 .Select(x => x.Name);
-
+    
     public async Task<string> SaveZipAsync(
         string logsname,
         string filename,
@@ -81,7 +57,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
     {
         // init dir
         string dir = Path.Combine(BaseFolder, name, logsname),
-               path = Path.Combine(dir, $"{subpath}.zip");;
+            path = Path.Combine(dir, $"{subpath}.zip");;
 
         Directory.CreateDirectory(dir);
 
@@ -143,6 +119,8 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         return destinationPath;
     }
 
+    #endregion
+
     #region network
 
     public async Task<string> GetShareLinkAsync(string filepath)
@@ -150,6 +128,79 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
         var node = await mega.UploadFileAsync(filepath, (await mega.GetNodesAsync()).First());
 
         return (await mega.GetDownloadLinkAsync(node)).ToString();
+    }
+    
+    public async Task<bool> TrySendUploadedAsync(InputPeer peer, string logsname, string category)
+    {
+        var uploaded = await context.Files!
+            .Where(x => x.LogsName == logsname)
+            .Where(x => x.Category == category)
+            .ToListAsync();
+
+        if (!uploaded.Any())
+            return false;
+
+        foreach (var group in uploaded
+                     .Select((x, y) => new { Index = y, Value = x })
+                     .GroupBy(x => x.Index / 8)
+                     .Select(x => x.Select(x => x.Value)))
+            await client.SendAlbumAsync(
+                peer,
+                group
+                    .Select(x => (InputMedia) new InputDocument
+                    {
+                        id = x.Id,
+                        access_hash = x.AccessHash,
+                        file_reference = x.FileReference
+                    })
+                    .ToList(),
+                caption: $"#Cookies\n{logsname}",
+                entities: 
+                [
+                    new MessageEntityHashtag
+                    {
+                        length = "#Cookies".Length,
+                        offset = 0
+                    }
+                ]
+            );
+
+        return true;
+    }
+
+    public async Task SendFilesAsync(InputPeer peer, IEnumerable<string> files, string logsname, string category)
+    {
+        if (!files.Any())
+        {
+            await client.SendMessageAsync(peer, "Sequence contains no elements");
+            
+            return;
+        }
+
+        var messages = new List<Message>();
+
+        foreach (var group in files
+                     .Select((x, y) => new { Index = y, Value = x })
+                     .GroupBy(x => x.Index / 8)
+                     .Select(x => x.Select(x => x.Value)))
+            messages.AddRange(await client.SendAlbumAsync(peer,
+                await group
+                    .ToAsyncEnumerable()
+                    .SelectAwait(async x => await client.UploadFileAsync(x))
+                    .Select(x => new InputMediaUploadedDocument(x, "application/zip"))
+                    .ToArrayAsync(),
+                caption: $"#{category}\n{logsname}",
+                entities:
+                [
+                    new MessageEntityHashtag
+                    {
+                        length = $"#{category}".Length,
+                        offset = 0
+                    }
+                ]
+            ));
+
+        await SaveFilesData(messages, logsname, category);
     }
 
     public async Task SendFileAsync(InputPeer peer, string filepath, string message = "")
@@ -183,7 +234,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
 
     #endregion
     
-    private async Task SaveFilesData(Message[] messages, string logsname)
+    private async Task SaveFilesData(IEnumerable<Message> messages, string logsname, string category)
     {
         var medias = messages
                      .Select(x => (MessageMediaDocument)x.media)
@@ -195,7 +246,7 @@ public class DataService(Client client, IMegaApiClient mega, IConfiguration conf
             AccessHash = x.access_hash,
             FileReference = x.file_reference,
             Type = x.Filename,
-            Category = "Cookies",
+            Category = category,
             LogsName = logsname
         }));
 

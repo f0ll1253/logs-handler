@@ -2,7 +2,7 @@ using Autofac;
 using Core.Models.Configs;
 using Microsoft.Extensions.Configuration;
 
-namespace Core.Models.Extensions;
+namespace TelegramBot.Extensions;
 
 public static class ContainerBuilderExtensions
 {

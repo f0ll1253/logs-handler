@@ -8,4 +8,4 @@ FodyWeavers.*
 *sln.DotSettings*
 log.txt
 mega.json
-*.db
+*.db*

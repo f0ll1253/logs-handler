@@ -1,7 +1,6 @@
 using SharpCompress;
 using SharpCompress.Archives;
 using SharpCompress.Common;
-using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using TelegramBot.Extensions;
 using TelegramBot.Models;

@@ -41,21 +41,6 @@ public static class Accounts
                 result.Add(picked, [account]);
         }
 
-        return result.ToDictionary(x => x.Key, x => x.Value.AsEnumerable());
-    }
-
-    public static IEnumerable<Account> AccountsFromLogs(this string domain, string path) =>
-        Directory.GetDirectories(path)
-                 .SelectPerTask(domain.AccountsFromLog)
-                 .SelectMany(x => x)
-                 .DistinctBy(x => x.ToStringShort());
-
-    public static IEnumerable<Account> AccountsFromLog(this string domain, string path)
-    {
-        string file = Path.Combine(path, "Passwords.txt");
-
-        if (!File.Exists(file)) return ArraySegment<Account>.Empty;
-
-        return file.ReadAccounts(url => new Uri(url).Host.Contains(domain));
+        return result.ToDictionary(x => x.Key, x => x.Value.Distinct());
     }
 }

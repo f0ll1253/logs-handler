@@ -24,62 +24,20 @@ public class CookiesCommand(Client client, AppDbContext context, ParsingConfig c
         if (await client.SendCallbackAvailableLogsOrGetPath(user, data, update.msg_id, update.data) is not
             { } logsname) return;
 
-        if (await TrySendUploadedAsync(user, logsname))
+        if (await data.TrySendUploadedAsync(user, logsname, "Cookies"))
             return;
 
-        await ProcessArchive(update.msg_id, user, logsname, null);
+        await ProcessArchive(update.msg_id, user, logsname);
     }
 
-    private async Task<bool> TrySendUploadedAsync(InputPeer peer, string logsname)
-    {
-        var uploaded = context.Files!
-               .Where(x => x.LogsName == logsname)
-               .Where(x => x.Category == "Cookies");
-
-        if (!await uploaded.AnyAsync())
-            return false;
-
-        await client.SendAlbumAsync(
-            peer,
-            await uploaded
-                  .Select(x => (InputMedia) new InputDocument
-                  {
-                      id = x.Id,
-                      access_hash = x.AccessHash,
-                      file_reference = x.FileReference
-                  })
-                  .ToListAsync(),
-            caption: $"#Cookies\n{logsname}",
-            entities: 
-            [
-                new MessageEntityHashtag
-                {
-                    length = "#Cookies".Length,
-                    offset = 0
-                }
-            ]
-        );
-
-        return true;
-    }
-
-    private async Task ProcessArchive(int messageId, InputPeer peer, string logsname, string? password)
+    private async Task ProcessArchive(int messageId, InputPeer peer, string logsname)
     {
         await client.EditMessage(peer, messageId, $"Cookies\nStart parsing cookies from {logsname}");
 
-        await data.SendFilesAsync(peer, ParseCookies(data.GetExtractedPath(logsname)).ToEnumerable(), "Cookies", logsname);
+        await data.SendFilesAsync(peer,  await ParseCookiesAsync(logsname), logsname, "Cookies");
         
         await client.EditMessage(peer, messageId, $"Cookies\n{logsname} successfully processed");
     }
 
-    private IAsyncEnumerable<string> ParseCookies(string logs) =>
-        cfgParse.Cookies.CookiesFromLogs(logs)
-                .ToAsyncEnumerable()
-                .SelectAwait(async x => 
-                    await data.SaveZipAsync(
-                        new DirectoryInfo(logs).Name,
-                        "cookies",
-                        x.Key.Domains.First(),
-                        x.Value.ToArray(),
-                        "Cookies"));
+    private Task<IEnumerable<string>> ParseCookiesAsync(string logsname) => cfgParse.Cookies.CookiesFromLogs(data.GetExtractedPath(logsname), data.GetServicePath(logsname, "Cookies"));
 }

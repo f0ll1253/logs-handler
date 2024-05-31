@@ -1,8 +1,7 @@
 .idea/
 bin/
 obj/
-/packages/
+packages/
 riderModule.iml
-/_ReSharper.Caches/
-FodyWeavers.*
+_ReSharper.Caches/
 *sln.DotSettings*

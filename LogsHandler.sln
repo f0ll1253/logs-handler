@@ -1,6 +1,5 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{632AFF71-FC74-4F71-A8BA-19C4508CD8F2}"
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot", "Bot\Bot.csproj", "{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,11 +7,17 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{632AFF71-FC74-4F71-A8BA-19C4508CD8F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{632AFF71-FC74-4F71-A8BA-19C4508CD8F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{632AFF71-FC74-4F71-A8BA-19C4508CD8F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{632AFF71-FC74-4F71-A8BA-19C4508CD8F2}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
+		{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FB4A75B-D258-4379-ABF1-6B7352A403A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FB4A75B-D258-4379-ABF1-6B7352A403A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FB4A75B-D258-4379-ABF1-6B7352A403A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FB4A75B-D258-4379-ABF1-6B7352A403A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D86A5086-F947-49DB-95D4-06E63280E1AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D86A5086-F947-49DB-95D4-06E63280E1AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D86A5086-F947-49DB-95D4-06E63280E1AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D86A5086-F947-49DB-95D4-06E63280E1AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

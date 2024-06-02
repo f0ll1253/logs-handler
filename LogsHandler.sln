@@ -1,6 +1,8 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot", "Bot\Bot.csproj", "{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Parsers", "Bot.Parsers\Bot.Parsers.csproj", "{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -9,5 +11,9 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}.Debug|Any CPU.ActiveCfg = Debug|linux-x64
 		{8ADA05F0-89DA-469A-874A-AC64C0B9D04A}.Debug|Any CPU.Build.0 = Debug|linux-x64
+		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

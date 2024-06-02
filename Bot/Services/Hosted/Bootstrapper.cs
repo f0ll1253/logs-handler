@@ -18,13 +18,13 @@ public class Bootstrapper(
         await client.LoginBotIfNeeded(configuration["Bot:Token"]);
         _manager = client.WithUpdateManager(
             HandleUpdate,
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Session", "state.json"),
+            Path.Combine(Directory_Session, "state.json"),
             reentrant: true
         );
     }
 
     public Task StopAsync(CancellationToken cancellationToken) {
-        _manager.SaveState(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Session", "state.json"));
+        _manager.SaveState(Path.Combine(Directory_Session, "state.json"));
 
         return Task.CompletedTask;
     }

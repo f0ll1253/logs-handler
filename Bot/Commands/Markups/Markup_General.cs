@@ -6,10 +6,10 @@ public static class Markup_General {
     
     /// <param name="showing_method">Callback which shows logs</param>
     /// <param name="method">Method for processing logs by name</param>
-    public static ReplyInlineMarkup? AvailableLogsMarkup(string showing_method, string method, string role = "user", int page = 0, int limit = 5) {
+    public static ReplyInlineMarkup? AvailableLogsMarkup(string showing_method, string method, string role = "user", string back_method = "user_start", int page = 0, int limit = 5) {
         var logs = Directory
             // Select logs by creation time
-            .GetDirectories(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Extracted"))
+            .GetDirectories(Directory_Extracted)
             .Select(x => new DirectoryInfo(x))
             .OrderByDescending(x => x.CreationTime)
             .Skip(page * limit)
@@ -30,7 +30,7 @@ public static class Markup_General {
             return null;
         }
 
-        if (NavigationRow(showing_method, role, logs.Count, page, limit) is { } navigation) {
+        if (NavigationRow(back_method, showing_method, role, logs.Count, page, limit) is { } navigation) {
             logs.Add(navigation);
         }
         
@@ -40,7 +40,7 @@ public static class Markup_General {
                 new KeyboardButtonCallback()
                 {
                     text = "Back",
-                    data = $"{role}_start".Utf8()
+                    data = back_method.Utf8()
                 }
             ]
         });
@@ -48,7 +48,7 @@ public static class Markup_General {
         return new() { rows = logs.ToArray() };
     }
 
-    public static KeyboardButtonRow? NavigationRow(string action, string role, int count, int page, int limit) {
+    public static KeyboardButtonRow? NavigationRow(string back_method, string showing_method, string role, int count, int page, int limit) {
         var row = new KeyboardButtonRow()
         {
             buttons = [
@@ -57,19 +57,19 @@ public static class Markup_General {
             ]
         };
 
-        if (page == 0) {
+        if (page > 0) {
             row.buttons[0] = new KeyboardButtonCallback()
             {
                 text = "\u25c0\ufe0f",
-                data = $"{role}_{action}:{page - 1}".Utf8()
+                data = $"{role}_{showing_method}:{page - 1}:{back_method}".Utf8()
             };
         }
 
-        if (count - (page + 1) * limit <= 0) {
+        if (count - (page + 1) * limit > 0) {
             row.buttons[1] = new KeyboardButtonCallback()
             {
                 text = "\u25b6\ufe0f",
-                data = $"{role}_{action}:{page + 1}".Utf8()
+                data = $"{role}_{showing_method}:{page + 1}:{back_method}".Utf8()
             };
         }
 

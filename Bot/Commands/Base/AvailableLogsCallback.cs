@@ -11,9 +11,10 @@ public abstract class AvailableLogsCallback(
     Client client) : ICommand<UpdateBotCallbackQuery> {
     public Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {
         var data = update.data.Utf8().Split(':');
-        var page = data.Length == 1 ? 0 : int.Parse(data[1]);
+        var page = int.Parse(data[1]);
+        var back = data[2];
 
-        if (Markup_General.AvailableLogsMarkup(showing_method, method, page: page) is not { } markup) {
+        if (Markup_General.AvailableLogsMarkup(showing_method, method, back_method: back, page: page) is not { } markup) {
             return client.Messages_SetBotCallbackAnswer(
                 update.query_id,
                 0,
@@ -21,10 +22,10 @@ public abstract class AvailableLogsCallback(
             );
         }
         
-        return client.Messages_SendMessage(
+        return client.Messages_EditMessage(
             user,
+            update.msg_id,
             Markup_General.AvailableLogsText,
-            Random.Shared.NextInt64(),
             reply_markup: markup
         );
     }

@@ -15,6 +15,7 @@
         <Using Include="TL" />
         
         <Using Include="Bot.Extensions" />
+        <Using Include="Bot.Constants" Static="True" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,6 +26,10 @@
       <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
       <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
       <PackageReference Include="WTelegramClient" Version="4.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Bot.Parsers\Bot.Parsers.csproj" />
     </ItemGroup>
 
 </Project>

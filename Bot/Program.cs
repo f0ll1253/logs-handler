@@ -11,8 +11,9 @@ namespace Bot;
 
 internal static class Program {
     public static void Main(string[] args) {
-        Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Session"));
-        Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Extracted"));
+        Directory.CreateDirectory(Directory_Session);
+        Directory.CreateDirectory(Directory_Extracted);
+        Directory.CreateDirectory(Directory_Downloaded);
         
         var builder = Host.CreateApplicationBuilder(args);
 
@@ -27,7 +28,7 @@ internal static class Program {
             new Client(
                 int.Parse(builder.Configuration["Bot:ApiId"]!), 
                 builder.Configuration["Bot:ApiHash"]!, 
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Session", ".session")
+                Path.Combine(Directory_Session, ".session")
             )
         );
 
@@ -37,9 +38,10 @@ internal static class Program {
 
         // Services
         builder.Services.AddHostedService<Bootstrapper>();
-
-        // Commands
+        
+        // Injectio
         builder.Services.AddBot();
+        builder.Services.AddBotParsers();
 
         var app = builder.Build();
 

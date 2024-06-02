@@ -11,7 +11,7 @@ public class StartCommand(Client client) : ICommand<UpdateNewMessage>, ICommand<
             user,
             $"Hello, {user.username}!",
             Random.Shared.NextInt64(),
-            reply_markup: Markup_User.StartMarkup
+            reply_markup: Markup_User.StartMarkup("user_start")
         );
     }
 
@@ -20,7 +20,7 @@ public class StartCommand(Client client) : ICommand<UpdateNewMessage>, ICommand<
             user,
             update.msg_id,
             $"Hello, {user.username}!",
-            reply_markup: Markup_User.StartMarkup
+            reply_markup: Markup_User.StartMarkup("user_start")
         );
     }
 }

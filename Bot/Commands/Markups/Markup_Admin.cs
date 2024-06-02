@@ -3,7 +3,7 @@ namespace Bot.Commands.Markups;
 public static class Markup_Admin {
     public static ReplyInlineMarkup StartMarkup { get; } = new()
     {
-        rows = Markup_User.StartMarkupRows
+        rows = Markup_User.StartMarkupRows("admin_start")
             .Append(new()
             {
                 buttons = [

@@ -1,7 +1,5 @@
-using Bot.Commands;
 using Bot.Data;
 using Bot.Models;
-using Bot.Models.Abstractions;
 using Bot.Services.Hosted;
 
 using Microsoft.EntityFrameworkCore;

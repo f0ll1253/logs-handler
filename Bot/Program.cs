@@ -1,5 +1,7 @@
+using Bot.Commands;
 using Bot.Data;
 using Bot.Models;
+using Bot.Models.Abstractions;
 using Bot.Services.Hosted;
 
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +40,7 @@ internal static class Program {
         builder.Services.AddHostedService<Bootstrapper>();
 
         // Commands
-        builder.Services.AddBot("User", "Admin");
+        builder.Services.AddBot();
 
         var app = builder.Build();
 
@@ -53,14 +55,14 @@ internal static class Program {
     }
 
     public static void InitializeContext<TContext>(this IHost app) where TContext : DbContext {
-        using (var context = app.Services.GetRequiredService<TContext>()) {
-            context.Database.EnsureCreated();
+        var context = app.Services.GetRequiredService<TContext>();
+        
+        context.Database.EnsureCreated();
 
-            switch (context) {
-                case UsersDbContext:
-                    app._InitializeUsers(context);
-                    break;
-            }
+        switch (context) {
+            case UsersDbContext:
+                app._InitializeUsers(context);
+                break;
         }
     }
 

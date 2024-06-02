@@ -75,19 +75,34 @@ public class Bootstrapper(
         await (Task)GetType()
             .GetMethod("ExecuteCommandsAsync")!
             .MakeGenericMethod(command_update.GetType())
-            .Invoke(this, [commands, command_update, user])!;
+            .Invoke(this, [commands.ToList(), command_update, user])!;
     }
 
-    public async Task ExecuteCommandsAsync<TUpdate>(IEnumerable commands, Update command_update, User user) where TUpdate : Update {
-        foreach (ICommand<TUpdate> command in commands) {
-            // if can't execute
-            if (command is IFilter<User> filter && !await filter.CanExecuteAsync(user)) {
+    public async Task ExecuteCommandsAsync<TUpdate>(List<object> commands, Update command_update, User user) where TUpdate : Update {
+        var filters = commands
+            .Where(x => x is IFilter<User>)
+            .Cast<IFilter<User>>()
+            .OrderBy(x => x.Order);
+
+        // try to execute commands with filter
+        foreach (var filter in filters) {
+            if (!await filter.CanExecuteAsync(user)) {
                 logger.LogWarning($"User @{user.username} (#{user.id})");
                 logger.LogWarning($"Command: {commands.GetType().Name}");
                 logger.LogWarning("State: can't execute");
-                return;
+
+                commands.Remove(filter);
+                
+                continue;
             }
 
+            await ((ICommand<TUpdate>)filter).ExecuteAsync((TUpdate)command_update, user);
+            
+            return;
+        }
+        
+        // if commands with filter was not executed, execute another commands
+        foreach (ICommand<TUpdate> command in commands) {
             await command.ExecuteAsync((TUpdate)command_update, user);
         }
     }

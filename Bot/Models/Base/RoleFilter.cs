@@ -3,10 +3,12 @@ using Bot.Models.Abstractions;
 
 namespace Bot.Models.Base;
 
-public abstract class RoleFilter(UsersDbContext context, string role) : IFilter<User> {
+public abstract class RoleFilter(UsersDbContext context, params string[] roles) : IFilter<User> {
+    public abstract int Order { get; set; }
+
     public async Task<bool> CanExecuteAsync(User obj) {
-        if (await context.FindAsync<ApplicationUser>() is { } user) {
-            return user.Roles.Contains(role);
+        if (await context.FindAsync<ApplicationUser>(obj.id) is { } user) {
+            return roles.Any(x => user.Roles.Contains(x));
         }
 
         return false;

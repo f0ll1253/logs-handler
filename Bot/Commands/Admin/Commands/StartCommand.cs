@@ -10,7 +10,7 @@ namespace Bot.Commands.Admin.Commands;
 public class StartCommand(Client client, UsersDbContext context) : RoleFilter(context, "Admin"), ICommand<UpdateNewMessage>, ICommand<UpdateBotCallbackQuery> {
     public override int Order { get; set; } = 0;
     
-    public Task ExecuteAsync(UpdateNewMessage message, TL.User user) {
+    public Task ExecuteAsync(UpdateNewMessage update, TL.User user) {
         return client.Messages_SendMessage(
             user,
             $"Hello admin, {user.username}!",
@@ -19,7 +19,7 @@ public class StartCommand(Client client, UsersDbContext context) : RoleFilter(co
         );
     }
 
-    public Task ExecuteAsync(UpdateBotCallbackQuery message, TL.User user) {
+    public Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {
         return client.Messages_SendMessage(
             user,
             $"Hello admin, {user.username}!",

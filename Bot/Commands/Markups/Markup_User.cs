@@ -14,7 +14,7 @@ public static class Markup_User {
                 new KeyboardButtonCallback()
                 {
                     text = "Twitter",
-                    data = "user_twitter".Utf8() // TODO create callback
+                    data = "user_twitter".Utf8()
                 }
             ]
         },
@@ -25,12 +25,12 @@ public static class Markup_User {
                 new KeyboardButtonCallback()
                 {
                     text = "Twitch",
-                    data = "user_twitch".Utf8() // TODO create callback
+                    data = "user_twitch".Utf8()
                 },
                 new KeyboardButtonCallback()
                 {
                     text = "Telegram",
-                    data = "user_telegram".Utf8() // TODO create callback
+                    data = "user_telegram".Utf8()
                 }
             ]
         },
@@ -41,12 +41,12 @@ public static class Markup_User {
                 new KeyboardButtonCallback()
                 {
                     text = "TikTok",
-                    data = "user_tiktok".Utf8() // TODO create callback
+                    data = "user_tiktok".Utf8()
                 },
                 new KeyboardButtonCallback()
                 {
                     text = "YouTube",
-                    data = "user_youtube".Utf8() // TODO create callback
+                    data = "user_youtube".Utf8()
                 }
             ]
         }

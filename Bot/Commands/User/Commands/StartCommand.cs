@@ -16,10 +16,10 @@ public class StartCommand(Client client) : ICommand<UpdateNewMessage>, ICommand<
     }
 
     public Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {
-        return client.Messages_SendMessage(
+        return client.Messages_EditMessage(
             user,
+            update.msg_id,
             $"Hello, {user.username}!",
-            Random.Shared.NextInt64(),
             reply_markup: Markup_User.StartMarkup
         );
     }

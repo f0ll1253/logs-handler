@@ -27,8 +27,4 @@
       <PackageReference Include="WTelegramClient" Version="4.1.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Commands\Admin\Callbacks\" />
-    </ItemGroup>
-
 </Project>

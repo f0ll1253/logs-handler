@@ -10,7 +10,7 @@ public static class Markup_Admin {
                     new KeyboardButtonCallback()
                     {
                         text = "Settings",
-                        data = "admin_settings"u8.ToArray() // TODO create callback
+                        data = "admin_settings".Utf8() // TODO create callback
                     }
                 ]
             })

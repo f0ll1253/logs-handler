@@ -13,6 +13,8 @@
         <Using Include="Injectio.Attributes" />
         <Using Include="WTelegram" />
         <Using Include="TL" />
+        
+        <Using Include="Bot.Extensions" />
     </ItemGroup>
 
     <ItemGroup>
@@ -27,7 +29,6 @@
 
     <ItemGroup>
       <Folder Include="Commands\Admin\Callbacks\" />
-      <Folder Include="Commands\User\Callbacks\" />
     </ItemGroup>
 
 </Project>

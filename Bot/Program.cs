@@ -12,6 +12,7 @@ namespace Bot;
 internal static class Program {
     public static void Main(string[] args) {
         Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Session"));
+        Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "Extracted"));
         
         var builder = Host.CreateApplicationBuilder(args);
 

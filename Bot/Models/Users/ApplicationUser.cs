@@ -1,6 +1,6 @@
 using Bot.Models.Abstractions;
 
-namespace Bot.Models;
+namespace Bot.Models.Users;
 
 public class ApplicationUser : IEntity<long> {
     public long Id { get; set; }

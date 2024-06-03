@@ -1,7 +1,7 @@
 using System.Reflection;
 
 using Bot.Data;
-using Bot.Models;
+using Bot.Models.Users;
 using Bot.Services.Hosted;
 
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +40,10 @@ internal static class Program {
             .UseSqlite(builder.Configuration["ConnectionStrings:Users"])
         );
 
+        builder.Services.AddDbContext<DataDbContext>(options => options
+            .UseSqlite(builder.Configuration["ConnectionStrings:Data"])
+        );
+
         // Services
         builder.Services.AddHostedService<Bootstrapper>();
         
@@ -51,6 +55,7 @@ internal static class Program {
 
         app.ConfigureLogging();
         app.InitializeContext<UsersDbContext>();
+        app.InitializeContext<DataDbContext>();
 
         app.Run();
     }

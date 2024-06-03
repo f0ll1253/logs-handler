@@ -1,8 +1,24 @@
 namespace Bot.Commands.Markups;
 
 public static class Markup_General {
-     public static string AvailableLogsText { get; } = "Available logs";
-     public static string AvailableLogsError { get; } = "No available logs";
+    public static ReplyInlineMarkup Dispose { get; } = new ReplyInlineMarkup()
+    {
+        rows = [
+            new()
+            {
+                buttons = [
+                    new KeyboardButtonCallback()
+                    {
+                        text = "\u274c Remove",
+                        data = "dispose".Utf8()
+                    }
+                ]
+            }
+        ]
+    }; 
+    
+    public static string AvailableLogsText { get; } = "Available logs";
+    public static string AvailableLogsError { get; } = "No available logs";
      
     /// <param name="method">Method for processing logs by name</param>
     public static ReplyInlineMarkup? AvailableLogsMarkup(string method, string back_method = "user_start", int page = 0, int limit = 5) {
@@ -19,7 +35,7 @@ public static class Markup_General {
                     new KeyboardButtonCallback()
                     {
                         text = x.Name,
-                        data = $"{method}:{x.Name}:{method}:{back_method}:{page}".Utf8()
+                        data = $"{method}:{x.Name}:{back_method}:{page}".Utf8()
                     }
                 ]
             })
@@ -33,11 +49,22 @@ public static class Markup_General {
         logs = logs
             .Take(5)
             .ToList();
-
+        
+        // Check data size
+        foreach (var data in logs
+                     .SelectMany(x => x.buttons)
+                     .Select(x => ((KeyboardButtonCallback)x).data)) {
+            if (data.Length > 64) {
+                throw new ArgumentOutOfRangeException(nameof(data), data.Utf8(), $"Data size more then 64 bytes: {data.Length}");
+            }
+        }
+        
+        // Add navigation buttons
         if (NavigationRow(method, back_method, count, page, limit) is { } navigation) {
             logs.Add(navigation);
         }
         
+        // Append back button
         logs.Add(new()
         {
             buttons = [

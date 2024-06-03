@@ -1,5 +1,6 @@
 using Bot.Data;
 using Bot.Models.Abstractions;
+using Bot.Models.Users;
 
 namespace Bot.Models.Base;
 

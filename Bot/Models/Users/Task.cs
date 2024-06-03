@@ -1,6 +1,6 @@
 using Bot.Models.Abstractions;
 
-namespace Bot.Models;
+namespace Bot.Models.Users;
 
 public class Task : IEntity<string> {
     public string Id { get; set; } = Guid.NewGuid().ToString();

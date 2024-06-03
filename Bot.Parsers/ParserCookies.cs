@@ -8,24 +8,27 @@ public class ParserCookies : IFileParser<IEnumerable<string>, string> {
         .GetDirectories(logs)
         .SelectMany(x => FromLog(x, input));
 
-    public IEnumerable<IAsyncEnumerable<string>> FromLog(string log, IEnumerable<string> input) => Directory
-        .GetFiles(Path.Combine(log, "Cookies"))
-        .Select(x => FromFile(x, input));
+    public IEnumerable<IAsyncEnumerable<string>> FromLog(string log, IEnumerable<string> input) =>
+        new DirectoryInfo(Path.Combine(log, "Cookies")) is {Exists: true} directory
+            ? directory
+                .GetFiles()
+                .Select(x => FromFile(x.FullName, input)) 
+            : ArraySegment<IAsyncEnumerable<string>>.Empty;
 
     public async IAsyncEnumerable<string> FromFile(string filepath, IEnumerable<string> domains) {
-        if (new FileInfo(filepath) is not { Exists: true } info) {
-            yield break;
-        }
-        
-        using (var stream = info.OpenRead()) {
-            using (var reader = new StreamReader(stream)) {
-                while (!reader.EndOfStream) {
-                    var line = await reader.ReadLineAsync();
-                    var domain = line[..line.IndexOf('\t')];
+        using (var reader = new StreamReader(filepath)) {
+            while (!reader.EndOfStream) {
+                var line = await reader.ReadLineAsync();
+                var index = line.IndexOf('\t');
 
-                    if (domains.Contains(domain)) {
-                        yield return line;
-                    }
+                if (index == -1) {
+                    continue;
+                }
+                
+                var domain = line[..index];
+
+                if (domains.Contains(domain)) {
+                    yield return line;
                 }
             }
         }

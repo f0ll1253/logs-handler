@@ -1,4 +1,4 @@
-using Bot.Models;
+using Bot.Models.Users;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +6,7 @@ namespace Bot.Data;
 
 public class UsersDbContext(DbContextOptions<UsersDbContext> options) : DbContext(options) {
     public DbSet<ApplicationUser> Users { get; set; }
-    public DbSet<Bot.Models.Task> Tasks { get; set; }
+    public DbSet<Bot.Models.Users.Task> Tasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder) {
         builder.Entity<ApplicationUser>(entity =>

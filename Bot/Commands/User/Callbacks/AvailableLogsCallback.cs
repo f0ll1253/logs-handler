@@ -1,20 +1,17 @@
 using Bot.Commands.Markups;
 using Bot.Models.Abstractions;
 
-namespace Bot.Commands.Base;
+namespace Bot.Commands.User.Callbacks;
 
-public abstract class AvailableLogsCallback(
-    string showing_method,
-    string method,
-    
-    // Inject
-    Client client) : ICommand<UpdateBotCallbackQuery> {
+[RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = "user_logs_show")]
+public class AvailableLogsCallback(Client client) : ICommand<UpdateBotCallbackQuery> {
     public Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {
         var data = update.data.Utf8().Split(':');
         var page = int.Parse(data[1]);
-        var back = data[2];
+        var method = data[2];
+        var back = data[3];
 
-        if (Markup_General.AvailableLogsMarkup(showing_method, method, back_method: back, page: page) is not { } markup) {
+        if (Markup_General.AvailableLogsMarkup(method, back_method: back, page: page) is not { } markup) {
             return client.Messages_SetBotCallbackAnswer(
                 update.query_id,
                 0,

@@ -9,12 +9,12 @@ public static class Markup_User {
                 new KeyboardButtonCallback()
                 {
                     text = "Instagram",
-                    data = $"user_instagram:0:{back_method}".Utf8()
+                    data = $"user_logs_show:0:user_instagram:{back_method}".Utf8()
                 },
                 new KeyboardButtonCallback()
                 {
                     text = "Twitter",
-                    data = $"user_twitter:0:{back_method}".Utf8()
+                    data = $"user_logs_show:0:user_twitter:{back_method}".Utf8()
                 }
             ]
         },
@@ -25,12 +25,12 @@ public static class Markup_User {
                 new KeyboardButtonCallback()
                 {
                     text = "Twitch",
-                    data = $"user_twitch:0:{back_method}".Utf8()
+                    data = $"user_logs_show:0:user_twitch:{back_method}".Utf8()
                 },
                 new KeyboardButtonCallback()
                 {
                     text = "Telegram",
-                    data = $"user_telegram:0:{back_method}".Utf8()
+                    data = $"user_logs_show:0:user_telegram:{back_method}".Utf8()
                 }
             ]
         },
@@ -41,12 +41,12 @@ public static class Markup_User {
                 new KeyboardButtonCallback()
                 {
                     text = "TikTok",
-                    data = $"user_tiktok:0:{back_method}".Utf8()
+                    data = $"user_logs_show:0:user_tiktok:{back_method}".Utf8()
                 },
                 new KeyboardButtonCallback()
                 {
                     text = "YouTube",
-                    data = $"user_youtube:0:{back_method}".Utf8()
+                    data = $"user_logs_show:0:user_youtube:{back_method}".Utf8()
                 }
             ]
         }

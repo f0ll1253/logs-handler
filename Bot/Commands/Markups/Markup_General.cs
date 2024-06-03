@@ -3,10 +3,9 @@ namespace Bot.Commands.Markups;
 public static class Markup_General {
      public static string AvailableLogsText { get; } = "Available logs";
      public static string AvailableLogsError { get; } = "No available logs";
-    
-    /// <param name="showing_method">Callback which shows logs</param>
+     
     /// <param name="method">Method for processing logs by name</param>
-    public static ReplyInlineMarkup? AvailableLogsMarkup(string showing_method, string method, string role = "user", string back_method = "user_start", int page = 0, int limit = 5) {
+    public static ReplyInlineMarkup? AvailableLogsMarkup(string method, string back_method = "user_start", int page = 0, int limit = 5) {
         var logs = Directory
             // Select logs by creation time
             .GetDirectories(Directory_Extracted)
@@ -20,17 +19,22 @@ public static class Markup_General {
                     new KeyboardButtonCallback()
                     {
                         text = x.Name,
-                        data = $"{role}_{method}:{x.Name}".Utf8()
+                        data = $"{method}:{x.Name}:{method}:{back_method}:{page}".Utf8()
                     }
                 ]
             })
             .ToList();
+        var count = logs.Count;
 
-        if (logs.Count == 0) {
+        if (count == 0) {
             return null;
         }
+        
+        logs = logs
+            .Take(5)
+            .ToList();
 
-        if (NavigationRow(back_method, showing_method, role, logs.Count, page, limit) is { } navigation) {
+        if (NavigationRow(method, back_method, count, page, limit) is { } navigation) {
             logs.Add(navigation);
         }
         
@@ -48,7 +52,7 @@ public static class Markup_General {
         return new() { rows = logs.ToArray() };
     }
 
-    public static KeyboardButtonRow? NavigationRow(string back_method, string showing_method, string role, int count, int page, int limit) {
+    public static KeyboardButtonRow? NavigationRow(string method, string back_method, int count, int page, int limit) {
         var row = new KeyboardButtonRow()
         {
             buttons = [
@@ -61,7 +65,7 @@ public static class Markup_General {
             row.buttons[0] = new KeyboardButtonCallback()
             {
                 text = "\u25c0\ufe0f",
-                data = $"{role}_{showing_method}:{page - 1}:{back_method}".Utf8()
+                data = $"user_logs_show:{page - 1}:{method}:{back_method}".Utf8()
             };
         }
 
@@ -69,7 +73,7 @@ public static class Markup_General {
             row.buttons[1] = new KeyboardButtonCallback()
             {
                 text = "\u25b6\ufe0f",
-                data = $"{role}_{showing_method}:{page + 1}:{back_method}".Utf8()
+                data = $"user_logs_show:{page + 1}:{method}:{back_method}".Utf8()
             };
         }
 

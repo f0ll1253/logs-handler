@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Bot.Data;
 using Bot.Models;
 using Bot.Services.Hosted;
@@ -22,6 +24,8 @@ internal static class Program {
             .Enrich.FromLogContext()
             .WriteTo.Console()
         );
+
+        builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
 
         // Instances
         builder.Services.AddActivatedSingleton(_ => 

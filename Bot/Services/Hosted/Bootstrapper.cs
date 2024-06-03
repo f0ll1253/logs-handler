@@ -24,8 +24,9 @@ public class Bootstrapper(
     }
 
     public Task StopAsync(CancellationToken cancellationToken) {
+#if RELEASE
         _manager.SaveState(Path.Combine(Directory_Session, "state.json"));
-
+#endif
         return Task.CompletedTask;
     }
     

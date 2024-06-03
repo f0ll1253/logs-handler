@@ -12,7 +12,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="Injectio" Version="3.1.0" PrivateAssets="All" />
+        <PackageReference Include="Injectio" Version="3.1.0" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -7,7 +7,8 @@
         <Nullable>annotations</Nullable>
         <Configurations>Debug</Configurations>
         <Platforms>linux-x64;win-x64</Platforms>
-    </PropertyGroup>
+        <UserSecretsId>378fdb81-7bba-4bc3-8e5a-084c0bdf9e20</UserSecretsId>
+  </PropertyGroup>
     
     <ItemGroup>
         <Using Include="Injectio.Attributes" />
@@ -19,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Injectio" Version="3.1.0" PrivateAssets="All" />
+      <PackageReference Include="Injectio" Version="3.1.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.6" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="8.5.0" />

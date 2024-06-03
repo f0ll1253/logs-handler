@@ -7,6 +7,7 @@ public class ApplicationUser : IEntity<long> {
     
     // Foreign
     public List<string> Roles { get; set; }
+    public List<Task> Tasks { get; set; }
 
     public static implicit operator ApplicationUser(User user) => new()
     {

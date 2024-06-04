@@ -3,7 +3,7 @@ using Bot.Data;
 namespace Bot.Services;
 
 [RegisterScoped]
-public class TasksManager(UsersDbContext context) {
+public class TasksManager(UsersDbContext context, ILogger<TasksManager> logger) {
     public async Task RegisterTask(Task task, long user_id, string name) {
         var active_task = new Models.Users.Task
         {
@@ -14,10 +14,16 @@ public class TasksManager(UsersDbContext context) {
         await context.AddAsync(active_task);
         await context.SaveChangesAsync();
 
-         task.ContinueWith((_, state) => _OnComplete((string)state), active_task.Id);
+         task.ContinueWith((task, state) => _OnComplete(task, (string)state), active_task.Id);
     }
 
-    private async Task _OnComplete(string id) {
+    private async Task _OnComplete(Task completed_task, string id) {
+        if (completed_task.IsFaulted) {
+            logger.LogError(completed_task.Exception, null);
+            
+            return;
+        }
+        
         var task = await context.FindAsync<Models.Users.Task>(id);
 
         task.IsCompleted = true;

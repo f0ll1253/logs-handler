@@ -33,6 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Bot.Checkers\Bot.Checkers.csproj" />
       <ProjectReference Include="..\Bot.Parsers\Bot.Parsers.csproj" />
     </ItemGroup>
 

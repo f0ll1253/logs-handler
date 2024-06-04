@@ -3,6 +3,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot", "Bot\Bot.csproj", "{8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Parsers", "Bot.Parsers\Bot.Parsers.csproj", "{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Checkers", "Bot.Checkers\Bot.Checkers.csproj", "{C6DF7003-4FE6-4F04-98FE-178127F3F945}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,5 +17,9 @@ Global
 		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{890D90D0-EEF4-478E-8B79-C0E9548EA9A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6DF7003-4FE6-4F04-98FE-178127F3F945}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6DF7003-4FE6-4F04-98FE-178127F3F945}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6DF7003-4FE6-4F04-98FE-178127F3F945}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6DF7003-4FE6-4F04-98FE-178127F3F945}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

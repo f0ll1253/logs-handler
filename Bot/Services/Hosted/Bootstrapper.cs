@@ -17,7 +17,15 @@ public class Bootstrapper(
     public async Task StartAsync(CancellationToken cancellationToken) {
         await client.LoginBotIfNeeded(configuration["Bot:Token"]);
         _manager = client.WithUpdateManager(
-            HandleUpdate,
+            async update =>
+            {
+                try {
+                    await HandleUpdate(update);
+                }
+                catch (Exception e) {
+                    logger.LogError(e, null);
+                }
+            },
             Path.Combine(Directory_Session, "state.json"),
             reentrant: true
         );
@@ -71,7 +79,7 @@ public class Bootstrapper(
             logger.LogWarning($"Command: not found '{command_trigger}'");
             return;
         }
-
+        
         await (Task)GetType()
             .GetMethod("ExecuteCommandsAsync")!
             .MakeGenericMethod(command_update.GetType())

@@ -1,6 +1,6 @@
 using Bot.Models.Abstractions;
 
-namespace Bot.Commands.General;
+namespace Bot.Commands;
 
 [RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = "dispose")]
 public class DisposeMessageCallback(Client client) : ICommand<UpdateBotCallbackQuery> {

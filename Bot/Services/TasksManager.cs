@@ -12,22 +12,22 @@ namespace Bot.Services {
 			await context.AddAsync(active_task);
 			await context.SaveChangesAsync();
 
-			task.ContinueWith((task, state) => _OnComplete(task, (string)state), active_task.Id);
+			_ = task.ContinueWith((task, state) => _OnComplete(task, (string)state), active_task.Id);
 		}
 
 		private async Task _OnComplete(Task completed_task, string id) {
-			if (completed_task.IsFaulted) {
-				logger.LogError(completed_task.Exception, null);
-
-				return;
-			}
-
-			var task = await context.FindAsync<Models.Users.Task>(id);
+			var task = (await context.FindAsync<Models.Users.Task>(id))!;
 
 			task.IsCompleted = true;
+			task.IsFaulted = completed_task.IsFaulted;
 			task.CompletionTime = DateTimeOffset.UtcNow;
+			
+			if (task.IsFaulted) {
+				logger.LogError(completed_task.Exception, "Error in registered task {id}", id);
+			}
 
 			context.Update(task);
+			
 			await context.SaveChangesAsync();
 		}
 	}

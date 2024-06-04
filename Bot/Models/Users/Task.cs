@@ -6,6 +6,7 @@ namespace Bot.Models.Users {
 		
 		public string Name { get; set; }
 		public bool IsCompleted { get; set; }
+		public bool IsFaulted { get; set; }
 		public DateTimeOffset CreationTime { get; set; } = DateTimeOffset.UtcNow;
 		public DateTimeOffset? CompletionTime { get; set; }
 

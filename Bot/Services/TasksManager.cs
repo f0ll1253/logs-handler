@@ -15,7 +15,7 @@ namespace Bot.Services {
 			task.ContinueWith((task, state) => _OnComplete(task, (string)state), active_task.Id);
 		}
 
-		async private Task _OnComplete(Task completed_task, string id) {
+		private async Task _OnComplete(Task completed_task, string id) {
 			if (completed_task.IsFaulted) {
 				logger.LogError(completed_task.Exception, null);
 

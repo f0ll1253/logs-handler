@@ -1,16 +1,17 @@
 using Bot.Models.Abstractions;
 
-namespace Bot.Models.Users;
+namespace Bot.Models.Users {
+	public class ApplicationUser : IEntity<long> {
+		public long Id { get; set; }
 
-public class ApplicationUser : IEntity<long> {
-    public long Id { get; set; }
-    
-    // Foreign
-    public List<string> Roles { get; set; }
-    public List<Task> Tasks { get; set; }
+		// Foreign
+		public List<string> Roles { get; set; }
+		public List<Task> Tasks { get; set; }
 
-    public static implicit operator ApplicationUser(User user) => new()
-    {
-        Id = user.id
-    };
+		public static implicit operator ApplicationUser(User user) {
+			return new() {
+				Id = user.id
+			};
+		}
+	}
 }

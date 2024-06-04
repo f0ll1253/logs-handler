@@ -1,5 +1,5 @@
-namespace Bot.Checkers.Abstractions;
-
-public interface ICookieValidator {
-    Task<bool> IsValidCookie(IAsyncEnumerable<string> lines);
+namespace Bot.Checkers.Abstractions {
+	public interface ICookieValidator {
+		Task<bool> IsValidCookie(IAsyncEnumerable<string> lines);
+	}
 }

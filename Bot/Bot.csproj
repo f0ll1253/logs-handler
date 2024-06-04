@@ -8,33 +8,33 @@
         <Configurations>Debug</Configurations>
         <Platforms>linux-x64;win-x64</Platforms>
         <UserSecretsId>378fdb81-7bba-4bc3-8e5a-084c0bdf9e20</UserSecretsId>
-  </PropertyGroup>
-    
+    </PropertyGroup>
+
     <ItemGroup>
-        <Using Include="Injectio.Attributes" />
-        <Using Include="WTelegram" />
-        <Using Include="TL" />
-        <Using Include="System.Threading.Tasks.Task" Static="True" />
-        
-        <Using Include="Bot.Extensions" />
-        <Using Include="Bot.Constants" Static="True" />
+        <Using Include="Injectio.Attributes"/>
+        <Using Include="WTelegram"/>
+        <Using Include="TL"/>
+        <Using Include="System.Threading.Tasks.Task" Static="True"/>
+
+        <Using Include="Bot.Extensions"/>
+        <Using Include="Bot.Constants" Static="True"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Injectio" Version="3.1.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.6" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="8.5.0" />
-      <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-      <PackageReference Include="SharpCompress" Version="0.37.2" />
-      <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-      <PackageReference Include="WTelegramClient" Version="4.1.1" />
+        <PackageReference Include="Injectio" Version="3.1.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.6"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="8.5.0"/>
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1"/>
+        <PackageReference Include="SharpCompress" Version="0.37.2"/>
+        <PackageReference Include="System.Linq.Async" Version="6.0.1"/>
+        <PackageReference Include="WTelegramClient" Version="4.1.1"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Bot.Checkers\Bot.Checkers.csproj" />
-      <ProjectReference Include="..\Bot.Parsers\Bot.Parsers.csproj" />
+        <ProjectReference Include="..\Bot.Checkers\Bot.Checkers.csproj"/>
+        <ProjectReference Include="..\Bot.Parsers\Bot.Parsers.csproj"/>
     </ItemGroup>
 
 </Project>

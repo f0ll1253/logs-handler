@@ -1,14 +1,15 @@
 using Bot.Models.Abstractions;
 
-namespace Bot.Models.Data;
+namespace Bot.Models.Data {
+	public class FileTelegramInfo : IEntity<long> {
+		public long Id { get; set; }
 
-public class FileTelegramInfo : IEntity<long> {
-    public long Id { get; set; }
-    public long AccessHash { get; set; }
-    public byte[] FileReference { get; set; } = [];
-    public string Type { get; set; } = null!;
-    
-    // Foreign
-    public FileEntity? File { get; set; }
-    public string FileId { get; set; } = null!;
+		public long AccessHash { get; set; }
+		public byte[] FileReference { get; set; } = [];
+		public string Type { get; set; } = null!;
+
+		// Foreign
+		public FileEntity? File { get; set; }
+		public string FileId { get; set; } = null!;
+	}
 }

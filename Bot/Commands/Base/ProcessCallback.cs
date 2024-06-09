@@ -28,17 +28,17 @@ namespace Bot.Commands.Base {
 			var data = update.data.Utf8().Split(':');
 
 			await tasks.RegisterTask(_SendDataAsync(user, data[1]), user.id, TaskName);
-
-			await client.Messages_SendMessage(
-				user,
-				$"Task '{TaskName}' was started",
-				Random.Shared.NextInt64(),
-				reply_markup: Markup_General.Dispose
-			);
 		}
 
 		private protected async Task _SendDataAsync(TL.User user, string logs_name) {
 			if (await files.TryGetFileAsync(Category, Service, logs_name, FileType) is not { } entity) {
+				await client.Messages_SendMessage(
+					user,
+					$"Task '{TaskName}' was started",
+					Random.Shared.NextInt64(),
+					reply_markup: Markup_General.Dispose
+				);
+				
 				entity = await _ParseAsync(logs_name);
 
 				if (entity is null) {

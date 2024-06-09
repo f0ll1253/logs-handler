@@ -30,7 +30,7 @@ namespace Bot.Commands.Markups {
 							   buttons = [
 								   new KeyboardButtonCallback {
 									   text = x.Name,
-									   data = $"{method}:{x.Name}:{back_method}:{page}".Utf8()
+									   data = $"{method}:{x.Name}".Utf8()
 								   }
 							   ]
 						   }

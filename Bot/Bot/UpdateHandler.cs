@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Collections.Immutable;
+
 using Bot.Bot.Abstractions;
 using Bot.Models.Abstractions;
 
@@ -5,7 +8,7 @@ namespace Bot.Bot {
 	[RegisterScoped<IUpdateHandler>]
 	public class UpdateHandler(IServiceProvider provider, ILogger<IUpdateHandler> logger) : IUpdateHandler {
 		public async Task HandleUpdateAsync(Update update, Dictionary<long, User> users) {
-			ICollection<object> commands = [];
+			ICollection commands = ImmutableList<object>.Empty;
 			User user = null;
 
 			switch (update) {
@@ -15,11 +18,11 @@ namespace Bot.Bot {
 					}
 
 					user = users[id];
-					commands = _FindCommands<UpdateNewMessage>(text, ' ') as ICollection<object>;
+					commands = _FindCommands<UpdateNewMessage>(text, ' ') as ICollection;
 					break;
 				case UpdateBotCallbackQuery {data: var data, user_id: var id}:
 					user = users[id];
-					commands = _FindCommands<UpdateBotCallbackQuery>(data.Utf8(), ':') as ICollection<object>;
+					commands = _FindCommands<UpdateBotCallbackQuery>(data.Utf8(), ':') as ICollection;
 					break;
 				default:
 					logger.LogWarning($"Command: unknown type '{update.GetType().Name}'");
@@ -39,8 +42,9 @@ namespace Bot.Bot {
 		}
 		
 		// public for reflection execution
-		public async Task ExecuteCommandsAsync<TUpdate>(ICollection<object> commands, Update command_update, User user) where TUpdate : Update {
-			var filters = commands
+		public async Task ExecuteCommandsAsync<TUpdate>(ICollection collection, Update command_update, User user) where TUpdate : Update {
+			var commands = collection as ICollection<ICommand<TUpdate>>;
+			var filters = commands!
 						  .Where(x => x is IFilter<User>)
 						  .Cast<IFilter<User>>()
 						  .OrderBy(x => x.Order);
@@ -51,7 +55,7 @@ namespace Bot.Bot {
 					logger.LogWarning("Command: {type}", commands.GetType().Name);
 					logger.LogWarning("State: can't execute");
 
-					commands.Remove(filter);
+					commands.Remove((ICommand<TUpdate>) filter);
 
 					continue;
 				}

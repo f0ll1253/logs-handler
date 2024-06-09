@@ -37,6 +37,14 @@ namespace Bot.Commands.Markups {
 							data = $"user_logs_show:0:user_youtube:{back_method}".Utf8()
 						}
 					]
+				},
+				new() {
+					buttons = [
+						new KeyboardButtonCallback {
+							text = "Discord",
+							data = $"user_logs_show:0:user_discord:{back_method}".Utf8()
+						}
+					]
 				}
 			];
 		}

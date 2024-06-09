@@ -43,6 +43,10 @@ namespace Bot.Commands.Markups {
 						new KeyboardButtonCallback {
 							text = "Discord",
 							data = $"user_logs_show:0:user_discord:{back_method}".Utf8()
+						},
+						new KeyboardButtonCallback {
+							text = "Credentials",
+							data = $"user_logs_show:0:user_credentials:{back_method}".Utf8()
 						}
 					]
 				}

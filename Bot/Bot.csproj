@@ -5,7 +5,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>annotations</Nullable>
-        <Configurations>Debug</Configurations>
+        <Configurations>Debug;Release</Configurations>
         <Platforms>linux-x64;win-x64</Platforms>
         <UserSecretsId>378fdb81-7bba-4bc3-8e5a-084c0bdf9e20</UserSecretsId>
     </PropertyGroup>

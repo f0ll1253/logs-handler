@@ -6,7 +6,7 @@ using Bot.Services;
 
 namespace Bot.Commands.User.Callbacks {
 	[RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = "user_discord")]
-	public class DiscordCallback([FromKeyedServices("parser_discord")] IFileParser<string> parser, Client client, TasksManager tasks, FilesManager files) : ProcessCallback(
+	public class DiscordCallback(ILogger<DiscordCallback> logger, [FromKeyedServices("parser_discord")] IFileParser<string> parser, Client client, TasksManager tasks, FilesManager files) : ProcessCallback(
 		category: "",
 		service: "Discord",
 		file_type: "txt",
@@ -28,6 +28,10 @@ namespace Bot.Commands.User.Callbacks {
 				await using (var writer = new StreamWriter(memory, leaveOpen: true)) {
 					await foreach (var token in tokens) {
 						await writer.WriteLineAsync(token);
+
+#if DEBUG
+						logger.LogInformation(token);
+#endif
 					}
 				}
 

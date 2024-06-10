@@ -7,7 +7,7 @@ using SharpCompress.Common;
 using SharpCompress.Writers.Zip;
 
 namespace Bot.Commands.Base {
-	public abstract class CookiesCallback(string[] domains, string category, string service, string file_type, string task_name, string not_found_message, string hashtags, IFileParser<IEnumerable<string>, string> parser, Client client, TasksManager tasks, FilesManager files) : ProcessCallback(category, service, file_type, task_name, not_found_message, hashtags, client, tasks, files) {
+	public abstract class CookiesCallback(string[] domains,string service, IFileParser<IEnumerable<string>, string> parser, Client client, TasksManager tasks, FilesManager files) : ProcessCallback("Cookies", service, "Zip", $"Parse {service} cookies", $"Cookies {service} not found", $"#{service.ToLower()} #cookies", client, tasks, files) {
 		private protected override async Task<FileEntity?> _ParseAsync(string logs_name) {
 			using var archive = ArchiveFactory.Create(ArchiveType.Zip);
 

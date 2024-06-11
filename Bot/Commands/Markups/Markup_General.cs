@@ -1,3 +1,5 @@
+using Bot.Models;
+
 namespace Bot.Commands.Markups {
 	public static class Markup_General {
 		public static ReplyInlineMarkup Dispose { get; } = new() {

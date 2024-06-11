@@ -1,6 +1,7 @@
 using Bot.Commands.Base;
+using Bot.Models;
 using Bot.Models.Abstractions;
-using Bot.Models.Data;
+using Bot.Models.Files;
 using Bot.Parsers.Abstractions;
 using Bot.Services;
 

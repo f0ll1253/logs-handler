@@ -1,6 +1,7 @@
 using Bot.Commands.Base;
+using Bot.Models;
 using Bot.Models.Abstractions;
-using Bot.Models.Data;
+using Bot.Models.Files;
 using Bot.Parsers.Abstractions;
 using Bot.Services;
 
@@ -16,7 +17,7 @@ namespace Bot.Commands.User.Callbacks {
 		
 		client, tasks, files) {
 		private protected override async Task<FileEntity?> _ParseAsync(string logs_name) {
-			var credentials = parser.FromLogs(Path.Combine(Directory_Extracted, logs_name))
+			var credentials = parser.FromLogs(Path.Combine(Constants.Directory_Extracted, logs_name))
 									.ToAsyncEnumerable()
 									.SelectMany(x => x)
 									.Distinct();

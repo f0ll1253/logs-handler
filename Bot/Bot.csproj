@@ -17,7 +17,6 @@
         <Using Include="System.Threading.Tasks.Task" Static="True"/>
 
         <Using Include="Bot.Extensions"/>
-        <Using Include="Bot.Constants" Static="True"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -34,7 +33,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Bot.Checkers\Bot.Checkers.csproj"/>
+        <ProjectReference Include="..\Bot.Database\Bot.Database.csproj" />
         <ProjectReference Include="..\Bot.Parsers\Bot.Parsers.csproj"/>
+        <ProjectReference Include="..\Bot.Services\Bot.Services.csproj" />
     </ItemGroup>
 
 </Project>

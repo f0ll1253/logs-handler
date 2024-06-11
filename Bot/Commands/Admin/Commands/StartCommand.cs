@@ -1,7 +1,7 @@
 using Bot.Commands.Markups;
-using Bot.Data;
+using Bot.Database;
+using Bot.Models;
 using Bot.Models.Abstractions;
-using Bot.Models.Base;
 
 namespace Bot.Commands.Admin.Commands {
 	[RegisterTransient<ICommand<UpdateNewMessage>>(ServiceKey = "/start", Duplicate = DuplicateStrategy.Append),

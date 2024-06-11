@@ -1,5 +1,7 @@
 using Bot.Models.Abstractions;
 
+using TL;
+
 namespace Bot.Models.Users {
 	public class ApplicationUser : IEntity<long> {
 		public long Id { get; set; }

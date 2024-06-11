@@ -1,8 +1,8 @@
-using Bot.Data;
+using Bot.Database;
 using Bot.Models.Abstractions;
 using Bot.Models.Users;
 
-namespace Bot.Models.Base {
+namespace Bot.Models {
 	public abstract class RoleFilter(UsersDbContext context, params string[] roles) : IFilter<User> {
 		public abstract int Order { get; }
 

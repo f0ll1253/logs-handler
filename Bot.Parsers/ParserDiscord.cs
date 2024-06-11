@@ -11,7 +11,13 @@ namespace Bot.Parsers {
 		public override async IAsyncEnumerable<string> FromFile(string filepath) {
 			using (var reader = new StreamReader(filepath)) {
 				while (!reader.EndOfStream) {
-					yield return (await reader.ReadLineAsync())!;
+					var line = await reader.ReadLineAsync();
+
+					if (string.IsNullOrEmpty(line)) {
+						continue;
+					}
+					
+					yield return line;
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 using Bot.Models.Abstractions;
+using Bot.Models.Extensions;
 
-namespace Bot.Models.Data {
+namespace Bot.Models.Files {
 	public class FileEntity : IEntity<string> {
 		public string Id { get; set; } = null!;
 		

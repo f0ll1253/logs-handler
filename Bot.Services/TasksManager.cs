@@ -1,4 +1,8 @@
-using Bot.Data;
+using Bot.Database;
+
+using Injectio.Attributes;
+
+using Microsoft.Extensions.Logging;
 
 namespace Bot.Services {
 	[RegisterScoped]

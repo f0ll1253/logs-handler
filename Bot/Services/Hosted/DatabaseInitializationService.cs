@@ -1,4 +1,4 @@
-using Bot.Data;
+using Bot.Database;
 using Bot.Models.Users;
 
 using Microsoft.EntityFrameworkCore;

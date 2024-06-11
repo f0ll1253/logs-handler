@@ -3,16 +3,16 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>annotations</Nullable>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-        <Using Include="Injectio.Attributes"/>
+      <PackageReference Include="Injectio" Version="3.1.0" />
+      <PackageReference Include="WTelegramClient" Version="4.1.1" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Injectio" Version="3.1.0"/>
-        <PackageReference Include="MegaApiClient" Version="1.10.4" />
+      <ProjectReference Include="..\Bot.Database\Bot.Database.csproj" />
     </ItemGroup>
 
 </Project>

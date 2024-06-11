@@ -1,4 +1,5 @@
-using Bot.Models.Data;
+using Bot.Models;
+using Bot.Models.Files;
 using Bot.Parsers.Abstractions;
 using Bot.Services;
 

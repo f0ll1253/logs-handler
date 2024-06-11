@@ -1,6 +1,6 @@
 using Bot.Models.Abstractions;
 
-namespace Bot.Models.Data {
+namespace Bot.Models.Files {
 	public class FileTelegramInfo : IEntity<long> {
 		public long Id { get; set; }
 

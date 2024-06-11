@@ -1,6 +1,7 @@
 using System.Reflection;
 
-using Bot.Data;
+using Bot.Database;
+using Bot.Models;
 using Bot.Services.Hosted;
 
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +58,7 @@ namespace Bot {
 			builder.Services.AddBot();
 			builder.Services.AddBotParsers();
 			builder.Services.AddBotCheckers();
+			builder.Services.AddBotServices();
 
 			var app = builder.Build();
 

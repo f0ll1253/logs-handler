@@ -1,4 +1,4 @@
-namespace Bot {
+namespace Bot.Models {
 	public static class Constants {
 		public static string Directory_Base => AppDomain.CurrentDomain.BaseDirectory;
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Task = Bot.Models.Users.Task;
 
-namespace Bot.Data {
+namespace Bot.Database {
 	public class UsersDbContext(DbContextOptions<UsersDbContext> options) : DbContext(options) {
 		public DbSet<ApplicationUser> Users { get; set; }
 		public DbSet<Task> Tasks { get; set; }

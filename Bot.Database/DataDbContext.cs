@@ -1,8 +1,8 @@
-using Bot.Models.Data;
+using Bot.Models.Files;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace Bot.Data {
+namespace Bot.Database {
 	public class DataDbContext(DbContextOptions<DataDbContext> options) : DbContext(options) {
 		public DbSet<FileEntity> Files { get; set; }
 		public DbSet<FileTelegramInfo> TelegramInfos { get; set; }

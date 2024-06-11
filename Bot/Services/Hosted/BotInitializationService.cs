@@ -1,4 +1,5 @@
 using Bot.Bot.Abstractions;
+using Bot.Models;
 
 namespace Bot.Services.Hosted {
 	public class BotInitializationService(

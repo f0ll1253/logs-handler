@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Database", "Bot.Databas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Models", "Bot.Models\Bot.Models.csproj", "{03B53A05-0EB1-4459-8C2C-3F5D57875713}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Tests", "Bot.Tests\Bot.Tests.csproj", "{7D74DA49-D80B-41EA-9AE7-57FD869A6965}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{03B53A05-0EB1-4459-8C2C-3F5D57875713}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03B53A05-0EB1-4459-8C2C-3F5D57875713}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03B53A05-0EB1-4459-8C2C-3F5D57875713}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D74DA49-D80B-41EA-9AE7-57FD869A6965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D74DA49-D80B-41EA-9AE7-57FD869A6965}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D74DA49-D80B-41EA-9AE7-57FD869A6965}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D74DA49-D80B-41EA-9AE7-57FD869A6965}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C6DF7003-4FE6-4F04-98FE-178127F3F945} = {E792B6EA-03F4-41D9-85CB-C4D9BC660C5E}

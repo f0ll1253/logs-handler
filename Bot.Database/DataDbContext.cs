@@ -4,7 +4,6 @@ using Bot.Models.Proxies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.ValueGeneration;
 
 namespace Bot.Database {
 	public class DataDbContext(DbContextOptions<DataDbContext> options) : DbContext(options) {

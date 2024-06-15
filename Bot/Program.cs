@@ -50,6 +50,11 @@ namespace Bot {
 						.UseSqlite(builder.Configuration["ConnectionStrings:Data"])
 			);
 
+			builder.Services.AddDbContext<PaymentsDbContext>(
+				options => options
+						.UseSqlite(builder.Configuration["ConnectionStrings:Payments"])
+			);
+
 			// Services
 			builder.Services.AddHostedService<BotInitializationService>();
 			builder.Services.AddHostedService<DatabaseInitializationService>();

@@ -13,6 +13,7 @@ namespace Bot.Services.Hosted {
 		public Task StartAsync(CancellationToken cancellationToken) {
 			_InitializeContext<UsersDbContext>();
 			_InitializeContext<DataDbContext>();
+			_InitializeContext<PaymentsDbContext>();
 
 			return Task.CompletedTask;
 		}
@@ -37,6 +38,7 @@ namespace Bot.Services.Hosted {
 			if (context.Set<ApplicationUser>().Any()) {
 				return;
 			}
+			
 			foreach (var id in configuration.GetRequiredSection("Bot:Admins").Get<List<long>>()) {
 				context.Add(
 					new ApplicationUser {
@@ -44,6 +46,22 @@ namespace Bot.Services.Hosted {
 						Roles = ["Admin"]
 					}
 				);
+			}
+			
+			foreach (var id in configuration.GetRequiredSection("Bot:Developers").Get<List<long>>()) {
+				var user = context.Find<ApplicationUser>(id);
+
+				if (user is not null) {
+					user.Roles.Add("Developer");
+				}
+				else {
+					context.Add(
+						new ApplicationUser {
+							Id = id,
+							Roles = ["Developer"]
+						}
+					);
+				}
 			}
 
 			context.SaveChanges();

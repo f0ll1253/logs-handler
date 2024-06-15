@@ -2,6 +2,8 @@ using System.Reflection;
 
 using Bot.Database;
 using Bot.Models;
+using Bot.Payments.CryptoBot.Extensions;
+using Bot.Payments.CryptoBot.Services.Hosted;
 using Bot.Services.Hosted;
 
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +18,13 @@ namespace Bot {
 			Directory.CreateDirectory(Constants.Directory_Extracted);
 			Directory.CreateDirectory(Constants.Directory_Downloaded);
 
+#if Bot_UseEndpoints
+			var builder = WebApplication.CreateBuilder(args);
+#else
 			var builder = Host.CreateApplicationBuilder(args);
+#endif
 
+			// Logging
 			builder.Services.AddSerilog(
 				config => config
 						  .MinimumLevel
@@ -28,8 +35,14 @@ namespace Bot {
 						  .Console()
 			);
 
+			// Configuration
 			builder.Configuration.AddUserSecrets(Assembly.GetExecutingAssembly());
 
+			// Endpoints
+			builder.Services
+				   .AddControllers()
+				   .AddNewtonsoftJson();
+			
 			// Instances
 			builder.Services.AddActivatedSingleton(
 				_ =>
@@ -65,9 +78,16 @@ namespace Bot {
 			builder.Services.AddBotCheckers();
 			builder.Services.AddBotServices();
 
+			builder.Services.AddBotPaymentsCryptoBot();
+			builder.Services.AddBotPaymentsCryptoBotDependencies();
+
 			var app = builder.Build();
 
 			app.ConfigureLogging();
+
+#if Bot_UseEndpoints
+			app.MapControllers();
+#endif
 
 			app.Run();
 		}

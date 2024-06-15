@@ -52,7 +52,7 @@ namespace Bot.Bot {
 			foreach (var filter in filters) {
 				if (!await filter.CanExecuteAsync(user)) {
 					logger.LogWarning("User @{username} (#{id})", user.username, user.id);
-					logger.LogWarning("Command: {type}", commands.GetType().Name);
+					logger.LogWarning("Command: {type}", filter.GetType().Name);
 					logger.LogWarning("State: can't execute");
 
 					commands.Remove((ICommand<TUpdate>) filter);

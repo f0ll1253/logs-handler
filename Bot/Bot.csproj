@@ -8,6 +8,11 @@
         <Configurations>Debug;Release</Configurations>
         <Platforms>linux-x64;win-x64</Platforms>
         <UserSecretsId>378fdb81-7bba-4bc3-8e5a-084c0bdf9e20</UserSecretsId>
+        <DefineConstants>
+            DBot_UseEndpoints,
+            
+            Payments_CryptoPay_UseListener
+        </DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,6 +26,7 @@
 
     <ItemGroup>
         <PackageReference Include="Injectio" Version="3.1.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.6" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.6"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="8.5.0"/>
@@ -35,6 +41,7 @@
         <ProjectReference Include="..\Bot.Checkers\Bot.Checkers.csproj"/>
         <ProjectReference Include="..\Bot.Database\Bot.Database.csproj" />
         <ProjectReference Include="..\Bot.Parsers\Bot.Parsers.csproj"/>
+        <ProjectReference Include="..\Bot.Payments.CryptoBot\Bot.Payments.CryptoBot.csproj" />
         <ProjectReference Include="..\Bot.Services\Bot.Services.csproj" />
     </ItemGroup>
 

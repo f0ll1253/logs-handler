@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Tests", "Bot.Tests\Bot.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Payments", "Payments", "{23DC6D96-4FBE-454C-A8E8-8DFD3B489BAC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Payments.CryptoBot", "Bot.Payments.CryptoBot\Bot.Payments.CryptoBot.csproj", "{DF86BB8F-80F1-4A6E-91B6-2F5D52D689C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

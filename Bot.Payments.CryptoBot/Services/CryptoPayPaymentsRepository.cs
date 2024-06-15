@@ -28,6 +28,7 @@ namespace Bot.Payments.CryptoBot.Services {
 
 			await context.AddAsync(
 				new Payment {
+					Id = invoice.Hash,
 					UserId = user_id,
 					Service = PaymentService.CryptoPay,
 					Currency = currency,

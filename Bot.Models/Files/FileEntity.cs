@@ -11,7 +11,6 @@ namespace Bot.Models.Files {
 
 		// Foreign
 		public FileTelegramInfo? TelegramInfo { get; set; }
-		public long? TelegramInfoId { get; set; }
 
 		//
 		public static string GenerateId(string category, string service, string logs_name, string extension) {

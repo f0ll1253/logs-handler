@@ -52,10 +52,9 @@ namespace Bot.Services {
 		}
 
 		public async Task<FileTelegramInfo> SendFileAsync(FileEntity entity, User user, string caption) {
-			FileTelegramInfo info;
-
-			if (entity.TelegramInfoId is { } id) {
-				info = (await context.FindAsync<FileTelegramInfo>(id))!;
+			await context.Entry(entity).Reference(x => x.TelegramInfo).LoadAsync();
+			
+			if (entity.TelegramInfo is { } info) {
 				var uploaded = (InputMedia)new InputDocument {
 					id = info.Id,
 					access_hash = info.AccessHash,
@@ -104,9 +103,6 @@ namespace Bot.Services {
 				FileId = entity.Id
 			};
 
-			entity.TelegramInfoId = info.Id;
-
-			context.Update(entity);
 			await context.AddAsync(info);
 			await context.SaveChangesAsync();
 

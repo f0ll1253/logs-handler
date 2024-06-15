@@ -22,7 +22,7 @@ namespace Bot.Services.Base {
 		}
 		
 		protected async Task _UpdateStatusAsync(string id, PaymentStatus status, DateTime date) {
-			var payment = await context.FindAsync<Payment>();
+			var payment = await context.FindAsync<Payment>(id);
 
 			if (payment is null) {
 				throw new ArgumentException($"Payment with id {id} not found", nameof(id));

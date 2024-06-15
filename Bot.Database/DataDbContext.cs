@@ -30,11 +30,6 @@ namespace Bot.Database {
 			builder.Entity<FileTelegramInfo>(
 				entity => {
 					entity.HasKey(x => x.Id);
-					
-					entity.HasOne(x => x.File)
-						  .WithOne(x => x.TelegramInfo)
-						  .HasPrincipalKey<FileTelegramInfo>(x => x.Id)
-						  .HasForeignKey<FileEntity>(x => x.TelegramInfoId);
 				}
 			);
 			

@@ -72,6 +72,8 @@ namespace Bot {
 			builder.Services.AddHostedService<BotInitializationService>();
 			builder.Services.AddHostedService<DatabaseInitializationService>();
 
+			builder.Services.AddHostedService<CryptoPayListener>();
+			
 			// Injectio
 			builder.Services.AddBot();
 			builder.Services.AddBotParsers();

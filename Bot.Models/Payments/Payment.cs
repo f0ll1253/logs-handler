@@ -13,7 +13,6 @@ namespace Bot.Models.Payments {
 		public PaymentStatus Status { get; set; } = PaymentStatus.Active;
 		
 		public IPaymentData? Data { get; set; }
-		public string? DataId { get; set; }
 	}
 
 	public enum PaymentService {

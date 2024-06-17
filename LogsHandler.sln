@@ -1,6 +1,12 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Telegram", "Bot.Telegram\Bot.Telegram.csproj", "{BB97BDC3-78EC-449F-910F-9AC045A0AD12}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{48634686-5FCE-4AD1-9CBF-ED9F96AC6CCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Core.Messages", "Core\Bot.Core.Messages\Bot.Core.Messages.csproj", "{B5428937-66CE-45CB-93EC-E933B7A980BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Core.Models", "Core\Bot.Core.Models\Bot.Core.Models.csproj", "{77C53ADE-C86E-4DCD-AF8C-826A8DC9B109}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -11,7 +17,17 @@ Global
 		{BB97BDC3-78EC-449F-910F-9AC045A0AD12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB97BDC3-78EC-449F-910F-9AC045A0AD12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB97BDC3-78EC-449F-910F-9AC045A0AD12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5428937-66CE-45CB-93EC-E933B7A980BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5428937-66CE-45CB-93EC-E933B7A980BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5428937-66CE-45CB-93EC-E933B7A980BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5428937-66CE-45CB-93EC-E933B7A980BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77C53ADE-C86E-4DCD-AF8C-826A8DC9B109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C53ADE-C86E-4DCD-AF8C-826A8DC9B109}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C53ADE-C86E-4DCD-AF8C-826A8DC9B109}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C53ADE-C86E-4DCD-AF8C-826A8DC9B109}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{B5428937-66CE-45CB-93EC-E933B7A980BC} = {48634686-5FCE-4AD1-9CBF-ED9F96AC6CCE}
+		{77C53ADE-C86E-4DCD-AF8C-826A8DC9B109} = {48634686-5FCE-4AD1-9CBF-ED9F96AC6CCE}
 	EndGlobalSection
 EndGlobal

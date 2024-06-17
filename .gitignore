@@ -8,3 +8,5 @@ _ReSharper.Caches/
 *.Development.json
 *.sqlite*
 *.sln.*
+*.session
+*.state

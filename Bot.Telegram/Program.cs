@@ -1,7 +1,12 @@
 using System.Reflection;
 
+using Bot.Core.Messages.WTelegram;
+using Bot.Telegram.WTelegram.UpdateHandlers;
+
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Memory;
+
+using TL;
 
 using WTelegram;
 
@@ -13,6 +18,28 @@ builder.Services.AddSlimMessageBus(
 		
 		config.WithProviderMemory()
 			  .AutoDeclareFrom(Assembly.GetExecutingAssembly());
+
+		config.Handle<UpdateHandlerRequest, UpdateHandlerResponse>(
+			builder => {
+				builder.Path(
+					nameof(UpdateNewMessage),
+					x => {
+						x.WithHandler<UpdateNewMessageHandler>();
+					}
+				);
+			}
+		);
+		
+		config.Handle<UpdateHandlerRequest, UpdateHandlerResponse>(
+			builder => {
+				builder.Path(
+					nameof(UpdateBotCallbackQuery),
+					x => {
+						x.WithHandler<UpdateBotCallbackQueryHandler>();
+					}
+				);
+			}
+		);
 	}
 );
 

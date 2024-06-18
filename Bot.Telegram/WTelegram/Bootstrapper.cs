@@ -23,7 +23,7 @@ namespace Bot.Telegram.WTelegram {
 		}
 
 		public Task StopAsync(CancellationToken cancellationToken) {
-			return Task.CompletedTask; // ignore
+			return Task.Run(() => _manager.SaveState(".state"), cancellationToken);
 		}
 
 		private async Task OnUpdate(Update update) {
@@ -31,7 +31,8 @@ namespace Bot.Telegram.WTelegram {
 				new UpdateHandlerRequest {
 					Update = update,
 					UpdateManager = _manager
-				}
+				},
+				update.GetType().Name
 			);
 
 			if (response.User is null) {

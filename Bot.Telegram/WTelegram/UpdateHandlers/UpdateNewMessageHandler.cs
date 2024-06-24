@@ -8,10 +8,12 @@ namespace Bot.Telegram.WTelegram.UpdateHandlers {
 		protected override Task<string> GetKeyAsync(UpdateNewMessage update) {
 			var text = ((Message)update.message).message;
 			var index = text.IndexOf(' ');
-			
+
 			return Task.FromResult(text[..(index == -1 ? text.Length : index)]);
 		}
 
-		protected override Task<long> GetUserIdAsync(UpdateNewMessage update) => Task.FromResult(((Message)update.message).peer_id.ID);
+		protected override Task<long> GetUserIdAsync(UpdateNewMessage update) {
+			return Task.FromResult(((Message)update.message).peer_id.ID);
+		}
 	}
 }

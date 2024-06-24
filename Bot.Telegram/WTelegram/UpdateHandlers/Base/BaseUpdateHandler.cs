@@ -10,13 +10,13 @@ namespace Bot.Telegram.WTelegram.UpdateHandlers.Base {
 			where TRequest : UpdateHandlerRequest
 			where TResponse : UpdateHandlerResponse, new()
 			where TUpdate : Update {
-		public async Task<TResponse> OnHandle(TRequest request) {
+		public virtual async Task<TResponse> OnHandle(TRequest request) {
 			if (await ValidateRequestAsync(request) is not { } update) {
 				return new();
 			}
-			
+
 			var user = request.UpdateManager.Users[await GetUserIdAsync(update)];
-			
+
 			return new() {
 				Commands = await GetCommands(await GetKeyAsync(update), user).ToListAsync(),
 				User = user
@@ -27,12 +27,12 @@ namespace Bot.Telegram.WTelegram.UpdateHandlers.Base {
 			if (request.Update is not TUpdate update) {
 				return Task.FromResult<TUpdate?>(null);
 			}
-			
+
 			return Task.FromResult<TUpdate?>(update);
 		}
-		
+
 		protected abstract Task<TKey> GetKeyAsync(TUpdate update);
-		protected abstract Task<long> GetUserIdAsync(TUpdate update); 
+		protected abstract Task<long> GetUserIdAsync(TUpdate update);
 
 		private protected async IAsyncEnumerable<ICommand<TUpdate>> GetCommands(TKey key, User user) {
 			var commands = provider.GetKeyedServices<ICommand<TUpdate>>(key);

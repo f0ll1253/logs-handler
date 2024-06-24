@@ -12,7 +12,7 @@ using WTelegram;
 namespace Bot.Telegram.WTelegram {
 	public class Bootstrapper(Client client, IConfiguration config, IMessageBus bus) : IHostedService {
 		private UpdateManager _manager;
-		
+
 		public async Task StartAsync(CancellationToken cancellationToken) {
 			await client.LoginBotIfNeeded(config["Bot:Token"]);
 			_manager = client.WithUpdateManager(
@@ -44,12 +44,12 @@ namespace Bot.Telegram.WTelegram {
 						.MakeGenericMethod(update.GetType())
 						.Invoke(this, [response.Commands, update, response.User])!;
 		}
-		
+
 		// public for reflection execution
 		public async Task ExecuteCommandsAsync<TUpdate>(ICollection collection, Update command_update, User user) where TUpdate : Update {
 			var commands = collection as ICollection<ICommand<TUpdate>>;
-			
-			foreach (ICommand<TUpdate> command in commands) {
+
+			foreach (var command in commands) {
 				await command.ExecuteAsync((TUpdate)command_update, user);
 			}
 		}

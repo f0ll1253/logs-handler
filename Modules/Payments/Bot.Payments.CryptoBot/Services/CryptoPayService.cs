@@ -3,10 +3,9 @@ using Bot.Payments.CryptoBot.Models;
 
 using CryptoPay;
 using CryptoPay.Types;
+using CryptoPay.Types.Update;
 
 using Injectio.Attributes;
-
-using Invoice = CryptoPay.Types.Invoice;
 
 namespace Bot.Payments.CryptoBot.Services {
 	[RegisterTransient]
@@ -16,12 +15,12 @@ namespace Bot.Payments.CryptoBot.Services {
 				amount,
 				asset: currency,
 				description: description,
-				paidBtnName: return_callback is null ? null : PaidButtonNames.callback,
-				paidBtnUrl: return_callback,
+				paid_btn_name: return_callback is null ? null : PaidButtonNames.callback,
+				paid_btn_url: return_callback,
 				payload: user_id.ToString(),
-				allowComments: false,
-				allowAnonymous: true,
-				expiresIn: (int)TimeSpan.FromMinutes(10).TotalSeconds
+				allow_comments: false,
+				allow_anonymous: true,
+				expires_in: (int)TimeSpan.FromMinutes(10).TotalSeconds
 			);
 
 			await repository.AddAsync(
@@ -31,8 +30,7 @@ namespace Bot.Payments.CryptoBot.Services {
 				invoice.Asset,
 				invoice.Amount,
 				invoice.CreatedAt,
-				
-				data: new CryptoPayPaymentData {
+				new CryptoPayPaymentData {
 					InvoiceId = invoice.InvoiceId
 				}
 			);

@@ -1,9 +1,7 @@
-using Bot.Core.Messages.Payments;
 using Bot.Core.Models.Payments.Abstractions;
 using Bot.Payments.CryptoBot.Models;
 
 using CryptoPay;
-using CryptoPay.Types;
 
 using Microsoft.Extensions.Hosting;
 
@@ -20,8 +18,8 @@ namespace Bot.Payments.CryptoBot.Services.Hosted {
 				}
 
 				var invoices = await pay.GetInvoicesAsync(
-					invoiceIds: await payments.Select(x => (x.Data as CryptoPayPaymentData).InvoiceId).ToArrayAsync(cancellationToken: cancellationToken),
-					cancellationToken: cancellationToken
+					invoice_ids: await payments.Select(x => (x.Data as CryptoPayPaymentData).InvoiceId).ToArrayAsync(cancellationToken: cancellationToken),
+					cancellation_token: cancellationToken
 				);
 
 				foreach (var invoice in invoices.Items) {
@@ -30,20 +28,13 @@ namespace Bot.Payments.CryptoBot.Services.Hosted {
 					}
 
 					await bus.Publish(
-						new PaymentCompletedMessage {
-							Payment = await payments.FirstAsync(
-								x => (x.Data as CryptoPayPaymentData).InvoiceId == invoice.InvoiceId,
+						invoice.ToMessage(
+							await payments.FirstAsync(
+								x => x.Id == invoice.Hash,
 								cancellationToken
-							),
-							CompletionTime = invoice.Status switch {
-								Statuses.paid    => invoice.PaidAt!.Value,
-								Statuses.expired => invoice.ExpirationDate!.Value
-							},
-							Status = invoice.Status switch {
-								Statuses.paid    => PaymentResultStatus.Success,
-								Statuses.expired => PaymentResultStatus.Fail
-							}
-						}
+							)
+						),
+						cancellationToken: cancellationToken
 					);
 				}
 			}

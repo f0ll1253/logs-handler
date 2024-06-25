@@ -1,14 +1,14 @@
 using Bot.Core.Models.Abstractions;
 
 namespace Bot.Core.Models.Payments.Abstractions {
-	public interface IPaymentsRepository : IRepository<IPayment> {
+	public interface IPaymentsRepository : IRepository<IPayment, string> {
 		Task<bool> AddAsync(
 			string id,
 			long user_id,
 			PaymentService service,
 			string currency,
 			double amount,
-			DateTime? created_at = null,
+			DateTimeOffset? created_at = null,
 			IPaymentData? data = null
 		);
 		

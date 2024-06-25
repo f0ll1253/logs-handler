@@ -6,9 +6,9 @@ namespace Bot.Core.Models.Payments.Abstractions {
 
 		string Currency { get; init; }
 		double Amount { get; init; }
-		DateTime CreatedAt { get; init; }
+		DateTimeOffset CreatedAt { get; init; }
 
-		DateTime? CompletedAt { get; set; }
+		DateTimeOffset? CompletedAt { get; set; }
 		PaymentStatus Status { get; set; }
 
 		IPaymentData? Data { get; set; }

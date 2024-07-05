@@ -2,6 +2,7 @@ using System.Collections;
 
 using Bot.Core.Messages.WTelegram;
 using Bot.Core.Models.Commands.Abstractions;
+using Bot.Telegram.Commands;
 
 using SlimMessageBus;
 
@@ -19,6 +20,12 @@ namespace Bot.Telegram.WTelegram {
 				OnUpdate,
 				".state",
 				reentrant: true
+			);
+
+			await client.Bots_SetBotCommands(
+				new BotCommandScopeUsers(),
+				"en",
+				Keys.GenerateCommands()
 			);
 		}
 

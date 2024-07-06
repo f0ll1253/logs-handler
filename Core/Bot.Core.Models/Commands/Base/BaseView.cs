@@ -53,9 +53,9 @@ namespace Bot.Core.Models.Commands.Base {
 		public async Task ExecuteAsync(UpdateNewMessage update, User user) {
 			await client.Messages_SendMessage(
 				user,
-				await BuildMessage(update, user) is {Length: > 0} str ? str : await DefaultMessage((update.message as Message)!.message, user),
+				await BuildMessage(update, user) is {Length: > 0} str ? str : await DefaultMessage((update.message as Message)!.message.Split(' '), user),
 				Random.Shared.NextInt64(),
-				reply_markup: await BuildMarkup(update, user) ?? await DefaultMarkup((update.message as Message)!.message, user)
+				reply_markup: await BuildMarkup(update, user) ?? await DefaultMarkup((update.message as Message)!.message.Split(' '), user)
 			);
 		}
 

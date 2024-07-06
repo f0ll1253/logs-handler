@@ -11,7 +11,7 @@ using TL;
 using WTelegram;
 
 namespace Bot.Telegram.WTelegram {
-	public class Bootstrapper(Client client, IConfiguration config, IMessageBus bus) : IHostedService {
+	public class Bootstrapper(Client client, IConfiguration config, IMessageBus bus, ILogger<Bootstrapper> logger) : IHostedService {
 		private UpdateManager _manager;
 
 		public async Task StartAsync(CancellationToken cancellationToken) {
@@ -57,7 +57,12 @@ namespace Bot.Telegram.WTelegram {
 			var commands = collection as ICollection<ICommand<TUpdate>>;
 
 			foreach (var command in commands) {
-				await command.ExecuteAsync((TUpdate)command_update, user);
+				try {
+					await command.ExecuteAsync((TUpdate)command_update, user);
+				}
+				catch (Exception e) {
+					logger.LogError(e, "Error was throwing while execution command");
+				}
 			}
 		}
 	}

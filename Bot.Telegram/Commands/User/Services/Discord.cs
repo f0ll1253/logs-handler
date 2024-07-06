@@ -10,12 +10,12 @@ using WTelegram;
 namespace Bot.Telegram.Commands.User.Services {
 	[RegisterTransient<ICommand<UpdateNewMessage>>(ServiceKey = Keys.Services.Discord), RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.Services.DiscordCallback)]
 	public class Discord(Client client) : BaseView(client) {
-		public override Task<string> BuildMessage(UpdateNewMessage update, TL.User user) {
-			throw new NotImplementedException();
+		protected override Task<string> DefaultMessage(object args, TL.User user) {
+			return base.DefaultMessage(args, user);
 		}
 
-		public override Task<ReplyInlineMarkup?> BuildMarkup(UpdateNewMessage update, TL.User user) {
-			throw new NotImplementedException();
+		protected override Task<ReplyInlineMarkup?> DefaultMarkup(object args, TL.User user) {
+			return base.DefaultMarkup(args, user);
 		}
 	}
 }

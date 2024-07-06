@@ -10,11 +10,11 @@ using WTelegram;
 namespace Bot.Telegram.Commands.User {
 	[RegisterTransient(ServiceKey = Keys.Start, ServiceType = typeof(ICommand<UpdateNewMessage>)), RegisterTransient(ServiceKey = Keys.StartCallback, ServiceType = typeof(ICommand<UpdateBotCallbackQuery>))]
 	public class Start(Client client) : BaseView(client) {
-		public override Task<string> BuildMessage(UpdateNewMessage update, TL.User user) {
+		protected override Task<string> DefaultMessage(object args, TL.User user) {
 			return Task.FromResult($"Hello, {user.username}!");
 		}
 
-		public override Task<ReplyInlineMarkup?> BuildMarkup(UpdateNewMessage update, TL.User user) {
+		protected override Task<ReplyInlineMarkup?> DefaultMarkup(object args, TL.User user) {
 			return Task.FromResult<ReplyInlineMarkup?>(new() {
 				rows = [
 					new() {

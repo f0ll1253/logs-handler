@@ -1,5 +1,6 @@
 using Bot.Core.Models.Commands.Abstractions;
 using Bot.Core.Models.Commands.Base;
+using Bot.Telegram.Commands.General;
 
 using Injectio.Attributes;
 
@@ -19,13 +20,21 @@ namespace Bot.Telegram.Commands.User.Menu {
 					rows = [
 						new() {
 							buttons = [
-								new KeyboardButtonCallback() {
+								new KeyboardButtonCallback {
 									text = "Discord",
-									data = [Keys.Services.DiscordCallback]
+									data = ShowLogsCallback.CreateData(Keys.Services.DiscordCallback, Keys.Menu.ServicesCallback)
 								},
-								new KeyboardButtonCallback() {
+								new KeyboardButtonCallback {
 									text = "Twitch",
-									data = [Keys.Services.TwitchCallback]
+									data = ShowLogsCallback.CreateData(Keys.Services.TwitchCallback, Keys.Menu.ServicesCallback)
+								}
+							]
+						},
+						new() {
+							buttons = [
+								new KeyboardButtonCallback {
+									text = "Back",
+									data = [Keys.StartCallback]
 								}
 							]
 						}

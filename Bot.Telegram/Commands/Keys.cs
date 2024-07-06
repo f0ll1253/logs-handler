@@ -5,6 +5,7 @@ namespace Bot.Telegram.Commands {
 		public const string Start = "/start";
 		public const byte StartCallback = 0;
 		
+		public const byte ShowLogsCallback = Byte.MaxValue - 1;
 		public const byte CloseCallback = Byte.MaxValue;
 		
 		public static class Menu {

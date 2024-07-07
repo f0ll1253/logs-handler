@@ -1,8 +1,8 @@
 using Bot.Core.Models.Parsers.Abstractions;
-using Bot.Parsers.Discord.Models;
+using Bot.Services.Discord.Models;
 
-namespace Bot.Parsers.Discord {
-	public class DiscordParser : IParserStream<Account> {
+namespace Bot.Services.Discord {
+	public class Parser : IParserStream<Account> {
 		public async IAsyncEnumerable<Account> FromLog(string log) {
 			var folder = Path.Combine(log, "Discord");
 			

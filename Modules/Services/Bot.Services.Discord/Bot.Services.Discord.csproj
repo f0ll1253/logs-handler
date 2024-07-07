@@ -10,4 +10,9 @@
       <ProjectReference Include="..\..\..\Core\Bot.Core.Models\Bot.Core.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Leaf.xNet" Version="5.2.10" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+
 </Project>

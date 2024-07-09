@@ -13,6 +13,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Payments", "Payments", "{E1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Payments.CryptoBot", "Modules\Payments\Bot.Payments.CryptoBot\Bot.Payments.CryptoBot.csproj", "{BB761A89-542F-424C-8983-3A7521660D63}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{80CD0707-0989-49E6-BC5F-3BAA776EAF00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Services.Files.Telegram", "Modules\Services\Bot.Services.Files.Telegram\Bot.Services.Files.Telegram.csproj", "{55ADAF5F-4C1C-4D0F-9109-4978DE4675AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

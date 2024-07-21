@@ -7,14 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Injectio" Version="3.1.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
-      <PackageReference Include="WTelegramClient" Version="4.1.1" />
+      <Folder Include="Services\" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\Core\Bot.Core.Messages\Bot.Core.Messages.csproj" />
       <ProjectReference Include="..\..\..\Core\Bot.Core.Models\Bot.Core.Models.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />
     </ItemGroup>
 
 </Project>

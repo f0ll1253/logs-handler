@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Core\Bot.Core.Messages\Bot.Core.Messages.csproj"/>
-        <ProjectReference Include="..\Core\Bot.Core.Models\Bot.Core.Models.csproj"/>
+      <ProjectReference Include="..\Core\Bot.Core.Messages\Bot.Core.Messages.csproj" />
+      <ProjectReference Include="..\Core\Bot.Core.Models\Bot.Core.Models.csproj" />
     </ItemGroup>
 </Project>

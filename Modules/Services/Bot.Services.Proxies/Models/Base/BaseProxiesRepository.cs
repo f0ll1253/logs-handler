@@ -1,21 +1,20 @@
 using System.Net;
 
 using Bot.Core.Models;
-using Bot.Core.Models.Exceptions;
+using Bot.Core.Models.Base;
 using Bot.Core.Models.Proxies.Abstractions;
 using Bot.Services.Proxies.Data;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Services.Proxies.Models.Base {
-	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, IConfiguration config, ILogger<BaseProxiesRepository<T>> logger) : IProxiesRepository<T> where T : Proxy {
+	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, IConfiguration config, ILogger? logger) : BaseRepository<T, string>(context, logger), IProxiesRepository<T> where T : Proxy {
 		protected static readonly AutoResetEvent _event = new(false);
 		
-		public virtual async Task<bool> AddAsync(T proxy) {
+		public override async Task<bool> AddAsync(T proxy) {
 			if (!await _CheckProxyAsync(proxy)) {
-				logger.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
+				logger?.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
 				
 				return false;
 			}
@@ -23,7 +22,7 @@ namespace Bot.Services.Proxies.Models.Base {
 			return await _TrySaveAsync(context.AddAsync(proxy).AsTask());
 		}
 
-		public virtual Task<bool> AddRangeAsync(ICollection<T> proxies) {
+		public override Task<bool> AddRangeAsync(ICollection<T> proxies) {
 			int count;
 			
 			foreach (var group in proxies.GroupBy(int.Parse(config["Multithreading:Proxy:MaxThreads"]))) {
@@ -50,19 +49,7 @@ namespace Bot.Services.Proxies.Models.Base {
 
 			return _TrySaveAsync();
 		}
-
-		public virtual async Task<bool> RemoveAsync(string key) {
-			if (await context.FindAsync<T>(key) is not { } entity) {
-				return false;
-			}
-
-			return await _TrySaveAsync(() => context.Remove(entity));
-		}
-
-		public virtual Task<bool> UpdateAsync(T proxy) => _TrySaveAsync(() => context.Update(proxy));
-
-		public virtual Task<T?> GetAsync(string key) => context.FindAsync<T>(key).AsTask();
-
+		
 		public virtual async IAsyncEnumerable<T> TakeAsync(int count) {
 			var proxies = context.Set<T>()
 								 .OrderBy(x => x.Index)
@@ -101,26 +88,6 @@ namespace Bot.Services.Proxies.Models.Base {
 				if (!response.IsSuccessStatusCode) {
 					return false;
 				}
-			}
-
-			return true;
-		}
-
-		protected Task<bool> _TrySaveAsync(Action action) => _TrySaveAsync(Task.Run(action));
-		
-		protected async Task<bool> _TrySaveAsync(Task? action = null) {
-			if (action is not null) {
-				await action;
-			}
-			
-			try {
-				await context.SaveChangesAsync();
-			} catch (Exception e) {
-				logger.LogError(new ContextSaveException(e, "Proxies"), null);
-
-				context.ChangeTracker.Clear();
-                
-				return false;
 			}
 
 			return true;

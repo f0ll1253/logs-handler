@@ -124,6 +124,48 @@ namespace Bot.Tests.Services {
 		}
 
 		#endregion
+
+		#region Test Adding
+
+		[Test]
+		public async Task Test_AddAsync() {
+			throw new NotImplementedException();
+		}
+
+		[Test]
+		public async Task Test_AddRangeAsync() {
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region Test Getting
+
+		[TestCase("Id")]
+		public async Task Test_GetAsync(string str) {
+			throw new NotImplementedException();
+		}
+
+		[TestCase(0)]
+		public async Task Test_TakeAsync(int count) {
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region Other
+
+		[TestCase("Id")]
+		public async Task Test_RemoveAsync(string str) {
+			throw new NotImplementedException();
+		}
+
+		[TestCase("id", "host", 80, "username", "password")]
+		public async Task Test_UpdateAsync(string id, string host, int port, string username, string password) {
+			throw new NotImplementedException();
+		}
+
+		#endregion
 	}
 
 	public class ProxiesConfiguration {

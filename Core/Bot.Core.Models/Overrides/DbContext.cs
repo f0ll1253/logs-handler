@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Bot.Core.Models.Overrides {
-	public class DbContext : Microsoft.EntityFrameworkCore.DbContext {
+	public class DbContext(DbContextOptions options) : Microsoft.EntityFrameworkCore.DbContext(options) {
 		// FIX ValueGenerator not working on update 
 		
 #pragma warning disable ALL

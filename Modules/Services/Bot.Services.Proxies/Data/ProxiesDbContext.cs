@@ -4,7 +4,7 @@ using Bot.Services.Proxies.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bot.Services.Proxies.Data {
-	public class ProxiesDbContext : Bot.Core.Models.Overrides.DbContext {
+	public class ProxiesDbContext(DbContextOptions<ProxiesDbContext> options) : Bot.Core.Models.Overrides.DbContext(options) {
 		public DbSet<Proxy> Proxies { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder builder) {

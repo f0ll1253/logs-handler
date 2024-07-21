@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Services.Files.Telegram
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Services.Proxies", "Modules\Services\Bot.Services.Proxies\Bot.Services.Proxies.csproj", "{79DAF4AB-E7AA-40A2-B229-426EC028F1A1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Tests", "Bot.Tests\Bot.Tests.csproj", "{0B8AB04C-4BAE-44DB-B61A-1F43B7A79605}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{79DAF4AB-E7AA-40A2-B229-426EC028F1A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79DAF4AB-E7AA-40A2-B229-426EC028F1A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79DAF4AB-E7AA-40A2-B229-426EC028F1A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B8AB04C-4BAE-44DB-B61A-1F43B7A79605}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B8AB04C-4BAE-44DB-B61A-1F43B7A79605}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B8AB04C-4BAE-44DB-B61A-1F43B7A79605}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B8AB04C-4BAE-44DB-B61A-1F43B7A79605}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B5428937-66CE-45CB-93EC-E933B7A980BC} = {48634686-5FCE-4AD1-9CBF-ED9F96AC6CCE}

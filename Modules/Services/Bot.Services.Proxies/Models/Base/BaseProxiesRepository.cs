@@ -3,17 +3,17 @@ using System.Net;
 using Bot.Core.Models;
 using Bot.Core.Models.Base;
 using Bot.Core.Models.Proxies.Abstractions;
+using Bot.Services.Proxies.Configuration;
 using Bot.Services.Proxies.Data;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Services.Proxies.Models.Base {
-	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, IConfiguration config, ILogger? logger) : BaseRepository<T, string>(context, logger), IProxiesRepository<T> where T : Proxy {
+	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, ProxyConfiguration config, ILogger? logger) : BaseRepository<T, string>(context, logger), IProxiesRepository<T> where T : Proxy {
 		protected static readonly AutoResetEvent _event = new(false);
 		
 		public override async Task<bool> AddAsync(T proxy) {
-			if (!await _CheckProxyAsync(proxy)) {
+			if (config.OnInCheck && !await _CheckProxyAsync(proxy)) {
 				logger?.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
 				
 				return false;
@@ -23,45 +23,80 @@ namespace Bot.Services.Proxies.Models.Base {
 		}
 
 		public override Task<bool> AddRangeAsync(ICollection<T> proxies) {
-			int count;
-			
-			foreach (var group in proxies.GroupBy(int.Parse(config["Multithreading:Proxy:MaxThreads"]))) {
-				_event.Reset();
+			if (config.OnInCheck) {
+				foreach (var group in proxies.GroupBy(config.MaxThreads)) {
+					_event.Reset();
 
-				count = group.Count();
+					for (int threads = group.Count(), i = 0; i < group.Count(); i++) {
+						var proxy = group.ElementAt(i);
+						
+						new Thread(
+							async () => {
+								if (await _CheckProxyAsync(proxy)) {
+									await context.AddAsync(proxy);
+								}
 
-				foreach (var proxy in group) {
-					new Thread(
-						async () => {
-							if (await _CheckProxyAsync(proxy)) {
-								await context.AddAsync(proxy);
+								if (Interlocked.Decrement(ref threads) == 0) {
+									_event.Set();
+								}
 							}
+						).Start();
+					}
 
-							if (Interlocked.Decrement(ref count) == 0) {
-								_event.Set();
-							}
-						}
-					).Start();
+					_event.WaitOne();
 				}
-
-				_event.WaitOne();
 			}
 
 			return _TrySaveAsync();
 		}
-		
+
+		public override async Task<T?> GetAsync(string key) {
+			var proxy = await base.GetAsync(key);
+
+			if (config.OnOutCheck && proxy is { } && !await _CheckProxyAsync(proxy)) {
+				logger?.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
+
+				await _TrySaveAsync(() => context.Remove(proxy));
+				
+				return null;
+			}
+            
+			return proxy;
+		}
+
 		public virtual async IAsyncEnumerable<T> TakeAsync(int count) {
 			var proxies = context.Set<T>()
-								 .OrderBy(x => x.Index)
-								 .Take(count);
+								 .OrderBy(x => x.Index);
+			var result = new List<T>();
 
-			foreach (var proxy in proxies) {
-				proxy.IsInUse = true;
+			if (config.OnOutCheck) {
+				foreach (var group in proxies.GroupBy(config.MaxThreads)) {
+					_event.Reset();
+
+					for (int threads = group.Count(), i = 0; i < group.Count(); i++ ) {
+						var proxy = group.ElementAt(i);
+						proxy.IsInUse = true;
+					
+						new Thread(
+							async () => {
+								if (result.Count < count && await _CheckProxyAsync(proxy)) {
+									result.Add(proxy);
+								}
+
+								if (Interlocked.Decrement(ref threads) == 0) {
+									_event.Set();
+								}
+							}
+						).Start();
+					}
+
+					_event.WaitOne();
+				}
 			}
 
 			await context.SaveChangesAsync();
 
-			foreach (var proxy in proxies) {
+			foreach (var proxy in result) {
 				yield return proxy;
 			}
 		}
@@ -75,12 +110,12 @@ namespace Bot.Services.Proxies.Models.Base {
 			};
 
 			using (var http = new HttpClient(handler, true)) {
-				http.Timeout = TimeSpan.FromMilliseconds(uint.Parse(config["Proxy:CheckTimeout"]));
+				http.Timeout = TimeSpan.FromMilliseconds(config.CheckTimeout);
 				
 				HttpResponseMessage response;
 				
 				try {
-					response = await http.GetAsync(config["Proxy:CheckUrl"]);
+					response = await http.GetAsync(config.CheckUrl);
 				} catch {
 					return false;
 				}

@@ -1,9 +1,10 @@
+using Bot.Services.Proxies.Generators;
 using Bot.Services.Proxies.Models;
 
 using Microsoft.EntityFrameworkCore;
 
 namespace Bot.Services.Proxies.Data {
-	public class ProxiesDbContext : DbContext {
+	public class ProxiesDbContext : Bot.Core.Models.Overrides.DbContext {
 		public DbSet<Proxy> Proxies { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder builder) {
@@ -19,6 +20,16 @@ namespace Bot.Services.Proxies.Data {
 						  .IsRequired();
 					entity.Property(x => x.Password)
 						  .IsRequired();
+
+					entity.Ignore(x => x.Context);
+					
+					entity.HasIndex(x => x.Index)
+						  .IsDescending()
+						  .IsUnique();
+					
+					entity.Property(x => x.Index)
+						  .HasValueGenerator<ProxyIndexGenerator>()
+						  .ValueGeneratedOnAddOrUpdate();
 				}
 			);
 			

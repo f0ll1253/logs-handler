@@ -5,6 +5,7 @@ using Bot.Core.Models.Exceptions;
 using Bot.Core.Models.Proxies.Abstractions;
 using Bot.Services.Proxies.Data;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -62,6 +63,23 @@ namespace Bot.Services.Proxies.Models.Base {
 
 		public virtual Task<T?> GetAsync(string key) => context.FindAsync<T>(key).AsTask();
 
+		public virtual async IAsyncEnumerable<T> TakeAsync(int count) {
+			var proxies = context.Set<T>()
+								 .OrderBy(x => x.Index)
+								 .Take(count);
+
+			foreach (var proxy in proxies) {
+				proxy.IsInUse = true;
+			}
+
+			await context.SaveChangesAsync();
+
+			foreach (var proxy in proxies) {
+				yield return proxy;
+			}
+		}
+		
+		// Protected
 		protected async Task<bool> _CheckProxyAsync(T proxy) {
 			var handler = new HttpClientHandler {
 				UseCookies = false,

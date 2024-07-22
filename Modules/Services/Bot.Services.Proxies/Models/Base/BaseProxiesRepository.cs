@@ -6,12 +6,11 @@ using Bot.Core.Models.Proxies.Abstractions;
 using Bot.Services.Proxies.Configuration;
 using Bot.Services.Proxies.Data;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Services.Proxies.Models.Base {
 	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, ProxyConfiguration config, ILogger? logger) : BaseRepository<T, string>(context, logger), IProxiesRepository<T> where T : Proxy {
-		protected static readonly AutoResetEvent _event = new(false);
-		
 		public override async Task<bool> AddAsync(T proxy) {
 			if (config.OnInCheck && !await _CheckProxyAsync(proxy)) {
 				logger?.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
@@ -22,32 +21,39 @@ namespace Bot.Services.Proxies.Models.Base {
 			return await _TrySaveAsync(context.AddAsync(proxy).AsTask());
 		}
 
-		public override Task<bool> AddRangeAsync(ICollection<T> proxies) {
+		public override async Task<bool> AddRangeAsync(ICollection<T> proxies) {
+			var @event = new AutoResetEvent(false);
+			
 			if (config.OnInCheck) {
+				var result = new List<T>();
+				
 				foreach (var group in proxies.GroupBy(config.MaxThreads)) {
-					_event.Reset();
-
 					for (int threads = group.Count(), i = 0; i < group.Count(); i++) {
 						var proxy = group.ElementAt(i);
 						
 						new Thread(
 							async () => {
 								if (await _CheckProxyAsync(proxy)) {
-									await context.AddAsync(proxy);
+									result.Add(proxy);
 								}
 
 								if (Interlocked.Decrement(ref threads) == 0) {
-									_event.Set();
+									@event.Set();
 								}
 							}
 						).Start();
 					}
 
-					_event.WaitOne();
+					@event.WaitOne();
 				}
+
+				await context.AddRangeAsync(result);
+			}
+			else {
+				await context.AddRangeAsync(proxies);
 			}
 
-			return _TrySaveAsync();
+			return await _TrySaveAsync();
 		}
 
 		public override async Task<T?> GetAsync(string key) {
@@ -65,14 +71,19 @@ namespace Bot.Services.Proxies.Models.Base {
 		}
 
 		public virtual async IAsyncEnumerable<T> TakeAsync(int count) {
-			var proxies = context.Set<T>()
-								 .OrderBy(x => x.Index);
-			var result = new List<T>();
+			var @event = new AutoResetEvent(false);
+			var proxies = context.Set<T>().OrderBy(x => x.Index);
+			
+			ICollection<T> result;
 
 			if (config.OnOutCheck) {
+				result = new List<T>();
+                
 				foreach (var group in proxies.GroupBy(config.MaxThreads)) {
-					_event.Reset();
-
+					if (result.Count >= count) {
+						break;
+					}
+					
 					for (int threads = group.Count(), i = 0; i < group.Count(); i++ ) {
 						var proxy = group.ElementAt(i);
 						proxy.IsInUse = true;
@@ -84,19 +95,22 @@ namespace Bot.Services.Proxies.Models.Base {
 								}
 
 								if (Interlocked.Decrement(ref threads) == 0) {
-									_event.Set();
+									@event.Set();
 								}
 							}
 						).Start();
 					}
 
-					_event.WaitOne();
+					@event.WaitOne();
 				}
+			}
+			else {
+				result = await proxies.Take(count).ToListAsync();
 			}
 
 			await context.SaveChangesAsync();
 
-			foreach (var proxy in result) {
+			foreach (var proxy in result.Take(count)) {
 				yield return proxy;
 			}
 		}

@@ -5,7 +5,7 @@ using Bot.Core.Models.Proxies.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bot.Services.Proxies.Models {
-	public class Proxy : IProxy, IAsyncDisposable {
+	public class Proxy : IProxy, IEquatable<Proxy>, IAsyncDisposable {
 		public string Id { get; set; } = Guid.NewGuid().ToString();
 		
 		public required string Host { get; set; }
@@ -20,28 +20,16 @@ namespace Bot.Services.Proxies.Models {
 		//
 		internal DbContext Context { get; init; }
 		
-		#region Imlicit
-
+		// From Proxy
 		public static implicit operator string(Proxy proxy) => $"{proxy.Host}:{proxy.Port}:{proxy.Username}:{proxy.Password}";
 
 		public static implicit operator WebProxy(Proxy proxy) => new() {
 			Address = new($"{proxy.Type}://{proxy.Host}:{proxy.Port}"),
 			Credentials = new NetworkCredential(proxy.Username, proxy.Password)
 		};
-
-		#endregion
-
-		#region Explicit
-
-		public static Proxy FromString(string str, ProxyType type) {
-			var proxy = (Proxy)str;
-
-			proxy.Type = type;
-
-			return proxy;
-		}
 		
-		public static explicit operator Proxy(string str) {
+		// To Proxy
+		public static implicit operator Proxy(string str) {
 			var data = str.Split('@')
 						  .SelectMany(x => x.Split(':'))
 						  .ToArray();
@@ -74,14 +62,48 @@ namespace Bot.Services.Proxies.Models {
 			};
 		}
 
-		#endregion
-
 		public async ValueTask DisposeAsync() {
 			// Set properties
 			IsInUse = false;
 			
 			// Save
 			await Context.SaveChangesAsync();
+		}
+
+		public bool Equals(Proxy? other) {
+			if (ReferenceEquals(null, other)) {
+				return false;
+			}
+			if (ReferenceEquals(this, other)) {
+				return true;
+			}
+			return Id == other.Id && Host == other.Host && Port == other.Port && Username == other.Username && Password == other.Password && Type == other.Type;
+		}
+
+		public override bool Equals(object? obj) {
+			if (ReferenceEquals(null, obj)) {
+				return false;
+			}
+			if (ReferenceEquals(this, obj)) {
+				return true;
+			}
+			if (obj.GetType() != this.GetType()) {
+				return false;
+			}
+			return Equals((Proxy)obj);
+		}
+
+		public override int GetHashCode() {
+			var hash_code = new HashCode();
+			
+			hash_code.Add(Id);
+			hash_code.Add(Host);
+			hash_code.Add(Port);
+			hash_code.Add(Username);
+			hash_code.Add(Password);
+			hash_code.Add((int)Type);
+			
+			return hash_code.ToHashCode();
 		}
 	}
 

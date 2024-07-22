@@ -39,16 +39,14 @@ namespace Bot.Tests.Services {
 
 			#endregion
 
-			_proxies = new(
-				_context,
-				new() {
+			_proxies = new(_context, new NullLogger<Proxies>()) {
+				Config = new() {
 					MaxThreads = 10,
 					OnInCheck = true,
 					OnOutCheck = true,
 					CheckTimeout = 10_000
-				},
-				new NullLogger<Proxies>()
-			);
+				}
+			};
 		}
 
 		#region Test Convertion
@@ -171,6 +169,11 @@ namespace Bot.Tests.Services {
 		}
 
 		#endregion
+
+		[TestCase(20), Order(1)]
+		public async Task Test_AfterAddCount(int expected_count) {
+			Assert.That(await _context.Proxies.CountAsync(), Is.EqualTo(expected_count));
+		}
 
 		#region Other
 

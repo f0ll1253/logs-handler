@@ -10,9 +10,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Services.Proxies.Models.Base {
-	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, ProxyConfiguration config, ILogger? logger) : BaseRepository<T, string>(context, logger), IProxiesRepository<T> where T : Proxy {
+	public abstract class BaseProxiesRepository<T>(ProxiesDbContext context, ILogger? logger) : BaseRepository<T, string>(context, logger), IProxiesRepository<T> where T : Proxy {
+
+		public ProxyConfiguration Config { get; init; } = new();
+		
 		public override async Task<bool> AddAsync(T proxy) {
-			if (config.OnInCheck && !await _CheckProxyAsync(proxy)) {
+			if (Config.OnInCheck && !await _CheckProxyAsync(proxy)) {
 				logger?.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
 				
 				return false;
@@ -22,30 +25,17 @@ namespace Bot.Services.Proxies.Models.Base {
 		}
 
 		public override async Task<bool> AddRangeAsync(ICollection<T> proxies) {
-			var @event = new AutoResetEvent(false);
-			
-			if (config.OnInCheck) {
+			if (Config.OnInCheck) {
 				var result = new List<T>();
-				
-				foreach (var group in proxies.GroupBy(config.MaxThreads)) {
-					for (int threads = group.Count(), i = 0; i < group.Count(); i++) {
-						var proxy = group.ElementAt(i);
-						
-						new Thread(
-							async () => {
-								if (await _CheckProxyAsync(proxy)) {
-									result.Add(proxy);
-								}
 
-								if (Interlocked.Decrement(ref threads) == 0) {
-									@event.Set();
-								}
-							}
-						).Start();
-					}
-
-					@event.WaitOne();
-				}
+				proxies.WithThreads(
+					async proxy => {
+						if (await _CheckProxyAsync(proxy)) {
+							result.Add(proxy);
+						}
+					},
+					Config.MaxThreads
+				);
 
 				await context.AddRangeAsync(result);
 			}
@@ -59,7 +49,7 @@ namespace Bot.Services.Proxies.Models.Base {
 		public override async Task<T?> GetAsync(string key) {
 			var proxy = await base.GetAsync(key);
 
-			if (config.OnOutCheck && proxy is { } && !await _CheckProxyAsync(proxy)) {
+			if (Config.OnOutCheck && proxy is { } && !await _CheckProxyAsync(proxy)) {
 				logger?.LogWarning("[Proxies] Proxy is not valid: {proxy}", (string)proxy);
 
 				await _TrySaveAsync(() => context.Remove(proxy));
@@ -71,38 +61,28 @@ namespace Bot.Services.Proxies.Models.Base {
 		}
 
 		public virtual async IAsyncEnumerable<T> TakeAsync(int count) {
-			var @event = new AutoResetEvent(false);
 			var proxies = context.Set<T>().OrderBy(x => x.Index);
 			
 			ICollection<T> result;
 
-			if (config.OnOutCheck) {
+			if (Config.OnOutCheck) {
 				result = new List<T>();
-                
-				foreach (var group in proxies.GroupBy(config.MaxThreads)) {
-					if (result.Count >= count) {
-						break;
-					}
-					
-					for (int threads = group.Count(), i = 0; i < group.Count(); i++ ) {
-						var proxy = group.ElementAt(i);
-						proxy.IsInUse = true;
-					
-						new Thread(
-							async () => {
-								if (result.Count < count && await _CheckProxyAsync(proxy)) {
-									result.Add(proxy);
-								}
 
-								if (Interlocked.Decrement(ref threads) == 0) {
-									@event.Set();
-								}
-							}
-						).Start();
-					}
-
-					@event.WaitOne();
-				}
+				proxies.WithThreads(
+					async proxy => {
+						if (result.Count >= count) {
+							return;
+						}
+						
+						if (await _CheckProxyAsync(proxy)) {
+							result.Add(proxy);
+						}
+						
+						// TODO else set proxy is not working
+					},
+					Config.MaxThreads,
+					_ => result.Count >= count
+				);
 			}
 			else {
 				result = await proxies.Take(count).ToListAsync();
@@ -124,12 +104,12 @@ namespace Bot.Services.Proxies.Models.Base {
 			};
 
 			using (var http = new HttpClient(handler, true)) {
-				http.Timeout = TimeSpan.FromMilliseconds(config.CheckTimeout);
+				http.Timeout = TimeSpan.FromMilliseconds(Config.CheckTimeout);
 				
 				HttpResponseMessage response;
 				
 				try {
-					response = await http.GetAsync(config.CheckUrl);
+					response = await http.GetAsync(Config.CheckUrl);
 				} catch {
 					return false;
 				}

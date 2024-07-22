@@ -11,22 +11,24 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Bot.Tests.Services {
 	public class Tests_Proxies {
-		private readonly ProxiesConfiguration _configuration;
-
-		public Tests_Proxies() {
-			var config = new ConfigurationBuilder()
-						 .AddUserSecrets(Assembly.GetExecutingAssembly())
-						 .AddInMemoryCollection()
-						 .Build();
-
-			_configuration = config.Get<ProxiesConfiguration>()!;
-		}
-
+		private ProxiesConfiguration _configuration;
 		private ProxiesDbContext _context;
 		private Proxies _proxies;
 		
 		[OneTimeSetUp]
 		public void OneTimeSetUp() {
+
+			#region Configuration
+
+			var config = new ConfigurationBuilder()
+						 .AddUserSecrets(Assembly.GetExecutingAssembly())
+						 .AddInMemoryCollection()
+						 .Build();
+
+			_configuration = config.GetSection("Proxies").Get<ProxiesConfiguration>()!;
+
+			#endregion
+            
 			#region Context
 
 			var options_builder = new DbContextOptionsBuilder<ProxiesDbContext>();
@@ -43,6 +45,7 @@ namespace Bot.Tests.Services {
 					MaxThreads = 10,
 					OnInCheck = true,
 					OnOutCheck = true,
+					CheckTimeout = 10_000
 				},
 				new NullLogger<Proxies>()
 			);
@@ -54,6 +57,7 @@ namespace Bot.Tests.Services {
 		[TestCase("1.1.1.1:80@username:password")]
 		[TestCase("username:password:1.1.1.1:80")]
 		[TestCase("username:password@1.1.1.1:80")]
+		[Order(-1)]
 		public void Test_StrToProxy(string str) {
 			var proxy = (Proxy)str;
 
@@ -113,7 +117,7 @@ namespace Bot.Tests.Services {
 
 		[Test]
 		public void Test_InvalidConvertion() {
-			foreach (var str in _configuration.Invalid) {
+			foreach (var str in _configuration.Invalid.ToArray()) {
 				Assert.Throws<ArgumentException>(
 					() => {
 						var proxy = (Proxy)str;
@@ -127,42 +131,64 @@ namespace Bot.Tests.Services {
 
 		#region Test Adding
 
-		[Test]
+		[Test, Order(0)]
 		public async Task Test_AddAsync() {
-			throw new NotImplementedException();
+			foreach (var str in _configuration.Valid.ToArray()) {
+				Assert.That(await _proxies.AddAsync(str), Is.True);
+			}
 		}
 
-		[Test]
+		[Test, Order(0)]
 		public async Task Test_AddRangeAsync() {
-			throw new NotImplementedException();
+			Assert.That(await _proxies.AddRangeAsync(_configuration.Valid.ToArray().Select(x => (Proxy)x).ToList()), Is.True);
 		}
 
 		#endregion
 
 		#region Test Getting
 
-		[TestCase("Id")]
-		public async Task Test_GetAsync(string str) {
-			throw new NotImplementedException();
+		[Test, Order(1)]
+		public async Task Test_GetAsync() {
+			if (await _context.Proxies.FirstOrDefaultAsync() is not {} proxy) {
+				throw new ArgumentException("Proxy not found");
+			}
+			
+			Assert.That(await _proxies.GetAsync(proxy.Id), Is.EqualTo(proxy));
 		}
 
-		[TestCase(0)]
+		[TestCase(10), Order(1)]
 		public async Task Test_TakeAsync(int count) {
-			throw new NotImplementedException();
+			var from_context = await _context.Proxies.Take(count).OrderBy(x => x.Index).ToArrayAsync();
+			var from_repository = await _proxies.TakeAsync(count).ToArrayAsync();
+
+			if (from_repository.Length != count) {
+				throw new("Count of elements more or less than needed");
+			}
+
+			for (var i = 0; i < count; i++) {
+				Assert.IsTrue(from_context.Contains(from_repository[i]));
+			}
 		}
 
 		#endregion
 
 		#region Other
 
-		[TestCase("Id")]
-		public async Task Test_RemoveAsync(string str) {
-			throw new NotImplementedException();
-		}
+		[TestCase("0.0.0.0", 80, "username", "password"), Order(2)]
+		public async Task Test_UpdateAsync(string host, int port, string username, string password) {
+			var proxy = await _context.Proxies.FirstAsync();
 
-		[TestCase("id", "host", 80, "username", "password")]
-		public async Task Test_UpdateAsync(string id, string host, int port, string username, string password) {
-			throw new NotImplementedException();
+			proxy.Host = host;
+			proxy.Port = (uint)port;
+			proxy.Username = username;
+			proxy.Password = password;
+			
+			Assert.That(await _proxies.UpdateAsync(proxy), Is.True);
+		}
+		
+		[Test, Order(3)]
+		public async Task Test_RemoveAsync() {
+			Assert.That(await _proxies.RemoveAsync(await _context.Proxies.Select(x => x.Id).FirstAsync()), Is.True);
 		}
 
 		#endregion

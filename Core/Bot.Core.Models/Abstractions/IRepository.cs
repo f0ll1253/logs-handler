@@ -1,8 +1,9 @@
-using Bot.Core.Models.Payments.Abstractions;
-
 namespace Bot.Core.Models.Abstractions {
-	public interface IRepository<in T, in TKey> where T : class {
-		Task<bool> AddAsync(T obj);
-		Task<IPayment?> GetAsync(TKey key);
+	public interface IRepository<T, in TKey> : IReadOnlyRepository<T, TKey> where T : class {
+		Task<bool> AddRangeAsync(ICollection<T> collection);
+		
+		Task<bool> RemoveAsync(string key);
+		
+		Task<bool> UpdateAsync(T entity);
 	}
 }

@@ -6,7 +6,7 @@ namespace Bot.Services.Discord.Models {
 
 		public string Token { get; set; }
 
-		#region @me Api (/users/api9/@me)
+		#region @me
 
 		[JsonProperty("id")]
 		public string Id { get; set; }
@@ -46,25 +46,30 @@ namespace Bot.Services.Discord.Models {
 
 		#endregion
 
-		#region guilds Api (/users/api9/@me/guild)
+		#region guilds
 
-		public ICollection<GuildDataClass> Guilds { get; } = new List<GuildDataClass>();
+		public ICollection<GuildDataClass> Guilds { get; set; } = new List<GuildDataClass>();
 
 		#endregion
 
-		#region country code Api (/users/api9/@me/billing/country-code)
+		#region country code
 
 		[JsonProperty("country_code")]
 		public string CountryCode { get; set; }
 
 		#endregion
 
-		#region payment-sources Api (/users/api9/@me/billing/payment-sources)
+		#region payment-sources
 
 		// TODO
 
 		#endregion
+
+		public static implicit operator Account(string str) => new() {
+			Token = str
+		};
 		
+		//
 		public enum UserFlags {
 			// ReSharper disable InconsistentNaming
 			STAFF = 0,
@@ -115,9 +120,9 @@ namespace Bot.Services.Discord.Models {
 			
 			[JsonProperty("permissions")]
 			public string Permissions { get; set; }
-			
+
 			[JsonProperty("features")]
-			public IEnumerable<string> Features { get; set; }
+			public List<string> Features { get; set; } = new();
 			
 			[JsonProperty("approximate_member_count")]
 			public uint MemberCount { get; set; }

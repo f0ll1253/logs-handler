@@ -17,18 +17,8 @@ namespace Bot.Tests.Services {
 		
 		[OneTimeSetUp]
 		public void OneTimeSetUp() {
-
-			#region Configuration
-
-			var config = new ConfigurationBuilder()
-						 .AddUserSecrets(Assembly.GetExecutingAssembly())
-						 .AddInMemoryCollection()
-						 .Build();
-
-			_configuration = config.GetSection("Proxies").Get<ProxiesConfiguration>()!;
-
-			#endregion
-            
+			_configuration = "Proxies".GetConfiguration<ProxiesConfiguration>();
+			
 			#region Context
 
 			var options_builder = new DbContextOptionsBuilder<ProxiesDbContext>();

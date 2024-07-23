@@ -3,6 +3,18 @@ using Bot.Services.Discord.Models;
 
 namespace Bot.Services.Discord {
 	public class Parser : IParserStream<Account> {
+		public async IAsyncEnumerable<Account> FromLogs(string logs) {
+			if (!Directory.Exists(logs)) {
+				yield break;
+			}
+
+			foreach (var log in Directory.GetDirectories(logs)) {
+				await foreach (var account in FromLog(log)) {
+					yield return account;
+				}
+			}
+		}
+		
 		public async IAsyncEnumerable<Account> FromLog(string log) {
 			var folder = Path.Combine(log, "Discord");
 			

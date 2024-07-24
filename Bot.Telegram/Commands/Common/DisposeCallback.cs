@@ -6,7 +6,7 @@ using TL;
 
 using WTelegram;
 
-namespace Bot.Telegram.Commands.General {
+namespace Bot.Telegram.Commands.Common {
 	[RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.CloseCallback)]
 	public class DisposeCallback(Client client) : ICommand<UpdateBotCallbackQuery> {
 		public Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {

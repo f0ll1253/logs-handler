@@ -29,7 +29,7 @@ namespace Bot.Services.Proxies.Models.Base {
 				var result = new List<T>();
 
 				proxies.WithThreads(
-					async proxy => {
+					async (proxy, _) => {
 						if (await _CheckProxyAsync(proxy)) {
 							result.Add(proxy);
 						}
@@ -69,7 +69,7 @@ namespace Bot.Services.Proxies.Models.Base {
 				result = new List<T>();
 
 				proxies.WithThreads(
-					async proxy => {
+					async (proxy, _) => {
 						if (result.Count >= count) {
 							return;
 						}

@@ -1,6 +1,5 @@
 using Bot.Core.Models.Commands.Abstractions;
-using Bot.Core.Models.Commands.Base;
-using Bot.Telegram.Commands.General;
+using Bot.Telegram.Commands.Common;
 
 using Injectio.Attributes;
 

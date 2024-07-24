@@ -7,7 +7,7 @@ namespace Bot.Core.Models {
 		#region Multithreading
 		
 		// Limited threads
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<T, Task> action, int max_threads, Predicate<IEnumerable<T>>? stop_prediction = null) {
+		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<T, int, Task> action, int max_threads, Predicate<IEnumerable<T>>? stop_prediction = null) {
 			foreach (var group in arr.GroupBy(max_threads)) {
 				if (stop_prediction?.Invoke(group) ?? false) {
 					break;
@@ -18,7 +18,7 @@ namespace Bot.Core.Models {
 
 			return arr;
 		}
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Action<T> action, int max_threads, Predicate<IEnumerable<T>>? stop_prediction = null) {
+		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Action<T, int> action, int max_threads, Predicate<IEnumerable<T>>? stop_prediction = null) {
 			foreach (var group in arr.GroupBy(max_threads)) {
 				if (stop_prediction?.Invoke(group) ?? false) {
 					break;
@@ -31,12 +31,12 @@ namespace Bot.Core.Models {
 		}
 		
 		// Unlimited threads
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<T, Task> action) {
+		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<T, int, Task> action) {
 			var threads = arr.Count();
 
 			return arr.WithThreads(
-				(@event, item) => async () => {
-					await action.Invoke(item);
+				(@event, index, item) => async () => {
+					await action.Invoke(item, index);
 
 					if (Interlocked.Decrement(ref threads) == 0) {
 						@event.Set();
@@ -45,12 +45,12 @@ namespace Bot.Core.Models {
 			);
 		}
 		
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Action<T> action) {
+		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Action<T, int> action) {
 			var threads = arr.Count();
 			
 			return arr.WithThreads(
-				(@event, item) => () => {
-					action.Invoke(item);
+				(@event, index, item) => () => {
+					action.Invoke(item, index);
 
 					if (Interlocked.Decrement(ref threads) == 0) {
 						@event.Set();
@@ -59,12 +59,13 @@ namespace Bot.Core.Models {
 			);
 		}
 
-		/// <param name="start">ThreadStart with passed tuple of AutoResetEvent, Threads variable and T</param>
-		private static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<AutoResetEvent, T, ThreadStart> start) {
+		private static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<AutoResetEvent, int, T, ThreadStart> start) {
 			var @event = new AutoResetEvent(false);
             
-			foreach (var item in arr) {
-				new Thread(start.Invoke(@event, item)).Start();
+			var arr_static = arr.ToArray();
+
+			for (int i = 0; i < arr_static.Length; i++) {
+				new Thread(start.Invoke(@event, i, arr_static[i])).Start();
 			}
 
 			@event.WaitOne();

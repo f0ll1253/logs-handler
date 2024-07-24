@@ -8,7 +8,7 @@ using TL;
 
 using WTelegram;
 
-namespace Bot.Telegram.Commands.General {
+namespace Bot.Telegram.Commands.Common {
 	[RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.ShowLogsCallback)]
 	public class ShowLogsCallback(Client client, IConfiguration config) : ICommand<UpdateBotCallbackQuery> {
 		private const byte n_Action = 1;
@@ -57,7 +57,7 @@ namespace Bot.Telegram.Commands.General {
 						..buttons.Select(x => new KeyboardButtonRow {
 							buttons = [x]
 						}),
-						_CreateNavigation(
+						ShowLogsCallback._CreateNavigation(
 							action, 
 							page,
 							back,

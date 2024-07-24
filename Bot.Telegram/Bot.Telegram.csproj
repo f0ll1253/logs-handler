@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="Injectio" Version="3.1.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.7" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0"/>
         <PackageReference Include="SlimMessageBus.Host" Version="2.3.5"/>
         <PackageReference Include="SlimMessageBus.Host.Memory" Version="2.3.5"/>
@@ -18,5 +19,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Core\Bot.Core.Messages\Bot.Core.Messages.csproj" />
       <ProjectReference Include="..\Core\Bot.Core.Models\Bot.Core.Models.csproj" />
+      <ProjectReference Include="..\Modules\Services\Bot.Services.Discord\Bot.Services.Discord.csproj" />
+      <ProjectReference Include="..\Modules\Services\Bot.Services.Proxies\Bot.Services.Proxies.csproj" />
     </ItemGroup>
 </Project>

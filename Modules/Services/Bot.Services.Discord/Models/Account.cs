@@ -18,13 +18,16 @@ namespace Bot.Services.Discord.Models {
 		public string Discriminator { get; set; }
 		
 		[JsonProperty("avatar")]
-		public string Avatar { get; set; }
+		public string? Avatar { get; set; }
 		
 		[JsonProperty("verified")]
 		public bool Verified { get; set; }
 		
 		[JsonProperty("email")]
 		public string Email { get; set; }
+		
+		[JsonProperty("phone")]
+		public string Phone { get; set; }
 		
 		[JsonProperty("flags")]
 		public uint Flags { get; set; }
@@ -33,7 +36,7 @@ namespace Bot.Services.Discord.Models {
 		public string Banner { get; set; }
 		
 		[JsonProperty("accent_color")]
-		public int AccentColor { get; set; }
+		public int? AccentColor { get; set; }
 		
 		[JsonProperty("premium_type")]
 		public PremiumFlags PremiumType { get; set; }
@@ -54,7 +57,7 @@ namespace Bot.Services.Discord.Models {
 
 		#region country code
 
-		[JsonProperty("country_code")]
+		[JsonProperty("locale")]
 		public string CountryCode { get; set; }
 
 		#endregion

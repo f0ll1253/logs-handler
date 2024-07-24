@@ -15,7 +15,8 @@ namespace Bot.Services.Discord {
 			if (await _SendRequestAsync(HttpMethod.Get, _Base_Url, account.Token, proxy) is not { } response) {
 				return false;
 			}
-
+			
+			logger?.LogInformation("[Discord] Valid token: {token}", account.Token);
 			JsonConvert.PopulateObject(await response.Content.ReadAsStringAsync(), account);
 
 			return true;
@@ -23,7 +24,7 @@ namespace Bot.Services.Discord {
 		
 		public override async Task<bool> DetailsAsync(Account account, WebProxy proxy) {
 			using (var http = _CreateClient(proxy)) {
-				return await GuildsAsync(account, http: http) && await PaymentSourcesAsync(account, http: http) && await CountryCodeAsync(account, http: http);
+				return await GuildsAsync(account, http: http) && await PaymentSourcesAsync(account, http: http);
 			}
 		}
 		
@@ -54,17 +55,6 @@ namespace Bot.Services.Discord {
 			throw new NotImplementedException();
 		}
 		
-		// {{base_url}}/billing/country-code
-		public async Task<bool> CountryCodeAsync(Account account, WebProxy? proxy = null, HttpClient? http = null) {
-			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/billing/country-code", account.Token, proxy, http) is not { } response) {
-				return false;
-			}
-			
-			JsonConvert.PopulateObject(await response.Content.ReadAsStringAsync(), account);
-
-			return true;
-		}
-		
 		//
 		protected override async Task<HttpResponseMessage?> _SendRequestAsync(HttpMethod method, string url, string auth_data, WebProxy? proxy = null, HttpClient? http = null) {
 			if (proxy == null && http == null) {
@@ -87,7 +77,11 @@ namespace Bot.Services.Discord {
 
 			if (http == null) {
 				using (http = _CreateClient(proxy)) {
-					response = await http.SendAsync(request);
+					try {
+						response = await http.SendAsync(request);
+					} catch (TaskCanceledException) {
+						return null;
+					}
 				}
 			}
 			else {

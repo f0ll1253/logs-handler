@@ -19,11 +19,11 @@ namespace Bot.Telegram.Commands.User {
 				rows = [
 					new() {
 						buttons = [
-							new KeyboardButtonCallback() {
+							new KeyboardButtonCallback {
 								text = "Games",
 								data = [Keys.Menu.GamesCallback]
 							},
-							new KeyboardButtonCallback() {
+							new KeyboardButtonCallback {
 								text = "Services",
 								data = [Keys.Menu.ServicesCallback]
 							},

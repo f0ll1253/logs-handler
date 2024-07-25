@@ -144,7 +144,9 @@ namespace Bot.Tests.Services {
 			Assert.That(await _proxies.GetAsync(proxy.Id), Is.EqualTo(proxy));
 		}
 
-		[TestCase(10), Order(1)]
+		[Order(1)]
+		[TestCase(10)]
+		[TestCase(100)]
 		public async Task Test_TakeAsync(int count) {
 			var from_context = await _context.Proxies.Take(count).OrderBy(x => x.Index).ToArrayAsync();
 			var from_repository = await _proxies.TakeAsync(count).ToArrayAsync();

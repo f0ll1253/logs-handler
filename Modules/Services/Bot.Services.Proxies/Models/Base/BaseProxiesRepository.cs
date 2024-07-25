@@ -29,12 +29,9 @@ namespace Bot.Services.Proxies.Models.Base {
 				var result = new List<T>();
 
 				proxies.WithThreads(
-					async (proxy, _) => {
-						if (await _CheckProxyAsync(proxy)) {
-							result.Add(proxy);
-						}
-					},
-					Config.MaxThreads
+					Config.MaxThreads,
+					(proxy, _) => _CheckProxyAsync(proxy),
+					(proxy, _) => Task.Run(() => result.Add(proxy))
 				);
 
 				await context.AddRangeAsync(result);
@@ -62,36 +59,40 @@ namespace Bot.Services.Proxies.Models.Base {
 
 		public virtual async IAsyncEnumerable<T> TakeAsync(int count) {
 			var proxies = context.Set<T>().OrderBy(x => x.Index);
+			var proxies_count = proxies.Count();
 			
-			ICollection<T> result;
+			List<T> result;
 
 			if (Config.OnOutCheck) {
-				result = new List<T>();
+				var invalid = new List<Proxy>();
+				
+				result = new();
 
 				proxies.WithThreads(
-					async (proxy, _) => {
-						if (result.Count >= count) {
-							return;
-						}
-						
-						if (await _CheckProxyAsync(proxy)) {
-							result.Add(proxy);
-						}
-						
-						// TODO else set proxy is not working
-					},
 					Config.MaxThreads,
-					_ => result.Count >= count
+					(proxy, _) => _CheckProxyAsync(proxy),
+					(proxy, _) => Task.Run(() => result.Add(proxy)),
+					(proxy, _) => Task.Run(() => invalid.Add(proxy)),
+					_ => result.Count >= count || result.Count >= proxies_count
 				);
+
+				if (invalid.Any()) {
+					context.RemoveRange(invalid);
+
+					await _TrySaveAsync();
+				}
 			}
 			else {
-				result = await proxies.Take(count).ToListAsync();
+				result = await proxies.ToListAsync();
 			}
 
-			await context.SaveChangesAsync();
-
-			foreach (var proxy in result.Take(count)) {
-				yield return proxy;
+			for (int i = 0; i < count; i++) {
+				if (i == result.Count) {
+					count -= i;
+					i = 0;
+				}
+                
+				yield return result[i];
 			}
 		}
 		

@@ -11,8 +11,8 @@ namespace Bot.Services.Discord {
 	public class Checker(ILogger? logger) : BaseChecker<Account, string> {
 		private const string _Base_Url = "https://discord.com/api/v9/users/@me";
 		
-		public override async Task<bool> CheckAsync(Account account, WebProxy proxy) {
-			if (await _SendRequestAsync(HttpMethod.Get, _Base_Url, account.Token, proxy) is not { } response) {
+		public override async Task<bool> CheckAsync(Account account, HttpClient http) {
+			if (await _SendRequestAsync(HttpMethod.Get, _Base_Url, account.Token, http) is not { } response) {
 				return false;
 			}
 			
@@ -22,15 +22,13 @@ namespace Bot.Services.Discord {
 			return true;
 		}
 		
-		public override async Task<bool> DetailsAsync(Account account, WebProxy proxy) {
-			using (var http = _CreateClient(proxy)) {
-				return await GuildsAsync(account, http: http) && await PaymentSourcesAsync(account, http: http);
-			}
+		public override async Task<bool> DetailsAsync(Account account, HttpClient http) {
+			return await GuildsAsync(account, http) && await PaymentSourcesAsync(account, http);
 		}
 		
 		// {{base_url}}/guilds
-		public async Task<bool> GuildsAsync(Account account, WebProxy? proxy = null, HttpClient? http = null) {
-			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/guilds", account.Token, proxy, http) is not { } response ||
+		public async Task<bool> GuildsAsync(Account account, HttpClient? http = null) {
+			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/guilds?with_counts=true", account.Token, http) is not { } response ||
 				JsonConvert.DeserializeObject<List<Account.GuildDataClass>>(await response.Content.ReadAsStringAsync()) is not { } guilds) {
 				return false;
 			}
@@ -41,8 +39,8 @@ namespace Bot.Services.Discord {
 		}
 		
 		// {{base_url}}/billing/payment-sources
-		public async Task<bool> PaymentSourcesAsync(Account account, WebProxy? proxy = null, HttpClient? http = null) {
-			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/billing/payment-sources", account.Token, proxy, http) is not { } response) {
+		public async Task<bool> PaymentSourcesAsync(Account account, HttpClient? http = null) {
+			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/billing/payment-sources", account.Token, http) is not { } response) {
 				return false;
 			}
 
@@ -56,11 +54,7 @@ namespace Bot.Services.Discord {
 		}
 		
 		//
-		protected override async Task<HttpResponseMessage?> _SendRequestAsync(HttpMethod method, string url, string auth_data, WebProxy? proxy = null, HttpClient? http = null) {
-			if (proxy == null && http == null) {
-				throw new ArgumentException("Required Proxy or HttpClient", $"{nameof(proxy)} or {nameof(http)}");
-			}
-			
+		protected override async Task<HttpResponseMessage?> _SendRequestAsync(HttpMethod method, string url, string auth_data, HttpClient http) {
 			HttpRequestMessage request;
 
 			try {
@@ -73,20 +67,7 @@ namespace Bot.Services.Discord {
 				return null;
 			}
 
-			HttpResponseMessage response;
-
-			if (http == null) {
-				using (http = _CreateClient(proxy)) {
-					try {
-						response = await http.SendAsync(request);
-					} catch (TaskCanceledException) {
-						return null;
-					}
-				}
-			}
-			else {
-				response = await http.SendAsync(request);
-			}
+			var response = await http.SendAsync(request);
 			
 			if (!response.IsSuccessStatusCode) {
 				switch (response.StatusCode) {

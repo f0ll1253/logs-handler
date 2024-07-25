@@ -28,6 +28,15 @@ namespace Bot.Services.Proxies.Models {
 			Credentials = new NetworkCredential(proxy.Username, proxy.Password)
 		};
 		
+		public static implicit operator HttpClient(Proxy proxy) {
+			var handler = new HttpClientHandler {
+				UseProxy = true,
+				Proxy = (WebProxy)proxy,
+			};
+
+			return new(handler, true);
+		}
+		
 		// To Proxy
 		public static implicit operator Proxy(string str) {
 			var data = str.Split('@')

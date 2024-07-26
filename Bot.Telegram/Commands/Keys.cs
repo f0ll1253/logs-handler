@@ -6,7 +6,14 @@ namespace Bot.Telegram.Commands {
 		public const byte StartCallback = 0;
 		
 		public const byte ShowLogsCallback = Byte.MaxValue - 1;
-		public const byte CloseCallback = Byte.MaxValue;
+		public const byte DisposeCallback = Byte.MaxValue;
+		
+		public static class Common {
+			public static readonly KeyboardButtonCallback Dispose_Button = new KeyboardButtonCallback {
+				text = "\u274c Dispose",
+				data = [DisposeCallback]
+			};
+		}
 		
 		public static class Menu {
 			public const byte GamesCallback = 20;

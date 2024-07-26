@@ -5,10 +5,7 @@ using CryptoPay;
 using CryptoPay.Types;
 using CryptoPay.Types.Update;
 
-using Injectio.Attributes;
-
 namespace Bot.Payments.CryptoBot.Services {
-	[RegisterTransient]
 	public class CryptoPayService(ICryptoPayClient pay, IPaymentsRepository repository) {
 		public async Task<Invoice> CreateAsync(long user_id, string currency, double amount, string? description = null, string? return_callback = null) {
 			var invoice = await pay.CreateInvoiceAsync(

@@ -8,7 +8,7 @@ using TL;
 using WTelegram;
 
 namespace Bot.Telegram.Commands.User {
-	[RegisterTransient(ServiceKey = Keys.Start, ServiceType = typeof(ICommand<UpdateNewMessage>)), RegisterTransient(ServiceKey = Keys.StartCallback, ServiceType = typeof(ICommand<UpdateBotCallbackQuery>))]
+	[RegisterTransient<ICommand<UpdateNewMessage>>(ServiceKey = Keys.Start), RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.StartCallback)]
 	public class Start(Client client) : BaseView(client) {
 		protected override Task<string> DefaultMessage(object args, TL.User user) {
 			return Task.FromResult($"Hello, {user.username}!");

@@ -2,8 +2,6 @@ using Bot.Core.Models.Files.Abstractions;
 using Bot.Services.Files.Telegram.Models;
 using Bot.Services.Files.Telegram.Models.Abstractions;
 
-using Injectio.Attributes;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +10,6 @@ using TL;
 using WTelegram;
 
 namespace Bot.Services.Files.Telegram.Services {
-	[RegisterTransient<IFilesRepository<TelegramFile, long>>]
 	public class TelegramFilesRepository(Client client, ITelegramFilesDbContext context, ILogger<TelegramFilesRepository> logger) : IFilesRepository<TelegramFile, long> {
 		public async Task<bool> AddAsync(TelegramFile obj) {
 			if (context is not DbContext db) {

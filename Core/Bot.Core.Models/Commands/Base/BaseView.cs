@@ -15,10 +15,10 @@ namespace Bot.Core.Models.Commands.Base {
 			#region Set Default parameters
 
 			if (string.IsNullOrEmpty(@new.Item1)) {
-				@new.Item1 = await DefaultMessage(update.data, user);
+				@new.Item1 = await DefaultMessage(update, user);
 			}
 
-			@new.Item2 ??= await DefaultMarkup(update.data, user);
+			@new.Item2 ??= await DefaultMarkup(update, user);
 
 			#endregion
 			
@@ -28,6 +28,10 @@ namespace Bot.Core.Models.Commands.Base {
 				message.reply_markup.Equals(@new.Item2)
 			   ) {
 				return;
+			}
+
+			if (await IsValidAsync(update, user)) {
+				await ProcessAsync(update, user);
 			}
 
 			await client.Messages_EditMessage(
@@ -51,6 +55,10 @@ namespace Bot.Core.Models.Commands.Base {
 		#region UpdateNewMessage
 
 		public async Task ExecuteAsync(UpdateNewMessage update, User user) {
+			if (await IsValidAsync(update, user)) {
+				await ProcessAsync(update, user);
+			}
+			
 			await client.Messages_SendMessage(
 				user,
 				await BuildMessage(update, user) is {Length: > 0} str ? str : await DefaultMessage((update.message as Message)!.message.Split(' '), user),
@@ -72,5 +80,8 @@ namespace Bot.Core.Models.Commands.Base {
 		protected virtual Task<string> DefaultMessage(object args, User user) => Task.FromResult("");
 
 		protected virtual Task<ReplyInlineMarkup?> DefaultMarkup(object args, User user) => Task.FromResult<ReplyInlineMarkup?>(null);
+
+		protected virtual Task<bool> IsValidAsync(object args, User user) => Task.FromResult(true);
+		protected virtual Task ProcessAsync(object args, User user) => Task.CompletedTask;
 	}
 }

@@ -1,12 +1,17 @@
-.idea/
+# Build
 bin/
 obj/
-packages/
-riderModule.iml
-_ReSharper.Caches/
-*sln.DotSettings*
-*.Development.json
-*.sqlite*
+
+# JetBrains
+.idea/
+
 *.sln.*
+
+# Development
+*.Development.json
+Bot.Tests.Console/
+
+# Runtime files
+*.sqlite*
 *.session
 *.state

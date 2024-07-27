@@ -7,8 +7,8 @@ using Newtonsoft.Json;
 namespace Bot.Services.Discord.Internal {
 	internal class DiscordApi {
 
-		public Task<bool> TryLogin(string token, out Account account) {
-			account = new();
+		public Task<bool> TryLogin(string token, out User user) {
+			user = new();
 			string content;
 			
 			// Make request
@@ -25,7 +25,7 @@ namespace Bot.Services.Discord.Internal {
 			}
 			
 			// Populate account
-			JsonConvert.PopulateObject(content, account);
+			JsonConvert.PopulateObject(content, user);
 
 			return Task.FromResult(true);
 		}

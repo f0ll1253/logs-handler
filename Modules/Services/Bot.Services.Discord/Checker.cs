@@ -2,45 +2,44 @@ using System.Net;
 
 using Bot.Core.Models.Checkers.Base;
 using Bot.Services.Discord.Models;
+using Bot.Services.Discord.Models.Guilds;
 
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
 namespace Bot.Services.Discord {
-	public class Checker(ILogger? logger) : BaseChecker<Account, string> {
+	public class Checker(ILogger? logger) : BaseChecker<User, string> {
 		private const string _Base_Url = "https://discord.com/api/v9/users/@me";
 		
-		public override async Task<bool> CheckAsync(Account account, HttpClient http) {
-			if (await _SendRequestAsync(HttpMethod.Get, _Base_Url, account.Token, http) is not { } response) {
+		public override async Task<bool> CheckAsync(User user, HttpClient http) {
+			if (await _SendRequestAsync(HttpMethod.Get, _Base_Url, user.Token, http) is not { } response) {
 				return false;
 			}
 			
-			logger?.LogInformation("[Discord] Valid token: {token}", account.Token);
-			JsonConvert.PopulateObject(await response.Content.ReadAsStringAsync(), account);
+			logger?.LogInformation("[Discord] Valid token: {token}", user.Token);
+			JsonConvert.PopulateObject(await response.Content.ReadAsStringAsync(), user);
 
 			return true;
 		}
 		
-		public override async Task<bool> DetailsAsync(Account account, HttpClient http) {
-			return await GuildsAsync(account, http) && await PaymentSourcesAsync(account, http);
+		public override async Task<bool> DetailsAsync(User user, HttpClient http) {
+			return await GuildsAsync(user, http) && await PaymentSourcesAsync(user, http) && await ChannelsAsync(user, http) && await FriendsAsync(user, http);
 		}
 		
-		// {{base_url}}/guilds
-		public async Task<bool> GuildsAsync(Account account, HttpClient? http = null) {
-			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/guilds?with_counts=true", account.Token, http) is not { } response ||
-				JsonConvert.DeserializeObject<List<Account.GuildDataClass>>(await response.Content.ReadAsStringAsync()) is not { } guilds) {
+		public async Task<bool> GuildsAsync(User user, HttpClient? http = null) {
+			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/guilds?with_counts=true", user.Token, http) is not { } response ||
+				JsonConvert.DeserializeObject<List<GuildDataClass>>(await response.Content.ReadAsStringAsync()) is not { } guilds) {
 				return false;
 			}
 
-			account.Guilds = guilds;
+			user.Guilds = guilds;
 
 			return true;
 		}
 		
-		// {{base_url}}/billing/payment-sources
-		public async Task<bool> PaymentSourcesAsync(Account account, HttpClient? http = null) {
-			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/billing/payment-sources", account.Token, http) is not { } response) {
+		public async Task<bool> PaymentSourcesAsync(User user, HttpClient? http = null) {
+			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/billing/payment-sources", user.Token, http) is not { } response) {
 				return false;
 			}
 
@@ -51,6 +50,28 @@ namespace Bot.Services.Discord {
 			}
 
 			throw new NotImplementedException();
+		}
+
+		public async Task<bool> ChannelsAsync(User user, HttpClient http) {
+			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/channels", user.Token, http) is not { } response ||
+				JsonConvert.DeserializeObject<List<ChannelDataClass>>(await response.Content.ReadAsStringAsync()) is not { } channels) {
+				return false;
+			}
+
+			user.Channels = channels;
+
+			return true;
+		}
+
+		public async Task<bool> FriendsAsync(User user, HttpClient http) {
+			if (await _SendRequestAsync(HttpMethod.Get, $"{_Base_Url}/relationships", user.Token, http) is not { } response ||
+				JsonConvert.DeserializeObject<List<RealationShipDataClass>>(await response.Content.ReadAsStringAsync()) is not { } friends) {
+				return false;
+			}
+
+			user.Friends = friends;
+
+			return true;
 		}
 		
 		//

@@ -3,6 +3,7 @@ using System.Text;
 using Bot.Core.Models;
 using Bot.Core.Models.Checkers.Abstractions;
 using Bot.Core.Models.Commands.Abstractions;
+using Bot.Core.Models.Commands.Base;
 using Bot.Core.Models.Parsers.Abstractions;
 using Bot.Services.Discord.Models;
 using Bot.Services.Proxies.Services;
@@ -16,8 +17,33 @@ using TL;
 using WTelegram;
 
 namespace Bot.Telegram.Commands.User.Services {
-	[RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.Services.DiscordCallback)]
-	public class Discord(Client client, Proxies proxies, IParserStream<Account> parser, IChecker<Account> checker, IConfiguration config, ILogger<Discord> logger) : ICommand<UpdateBotCallbackQuery> {
+	[RegisterTransient<ICommand<UpdateNewMessage>>(ServiceKey = Keys.Services.Discord), RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.Services.DiscordCallback)]
+	public class Discord(Client client, Proxies proxies, IParserStream<Bot.Services.Discord.Models.User> parser, IChecker<Bot.Services.Discord.Models.User> checker, IConfiguration config, ILogger<Discord> logger) : BaseView(client) {
+		public override Task<string> BuildMessage(UpdateNewMessage update, TL.User user) {
+			if (update is not {message: Message {media: MessageMediaDocument {document: Document document}}}) {
+				return Task.FromResult("File with tokens not found");
+			}
+
+			if (document.mime_type != "text/plain") {
+				return Task.FromResult("File is not of type .txt");
+			}
+
+			return Task.FromResult($"Start processing: {document.Filename}");
+		}
+
+		protected override Task<ReplyInlineMarkup?> DefaultMarkup(object args, TL.User user) {
+			return Task.FromResult<ReplyInlineMarkup?>(new() {
+				rows = [
+					new() {
+						buttons = [
+							Keys.Common.Dispose_Button
+						]
+					}
+				]
+			});
+		}
+
+		[Obsolete]
 		public Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {
 			var name = Encoding.UTF8.GetString(update.data[1..]);
 			var path = Path.Combine(config["Files:Root"], "Extracted", name);
@@ -69,8 +95,8 @@ namespace Bot.Telegram.Commands.User.Services {
 							await client.SendMessageAsync(
 								user,
 								text,
-								media: account.Avatar is not null ? new InputMediaPhotoExternal {
-									url = $"https://cdn.discordapp.com/avatars/{account.Id}/{account.Avatar}.webp"
+								media: account.AvatarId is not null ? new InputMediaPhotoExternal {
+									url = $"https://cdn.discordapp.com/avatars/{account.Id}/{account.AvatarId}.webp"
 								} : null,
 								entities: entities
 							);

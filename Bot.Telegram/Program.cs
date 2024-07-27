@@ -69,8 +69,8 @@ builder.Services.AddDbContext<ProxiesDbContext>(x => x.UseInMemoryDatabase("Prox
 builder.Services.AddSingleton<Proxies>();
 
 // Discord
-builder.Services.AddSingleton<IChecker<Bot.Services.Discord.Models.Account>, Bot.Services.Discord.Checker>(x => new(x.GetRequiredService<ILoggerFactory>().CreateLogger<Bot.Services.Discord.Checker>()));
-builder.Services.AddSingleton<IParserStream<Bot.Services.Discord.Models.Account>, Bot.Services.Discord.Parser>();
+builder.Services.AddSingleton<IChecker<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Checker>(x => new(x.GetRequiredService<ILoggerFactory>().CreateLogger<Bot.Services.Discord.Checker>()));
+builder.Services.AddSingleton<IParserStream<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Parser>();
 
 // Projects inject
 builder.Services.AddBotTelegram();

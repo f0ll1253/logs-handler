@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{2651A0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{F1CD585B-5D21-4A00-8D20-02FA2131C102}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Tests.Console", "Bot.Tests.Console\Bot.Tests.Console.csproj", "{F9252470-C092-4D7E-A5F3-18E39F5FD421}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{90B1E97D-565C-455D-9A82-6253693886B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90B1E97D-565C-455D-9A82-6253693886B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90B1E97D-565C-455D-9A82-6253693886B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9252470-C092-4D7E-A5F3-18E39F5FD421}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9252470-C092-4D7E-A5F3-18E39F5FD421}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9252470-C092-4D7E-A5F3-18E39F5FD421}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9252470-C092-4D7E-A5F3-18E39F5FD421}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B5428937-66CE-45CB-93EC-E933B7A980BC} = {48634686-5FCE-4AD1-9CBF-ED9F96AC6CCE}

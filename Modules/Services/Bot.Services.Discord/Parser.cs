@@ -2,8 +2,8 @@ using Bot.Core.Models.Parsers.Abstractions;
 using Bot.Services.Discord.Models;
 
 namespace Bot.Services.Discord {
-	public class Parser : IParserStream<Account> {
-		public async IAsyncEnumerable<Account> FromLogs(string logs) {
+	public class Parser : IParserStream<User> {
+		public async IAsyncEnumerable<User> FromLogs(string logs) {
 			if (!Directory.Exists(logs)) {
 				yield break;
 			}
@@ -15,7 +15,7 @@ namespace Bot.Services.Discord {
 			}
 		}
 		
-		public async IAsyncEnumerable<Account> FromLog(string log) {
+		public async IAsyncEnumerable<User> FromLog(string log) {
 			var folder = Path.Combine(log, "Discord");
 			
 			if (!Directory.Exists(folder) || Directory.GetFiles(folder) is not {Length:>0} files) {

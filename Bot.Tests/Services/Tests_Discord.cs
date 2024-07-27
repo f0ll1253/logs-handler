@@ -8,11 +8,11 @@ using Newtonsoft.Json;
 
 namespace Bot.Tests.Services {
 	public class Tests_Discord {
-		private readonly List<Account> _accounts = new();
+		private readonly List<User> _accounts = new();
 		
 		private DiscordConfiguration _configuration;
-		private IParserStream<Account> _parser;
-		private IChecker<Account> _checker;
+		private IParserStream<User> _parser;
+		private IChecker<User> _checker;
 		
 		[OneTimeSetUp]
 		public void OneTimeSetUp() {
@@ -44,7 +44,7 @@ namespace Bot.Tests.Services {
 
 		[Test, Order(0)]
 		public async Task Test_CheckValid() {
-			foreach (Account account in _configuration.Valid.ToArray()) {
+			foreach (User account in _configuration.Valid.ToArray()) {
 				Assert.That(await _checker.CheckAsync(account, (Proxy)_configuration.Proxy), Is.True);
 				
 				_accounts.Add(account);
@@ -55,7 +55,7 @@ namespace Bot.Tests.Services {
 
 		[Test]
 		public async Task Test_CheckInvalid() {
-			foreach (Account account in _configuration.Invalid) {
+			foreach (User account in _configuration.Invalid) {
 				Assert.That(await _checker.CheckAsync(account, (Proxy)_configuration.Proxy), Is.False);
 			}
 		}

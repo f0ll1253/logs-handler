@@ -1,11 +1,17 @@
+using Bot.Services.Discord.Models.Guilds;
+
 using Newtonsoft.Json;
 
 namespace Bot.Services.Discord.Models {
-	public class Account {
-		internal Account() { }
+	[JsonObject(MemberSerialization.OptIn, ItemNullValueHandling = NullValueHandling.Ignore)]
+	public class User {
+		internal User() { }
 
+		[JsonProperty("token")]
 		public string Token { get; set; }
 
+		public string AvatarSource => $"https://cdn.discordapp.com/avatars/{Id}/{AvatarId}.webp";
+		
 		#region @me
 
 		[JsonProperty("id")]
@@ -14,11 +20,14 @@ namespace Bot.Services.Discord.Models {
 		[JsonProperty("username")]
 		public string Username { get; set; }
 		
+		[JsonProperty("global_name")]
+		public string GlobalUsername { get; set; }
+		
 		[JsonProperty("discriminator")]
 		public string Discriminator { get; set; }
 		
 		[JsonProperty("avatar")]
-		public string? Avatar { get; set; }
+		public string? AvatarId { get; set; }
 		
 		[JsonProperty("verified")]
 		public bool Verified { get; set; }
@@ -29,8 +38,11 @@ namespace Bot.Services.Discord.Models {
 		[JsonProperty("phone")]
 		public string Phone { get; set; }
 		
+		[JsonProperty("locale")]
+		public string CountryCode { get; set; }
+		
 		[JsonProperty("flags")]
-		public uint Flags { get; set; }
+		public UserFlags Flags { get; set; }
 		
 		[JsonProperty("banner")]
 		public string Banner { get; set; }
@@ -42,39 +54,28 @@ namespace Bot.Services.Discord.Models {
 		public PremiumFlags PremiumType { get; set; }
 		
 		[JsonProperty("public_flags")]
-		public uint PublicFlags { get; set; }
+		public UserFlags PublicFlags { get; set; }
 		
 		[JsonProperty("avatar_decoration_data")]
 		public AvatarDataClass AvatarData { get; set; }
 
 		#endregion
 
-		#region guilds
+		[JsonProperty("guilds")]
+		public ICollection<GuildDataClass> Guilds { get; set; } = [];
 
-		public ICollection<GuildDataClass> Guilds { get; set; } = new List<GuildDataClass>();
+		[JsonProperty("channels")]
+		public ICollection<ChannelDataClass> Channels { get; set; } = [];
 
-		#endregion
+		[JsonProperty("relationships")]
+		public ICollection<RealationShipDataClass> Friends { get; set; } = [];
 
-		#region country code
-
-		[JsonProperty("locale")]
-		public string CountryCode { get; set; }
-
-		#endregion
-
-		#region payment-sources
-
-		// TODO
-
-		#endregion
-
-		public static implicit operator Account(string str) => new() {
+		public static implicit operator User(string str) => new() {
 			Token = str
 		};
 		
-		//
+		[Flags]
 		public enum UserFlags {
-			// ReSharper disable InconsistentNaming
 			STAFF = 0,
 			PARTNER,
 			HYPESQUAD,
@@ -90,7 +91,6 @@ namespace Bot.Services.Discord.Models {
 			CERTIFIED_MODERATOR,
 			BOT_HTTP_INTERACTIONS,
 			ACTIVE_DEVELOPER,
-			// ReSharper restore InconsistentNaming
 		}
 		
 		public enum PremiumFlags {
@@ -98,40 +98,6 @@ namespace Bot.Services.Discord.Models {
 			NitroClassic,
 			Nitro,
 			NitroBasic
-		}
-		
-		public class AvatarDataClass {
-			[JsonProperty("sku_id")]
-			public string SkuId { get; set; }
-			
-			[JsonProperty("asset")]
-			public string Asset { get; set; }
-		}
-		
-		public class GuildDataClass {
-			[JsonProperty("id")]
-			public string Id { get; set; }
-			
-			[JsonProperty("name")]
-			public string Name { get; set; }
-			
-			[JsonProperty("icon")]
-			public string Icon { get; set; }
-			
-			[JsonProperty("owner")]
-			public bool IsOwner { get; set; }
-			
-			[JsonProperty("permissions")]
-			public string Permissions { get; set; }
-
-			[JsonProperty("features")]
-			public List<string> Features { get; set; } = new();
-			
-			[JsonProperty("approximate_member_count")]
-			public uint MemberCount { get; set; }
-			
-			[JsonProperty("approximate_presence_count")]
-			public uint PresenceCount { get; set; }
 		}
 	}
 }

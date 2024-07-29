@@ -24,6 +24,10 @@ namespace Bot.Services.Discord {
 		}
 		
 		public override async Task<bool> DetailsAsync(User user, HttpClient http) {
+			if (!user.Verified) {
+				return false;
+			}
+			
 			return await GuildsAsync(user, http) && await PaymentSourcesAsync(user, http) && await ChannelsAsync(user, http) && await FriendsAsync(user, http);
 		}
 		
@@ -96,7 +100,9 @@ namespace Bot.Services.Discord {
 						logger?.LogWarning("[Discord] [401] Token is invalid: {token}", auth_data);
 						break;
 					default:
-						logger?.LogError("[Discord] [Unknown] Unknown error code: {code}\n{content}", (int)response.StatusCode, await response.Content.ReadAsStringAsync());
+						var error = JsonConvert.DeserializeObject<ErrorMessageResponse>(await response.Content.ReadAsStringAsync());
+                        
+						logger?.LogError("[Discord] Unknown error {status_code}: {code}\n{content}", (int)response.StatusCode, error?.Code, error?.Message);
 						break;
 				}
 					

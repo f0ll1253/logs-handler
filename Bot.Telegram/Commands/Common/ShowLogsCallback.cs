@@ -14,8 +14,6 @@ namespace Bot.Telegram.Commands.Common {
 		private const byte n_Action = 1;
 		private const byte n_Page = 2;
 		private const byte n_Back = 3;
-
-		public static byte[] CreateData(byte action, byte back) => [Keys.ShowLogsCallback, action, 0, back];
 		
 		public async Task ExecuteAsync(UpdateBotCallbackQuery update, TL.User user) {
 			#region Arguments
@@ -75,6 +73,9 @@ namespace Bot.Telegram.Commands.Common {
 				}
 			);
 		}
+		
+		// Static
+		public static byte[] CreateData(byte action, byte back) => [Keys.ShowLogsCallback, action, 0, back];
 		
 		// Private
 		private static KeyboardButtonRow? _CreateNavigation(byte action, byte page, byte back, int found_directories) {

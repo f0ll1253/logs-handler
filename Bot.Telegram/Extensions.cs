@@ -1,15 +1,16 @@
 using System.Text;
 
-using TL;
-
 namespace Bot.Telegram {
 	internal static class Extensions {
-		public static void AppendBlockquote(this StringBuilder builder, string message, string value, ICollection<MessageEntity> entities) {
-			builder.AppendLine($"{message}: {value}");
-			entities.Add(new MessageEntityBlockquote {
-				length = value.Length,
-				offset = builder.Length - value.Length - 1
-			});
+		public static (string name, string path) GetPath(this IConfiguration config, byte[] bytes, Paths type) {
+			var name = Encoding.UTF8.GetString(bytes[1..]);
+
+			return (name, Path.Combine(config["Files:Root"]!, type.ToString(), name));
 		}
+	}
+	
+	public enum Paths {
+		Extracted,
+		Downloaded
 	}
 }

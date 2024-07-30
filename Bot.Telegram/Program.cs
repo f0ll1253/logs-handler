@@ -9,6 +9,9 @@ using Bot.Services.Proxies.Services;
 using Bot.Telegram.WTelegram;
 using Bot.Telegram.WTelegram.UpdateHandlers;
 
+using Hangfire;
+using Hangfire.InMemory;
+
 using Microsoft.EntityFrameworkCore;
 
 using SlimMessageBus.Host;
@@ -60,6 +63,19 @@ builder.Services.AddSingleton<Client>(
 		".session"
 	)
 );
+
+// Hangfire
+builder.Services.AddHangfire(
+	config => {
+		config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180);
+		config.UseColouredConsoleLogProvider();
+		config.UseSimpleAssemblyNameTypeSerializer();
+		config.UseRecommendedSerializerSettings();
+		config.UseInMemoryStorage();
+	}
+);
+
+builder.Services.AddHangfireServer();
 
 // Services
 builder.Services.AddHostedService<Bootstrapper>();

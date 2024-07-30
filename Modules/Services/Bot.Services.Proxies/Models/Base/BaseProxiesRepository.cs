@@ -91,6 +91,8 @@ namespace Bot.Services.Proxies.Models.Base {
 					count -= i;
 					i = 0;
 				}
+
+				result[i].Context = context;
                 
 				yield return result[i];
 			}

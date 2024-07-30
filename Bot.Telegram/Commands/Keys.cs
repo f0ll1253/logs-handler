@@ -9,15 +9,22 @@ namespace Bot.Telegram.Commands {
 		public const byte DisposeCallback = Byte.MaxValue;
 		
 		public static class Common {
+			//
 			public static readonly KeyboardButtonCallback Dispose_Button = new KeyboardButtonCallback {
 				text = "\u274c Dispose",
 				data = [DisposeCallback]
 			};
+			
+			//
+			public const byte Url_Login_Password = 31;
+			public const byte Email_Login_Password = 32;
+			public const byte Cookies = 33;
 		}
 		
 		public static class Menu {
 			public const byte GamesCallback = 20;
 			public const byte ServicesCallback = 30;
+			public const byte CommonCallback = 40;
 		}
 		
 		public static class Games {

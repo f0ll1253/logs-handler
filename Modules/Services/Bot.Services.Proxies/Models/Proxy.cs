@@ -18,7 +18,7 @@ namespace Bot.Services.Proxies.Models {
 		public bool IsInUse { get; set; }
 
 		//
-		internal DbContext Context { get; init; }
+		internal DbContext Context { get; set; }
 		
 		// From Proxy
 		public static implicit operator string(Proxy proxy) => $"{proxy.Host}:{proxy.Port}:{proxy.Username}:{proxy.Password}";

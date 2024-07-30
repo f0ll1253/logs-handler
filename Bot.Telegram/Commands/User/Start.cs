@@ -28,6 +28,14 @@ namespace Bot.Telegram.Commands.User {
 								data = [Keys.Menu.ServicesCallback]
 							},
 						]
+					},
+					new() {
+						buttons = [
+							new KeyboardButtonCallback {
+								text = "Common",
+								data = [Keys.Menu.CommonCallback]
+							}
+						]
 					}
 				]
 			});

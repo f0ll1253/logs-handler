@@ -1,9 +1,27 @@
+using System.Text;
+
+using Microsoft.Extensions.Configuration;
+
 namespace Bot.Core.Models {
 	public static class Extensions {
 		public static IEnumerable<IGrouping<int, T>> GroupBy<T>(this IEnumerable<T> arr, int count) =>
 				arr.Select((x, i) => (x, i))
 				   .GroupBy(x => x.i / count, x => x.x);
+		
+		public static (string name, string path) GetPath(this IConfiguration config, byte[] bytes, Paths type) {
+			var name = Encoding.UTF8.GetString(bytes[1..]);
 
+			return (name, Path.Combine(config["Files:Root"]!, type.ToString(), name));
+		}
+
+		public static string GetPath(this IConfiguration config, string service) {
+			var path = Path.Combine(config["Files:Root"]!, service);
+
+			Directory.CreateDirectory(path);
+
+			return path;
+		}
+		
 		#region Multithreading
 		
 		// Limited threads
@@ -80,5 +98,10 @@ namespace Bot.Core.Models {
 		}
 
 		#endregion
+	}
+	
+	public enum Paths {
+		Extracted,
+		Downloaded
 	}
 }

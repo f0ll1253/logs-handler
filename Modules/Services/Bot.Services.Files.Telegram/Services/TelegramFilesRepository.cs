@@ -10,7 +10,7 @@ using TL;
 using WTelegram;
 
 namespace Bot.Services.Files.Telegram.Services {
-	public class TelegramFilesRepository(Client client, ITelegramFilesDbContext context, ILogger<TelegramFilesRepository> logger) : IFilesRepository<TelegramFile, long> {
+	public class TelegramFilesRepository(Client client, ITelegramFilesDbContext context, ILogger<TelegramFilesRepository> logger) : IFilesRepository<TelegramFile, long, TelegramFilesArgs> {
 		public async Task<bool> AddAsync(TelegramFile obj) {
 			if (context is not DbContext db) {
 				throw new ArgumentException("ITelegramFilesDbContext is not DbContext", nameof(context));
@@ -35,13 +35,13 @@ namespace Bot.Services.Files.Telegram.Services {
 			return context.TelegramFiles.FindAsync(key).AsTask();
 		}
 
-		public async Task<TelegramFile> CreateAsync(Stream stream, string name, string extension, bool dispose_stream = true) {
+		public async Task<TelegramFile> CreateAsync(Stream stream, TelegramFilesArgs args, bool dispose_stream = true) {
 
 			#region Upload file
 
 			stream.Seek(0, SeekOrigin.Begin);
 
-			var info = await client.UploadFileAsync(stream, $"{name}.{extension}");
+			var info = await client.UploadFileAsync(stream, $"{args.Name}.{args.Extension}");
 
 			if (dispose_stream) {
 				await stream.DisposeAsync();
@@ -50,7 +50,7 @@ namespace Bot.Services.Files.Telegram.Services {
 			#endregion
 
 			var telegram_file = new TelegramFile {
-				Extension = extension
+				Extension = args.Extension
 			};
 
 			if (stream.Length >= 10 * 1024 * 1024 && info is InputFileBig big) { // is big (more than 20 mb)
@@ -68,5 +68,10 @@ namespace Bot.Services.Files.Telegram.Services {
 
 			return telegram_file;
 		}
+	}
+
+	public record TelegramFilesArgs(string Name, string Extension) : IFilesRepositoryArgs {
+		public string Name { get; set; } = Name;
+		public string Extension { get; set; } = Extension;
 	}
 }

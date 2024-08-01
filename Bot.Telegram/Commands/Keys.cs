@@ -34,8 +34,10 @@ namespace Bot.Telegram.Commands {
 		public static class Services {
 			public const string Discord = "/discord";
 			public const byte DiscordCallback = 31;
+			public const byte DiscordCheckCallback = 32;
+			
 			public const string Twitch = "/twitch";
-			public const byte TwitchCallback = 32;
+			public const byte TwitchCallback = 33;
 		}
 
 		public static BotCommand[] GenerateCommands() {

@@ -3,9 +3,14 @@ using System.Reflection;
 using Bot.Core.Messages.WTelegram;
 using Bot.Core.Models.Checkers.Abstractions;
 using Bot.Core.Models.Parsers.Abstractions;
+using Bot.Services.Files.System.Models.Abstractions;
+using Bot.Services.Files.System.Services;
+using Bot.Services.Files.Telegram.Models.Abstractions;
+using Bot.Services.Files.Telegram.Services;
 using Bot.Services.Proxies.Data;
 using Bot.Services.Proxies.Models;
 using Bot.Services.Proxies.Services;
+using Bot.Telegram.Data;
 using Bot.Telegram.WTelegram;
 using Bot.Telegram.WTelegram.UpdateHandlers;
 
@@ -88,6 +93,14 @@ builder.Services.AddSingleton<Proxies>();
 builder.Services.AddSingleton<IChecker<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Checker>(x => new(x.GetRequiredService<ILoggerFactory>().CreateLogger<Bot.Services.Discord.Checker>()));
 builder.Services.AddSingleton<IParserStream<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Parser>();
 
+// Files
+builder.Services.AddDbContext<FilesDbContext>(x => x.UseSqlite(builder.Configuration.GetConnectionString("Files")));
+builder.Services.AddScoped<ITelegramFilesDbContext>(x => x.GetRequiredService<FilesDbContext>());
+builder.Services.AddScoped<ISystemFilesDbContext>(x => x.GetRequiredService<FilesDbContext>());
+
+builder.Services.AddSingleton<SystemFilesRepository>();
+builder.Services.AddSingleton<TelegramFilesRepository>();
+
 // Projects inject
 builder.Services.AddBotTelegram();
 
@@ -95,6 +108,8 @@ var host = builder.Build();
 
 // Initialize proxies
 using (var scope = host.Services.CreateScope()) {
+	scope.ServiceProvider.GetRequiredService<FilesDbContext>().Database.EnsureCreated();
+	
 	var context = scope.ServiceProvider.GetRequiredService<ProxiesDbContext>();
 	var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 	var section = config.GetSection("Proxies");

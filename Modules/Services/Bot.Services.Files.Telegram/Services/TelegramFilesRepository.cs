@@ -49,29 +49,20 @@ namespace Bot.Services.Files.Telegram.Services {
 
 			#endregion
 
-			var telegram_file = new TelegramFile {
-				Extension = args.Extension
-			};
+			var file = (TelegramFile)info;
 
-			if (stream.Length >= 10 * 1024 * 1024 && info is InputFileBig big) { // is big (more than 20 mb)
-				telegram_file.Id = big.id;
-				telegram_file.Name = big.name;
+			file.Extension = args.Extension;
+			file.MimeType = args.MimeType;
+			file.Service = args.Service;
 
-				telegram_file.Parts = big.Parts;
-			}
-			else if (info is InputFile file) {
-				telegram_file.Id = file.id;
-				telegram_file.Name = file.Name;
-
-				telegram_file.Md5CheckSum = file.md5_checksum;
-			}
-
-			return telegram_file;
+			return file;
 		}
 	}
 
-	public record TelegramFilesArgs(string Name, string Extension) : IFilesRepositoryArgs {
+	public record TelegramFilesArgs(string Name, string Extension, string Service, string MimeType) : IFilesRepositoryArgs {
 		public string Name { get; set; } = Name;
 		public string Extension { get; set; } = Extension;
+		public string Service { get; set; } = Service;
+		public string MimeType { get; set; } = MimeType;
 	}
 }

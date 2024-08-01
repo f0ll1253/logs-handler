@@ -52,7 +52,7 @@ namespace Bot.Services.Files.System.Services {
 			return new() {
 				Name = args.Name,
 				Extension = args.Extension,
-				Service = args.Extension
+				Service = args.Service
 			};
 		}
 	}

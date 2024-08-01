@@ -3,5 +3,6 @@ namespace Bot.Core.Models.Files.Abstractions {
 		TKey Id { get; set; }
 		string Name { get; set; }
 		string Extension { get; set; }
+		string Service { get; set; }
 	}
 }

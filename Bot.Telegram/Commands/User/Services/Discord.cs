@@ -103,27 +103,32 @@ namespace Bot.Telegram.Commands.User.Services {
 			}
 			
 			logger.LogInformation("[Discord] Parsing completed");
-			
-			TelegramFile telegram;
-			SystemFile system;
-            
-			using (var memory = new MemoryStream()) {
-				// Write to stream
-				using (var writer = new StreamWriter(memory, leaveOpen: true)) {
-					foreach (var token in tokens) {
-						await writer.WriteLineAsync(token);
+
+			var args_telegram = new TelegramFilesArgs(name, "txt", "Discord", "text/plain");
+			var telegram = await files_telegram.GetAsync(args_telegram);
+
+			var args_system = new SystemFilesArgs(name, "txt", "Discord");
+			var system = await files_system.GetAsync(args_system);
+
+			if (telegram is null || system is null) {
+				using (var memory = new MemoryStream()) {
+					// Write to stream
+					await using (var writer = new StreamWriter(memory, leaveOpen: true)) {
+						foreach (var token in tokens) {
+							await writer.WriteLineAsync(token);
+						}
 					}
+				
+					// Save system
+					system ??= await files_system.CreateAsync(memory, args_system, false);
+				
+					await files_system.AddAsync(system);
+
+					// Save telegram
+					telegram ??= await files_telegram.CreateAsync(memory, args_telegram, false);
+
+					await files_telegram.AddAsync(telegram);
 				}
-				
-				// Save system
-				system = await files_system.CreateAsync(memory, new(name, "txt", "Discord"), false);
-				
-				await files_system.AddAsync(system);
-
-				// Save telegram
-				telegram = await files_telegram.CreateAsync(memory, new(name, "txt", "Discord", "text/plain"), false);
-
-				await files_telegram.AddAsync(telegram);
 			}
 
 			var text = "#discord";

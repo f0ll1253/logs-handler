@@ -33,6 +33,10 @@ namespace Bot.Services.Files.System.Services {
 			return context.SystemFiles.FindAsync(key).AsTask();
 		}
 
+		public Task<SystemFile?> GetAsync(SystemFilesArgs args) {
+			return context.SystemFiles.FirstOrDefaultAsync(x => x.Name == args.Name && x.Extension == args.Extension && x.Service == args.Service);
+		}
+
 		public async Task<SystemFile> CreateAsync(Stream stream, SystemFilesArgs args, bool dispose_stream = true) {
 			
 			#region Save File

@@ -94,7 +94,7 @@ builder.Services.AddSingleton<IChecker<Bot.Services.Discord.Models.User>, Bot.Se
 builder.Services.AddSingleton<IParserStream<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Parser>();
 
 // Files
-builder.Services.AddDbContext<FilesDbContext>(x => x.UseSqlite(builder.Configuration.GetConnectionString("Files")));
+builder.Services.AddDbContext<FilesDbContext>(x => x.UseInMemoryDatabase("Files"));
 builder.Services.AddScoped<ITelegramFilesDbContext>(x => x.GetRequiredService<FilesDbContext>());
 builder.Services.AddScoped<ISystemFilesDbContext>(x => x.GetRequiredService<FilesDbContext>());
 

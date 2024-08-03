@@ -34,6 +34,10 @@ namespace Bot.Services.Files.Telegram.Services {
 		public Task<TelegramFile?> GetAsync(long key) {
 			return context.TelegramFiles.FindAsync(key).AsTask();
 		}
+		
+		public Task<TelegramFile?> GetAsync(TelegramFilesArgs args) {
+			return context.TelegramFiles.FirstOrDefaultAsync(x => x.Name == args.Name && x.Extension == args.Extension && x.Service == args.Service);
+		}
 
 		public async Task<TelegramFile> CreateAsync(Stream stream, TelegramFilesArgs args, bool dispose_stream = true) {
 

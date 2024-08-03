@@ -21,6 +21,14 @@ namespace Bot.Core.Models {
 
 			return (name, Path.Combine(config.GetPath(type.ToString()), name));
 		}
+
+		public static string[] TryGetFilesOf(this string directory, string search_pattern) {
+			if (Directory.GetDirectories(directory, search_pattern, SearchOption.AllDirectories).FirstOrDefault() is not { } folder || Directory.GetFiles(folder) is not {Length:>0} files) {
+				return [];
+			}
+
+			return files;
+		}
 		
 		#region Multithreading
 		

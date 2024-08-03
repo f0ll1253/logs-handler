@@ -1,3 +1,4 @@
+using Bot.Core.Models;
 using Bot.Core.Models.Parsers.Abstractions;
 using Bot.Services.Discord.Models;
 
@@ -16,9 +17,7 @@ namespace Bot.Services.Discord {
 		}
 		
 		public async IAsyncEnumerable<User> FromLog(string log) {
-			var folder = Path.Combine(log, "Discord");
-			
-			if (!Directory.Exists(folder) || Directory.GetFiles(folder) is not {Length:>0} files) {
+			if (log.TryGetFilesOf("Discord") is not {Length: > 0} files) {
 				yield break;
 			}
 

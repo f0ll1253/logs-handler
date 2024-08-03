@@ -1,22 +1,10 @@
 using Bot.Core.Models;
-using Bot.Core.Models.Parsers.Abstractions;
+using Bot.Core.Models.Parsers.Base;
 using Bot.Services.Discord.Models;
 
 namespace Bot.Services.Discord {
-	public class Parser : IParserStream<User> {
-		public async IAsyncEnumerable<User> FromLogs(string logs) {
-			if (!Directory.Exists(logs)) {
-				yield break;
-			}
-
-			foreach (var log in Directory.GetDirectories(logs)) {
-				await foreach (var account in FromLog(log)) {
-					yield return account;
-				}
-			}
-		}
-		
-		public async IAsyncEnumerable<User> FromLog(string log) {
+	public class Parser : BaseParserStream<User> {
+		public override async IAsyncEnumerable<User> FromLog(string log) {
 			if (log.TryGetFilesOf("Discord") is not {Length: > 0} files) {
 				yield break;
 			}

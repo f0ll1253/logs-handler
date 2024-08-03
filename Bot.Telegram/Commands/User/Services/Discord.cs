@@ -98,7 +98,7 @@ namespace Bot.Telegram.Commands.User.Services {
 					
 					(name, var path) = config.GetPath(data, Paths.Extracted);
 
-					tokens = await parser.FromLogs(path).Select(x => x.Token).Distinct().ToListAsync();
+					tokens = parser.FromLogs(path, int.Parse(config["Multithreading:Parser"])).Select(x => x.Token).Distinct().ToList();
 					break;
 			}
 			

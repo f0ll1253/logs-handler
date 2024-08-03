@@ -1,6 +1,6 @@
 namespace Bot.Core.Models.Parsers.Abstractions {
 	public interface IParserStream<T> where T : class {
-		IAsyncEnumerable<T> FromLogs(string logs);
+		ICollection<T> FromLogs(string logs, int max_threads);
 		IAsyncEnumerable<T> FromLog(string log);
 	}
 }

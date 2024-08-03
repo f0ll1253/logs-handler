@@ -26,7 +26,7 @@ namespace Bot.Tests.Services {
 
 		[Test]
 		public async Task Test_FromLogs() {
-			await foreach (var account in _parser.FromLogs(_configuration.Logs)) {
+			foreach (var account in _parser.FromLogs(_configuration.Logs, 10)) {
 				await TestContext.Out.WriteLineAsync(account.Token);
 			}
 		}

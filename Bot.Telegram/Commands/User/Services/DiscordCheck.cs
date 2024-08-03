@@ -30,7 +30,7 @@ namespace Bot.Telegram.Commands.User.Services {
 			await new Start(client).ExecuteAsync(update, user);
 			
 			logger.LogInformation("[Discord] Taking proxy");
-			var proxy_list = await proxies.TakeAsync(int.Parse(config["Multithreading:Proxy:MaxThreads"]!)).ToListAsync();
+			var proxy_list = await proxies.TakeAsync(int.Parse(config["Multithreading:Proxy"]!)).ToListAsync();
 
 			logger.LogInformation("[Discord] Parse tokens from file {id}", id);
 			if (await files_system.GetAsync(id) is not { } file) {
@@ -48,7 +48,7 @@ namespace Bot.Telegram.Commands.User.Services {
 			}
 			
 			tokens.WithThreads(
-				int.Parse(config["Multithreading:Proxy:MaxThreads"]!),
+				int.Parse(config["Multithreading:Proxy"]!),
 				async (account, index) => {
 					var proxy = proxy_list[index];
 

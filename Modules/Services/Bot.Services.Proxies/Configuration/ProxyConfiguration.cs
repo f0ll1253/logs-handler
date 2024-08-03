@@ -1,6 +1,6 @@
 namespace Bot.Services.Proxies.Configuration {
 	public class ProxyConfiguration {
-		// Multithreading:Proxy:MaxThreads
+		// Multithreading:Proxy
 		public int MaxThreads { get; set; }
 		
 		public bool OnInCheck { get; set; } = false;

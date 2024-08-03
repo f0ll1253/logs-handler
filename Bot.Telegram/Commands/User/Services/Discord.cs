@@ -128,7 +128,7 @@ namespace Bot.Telegram.Commands.User.Services {
 
 			var text = "#discord";
 			var entities = client.MarkdownToEntities(ref text);
-
+			
 			await client.Messages_SendMedia(
 				user,
 				telegram,

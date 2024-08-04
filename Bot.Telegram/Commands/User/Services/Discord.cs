@@ -9,6 +9,7 @@ using Bot.Services.Files.System.Services;
 using Bot.Services.Files.Telegram.Models;
 using Bot.Services.Files.Telegram.Services;
 using Bot.Telegram.Commands.Common;
+using Bot.Telegram.Services;
 
 using Hangfire;
 
@@ -23,8 +24,7 @@ namespace Bot.Telegram.Commands.User.Services {
 	public class Discord(
 		//
 		Client client,
-		SystemFilesRepository files_system,
-		TelegramFilesRepository files_telegram,
+		FilesManager files,
 		IParserStream<Bot.Services.Discord.Models.User> parser,
 		
 		//
@@ -64,7 +64,7 @@ namespace Bot.Telegram.Commands.User.Services {
 				rows = [
 					new() {
 						buttons = [
-							Keys.Common.Dispose_Button
+							Buttons.Dispose_Button
 						]
 					}
 				]
@@ -104,32 +104,17 @@ namespace Bot.Telegram.Commands.User.Services {
 			
 			logger.LogInformation("[Discord] Parsing completed");
 
-			var args_telegram = new TelegramFilesArgs(name, "txt", "Discord", "text/plain");
-			var telegram = await files_telegram.GetAsync(args_telegram);
-
-			var args_system = new SystemFilesArgs(name, "txt", "Discord");
-			var system = await files_system.GetAsync(args_system);
-
-			if (telegram is null || system is null) {
-				using (var memory = new MemoryStream()) {
-					// Write to stream
-					await using (var writer = new StreamWriter(memory, leaveOpen: true)) {
+			var (system, telegram) = await files.CreateOrGetAsync(
+				async stream => {
+					await using (var writer = new StreamWriter(stream, leaveOpen: true)) {
 						foreach (var token in tokens) {
 							await writer.WriteLineAsync(token);
 						}
 					}
-				
-					// Save system
-					system ??= await files_system.CreateAsync(memory, args_system, false);
-				
-					await files_system.AddAsync(system);
-
-					// Save telegram
-					telegram ??= await files_telegram.CreateAsync(memory, args_telegram, false);
-
-					await files_telegram.AddAsync(telegram);
-				}
-			}
+				},
+				new(name, "txt", "Discord"),
+				new(name, "txt", "Discord", "text/plain")
+			);
 
 			var text = "#discord";
 			var entities = client.MarkdownToEntities(ref text);

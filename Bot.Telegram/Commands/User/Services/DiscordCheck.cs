@@ -105,7 +105,7 @@ namespace Bot.Telegram.Commands.User.Services {
 					rows = [
 						new() {
 							buttons = [
-								Keys.Common.Dispose_Button
+								Buttons.Dispose_Button
 							]
 						}
 					]

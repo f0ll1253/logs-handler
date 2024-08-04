@@ -35,7 +35,7 @@ namespace Bot.Services.Files.Telegram.Services {
 			return context.TelegramFiles.FindAsync(key).AsTask();
 		}
 		
-		public Task<TelegramFile?> GetAsync(TelegramFilesArgs args) {
+		public Task<TelegramFile?> GetAsync(IFileArgs args) {
 			return context.TelegramFiles.FirstOrDefaultAsync(x => x.Name == args.Name && x.Extension == args.Extension && x.Service == args.Service);
 		}
 
@@ -63,7 +63,7 @@ namespace Bot.Services.Files.Telegram.Services {
 		}
 	}
 
-	public record TelegramFilesArgs(string Name, string Extension, string Service, string MimeType) : IFilesRepositoryArgs {
+	public record TelegramFilesArgs(string Name, string Extension, string Service, string MimeType) : IFileArgs {
 		public string Name { get; set; } = Name;
 		public string Extension { get; set; } = Extension;
 		public string Service { get; set; } = Service;

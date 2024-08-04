@@ -33,7 +33,7 @@ namespace Bot.Services.Files.System.Services {
 			return context.SystemFiles.FindAsync(key).AsTask();
 		}
 
-		public Task<SystemFile?> GetAsync(SystemFilesArgs args) {
+		public Task<SystemFile?> GetAsync(IFileArgs args) {
 			return context.SystemFiles.FirstOrDefaultAsync(x => x.Name == args.Name && x.Extension == args.Extension && x.Service == args.Service);
 		}
 
@@ -61,7 +61,7 @@ namespace Bot.Services.Files.System.Services {
 		}
 	}
 
-	public record SystemFilesArgs(string Name, string Extension, string Service) : IFilesRepositoryArgs {
+	public record SystemFilesArgs(string Name, string Extension, string Service) : IFileArgs {
 		public string Name { get; set; } = Name;
 		public string Extension { get; set; } = Extension;
 		public string Service { get; set; } = Service;

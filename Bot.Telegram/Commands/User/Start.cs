@@ -34,6 +34,10 @@ namespace Bot.Telegram.Commands.User {
 							new KeyboardButtonCallback {
 								text = "Common",
 								data = [Keys.Menu.CommonCallback]
+							},
+							new KeyboardButtonCallback {
+								text = "Database",
+								data = [Keys.Menu.DatabaseCallback]
 							}
 						]
 					}

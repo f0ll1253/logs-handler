@@ -24,6 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Modules\Services\Bot.Services.Database\Bot.Services.Database.csproj" />
       <ProjectReference Include="..\Modules\Services\Bot.Services.Discord\Bot.Services.Discord.csproj" />
       <ProjectReference Include="..\Modules\Services\Bot.Services.Proxies\Bot.Services.Proxies.csproj" />
       <ProjectReference Include="..\Modules\Services\Bot.Services.Twitch\Bot.Services.Twitch.csproj" />

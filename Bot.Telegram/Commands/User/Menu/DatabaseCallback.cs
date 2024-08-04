@@ -27,11 +27,11 @@ namespace Bot.Telegram.Commands.User.Menu {
 						new() {
 							buttons = [
 								new KeyboardButtonCallback {
-									text = "Select By Domain",
+									text = "By Domain",
 									data = [Keys.Database.SelectByDomainCallback]
 								},
 								new KeyboardButtonCallback {
-									text = "Select By Username",
+									text = "By Username",
 									data = [Keys.Database.SelectByUsernameCallback]
 								},
 							]

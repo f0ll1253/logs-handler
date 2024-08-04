@@ -24,5 +24,9 @@ namespace Bot.Services.Twitch {
 				}
 			}
 		}
+
+		protected override ICollection<User> Distinct(ICollection<User> collection) {
+			return collection.DistinctBy(x => x.Token).ToList();
+		}
 	}
 }

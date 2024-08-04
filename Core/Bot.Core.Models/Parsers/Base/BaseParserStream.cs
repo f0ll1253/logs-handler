@@ -13,9 +13,12 @@ namespace Bot.Core.Models.Parsers.Base {
 				}
 			);
 
-			return list;
+			return Distinct(list);
 		}
 
 		public abstract IAsyncEnumerable<T> FromLog(string log);
+		
+		// Protected
+		protected abstract ICollection<T> Distinct(ICollection<T> collection);
 	}
 }

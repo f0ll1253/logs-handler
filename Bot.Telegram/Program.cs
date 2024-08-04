@@ -11,11 +11,11 @@ using Bot.Services.Proxies.Data;
 using Bot.Services.Proxies.Models;
 using Bot.Services.Proxies.Services;
 using Bot.Telegram.Data;
+using Bot.Telegram.Services;
 using Bot.Telegram.WTelegram;
 using Bot.Telegram.WTelegram.UpdateHandlers;
 
 using Hangfire;
-using Hangfire.InMemory;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -93,6 +93,9 @@ builder.Services.AddSingleton<Proxies>();
 builder.Services.AddSingleton<IChecker<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Checker>(x => new(x.GetRequiredService<ILoggerFactory>().CreateLogger<Bot.Services.Discord.Checker>()));
 builder.Services.AddSingleton<IParserStream<Bot.Services.Discord.Models.User>, Bot.Services.Discord.Parser>();
 
+// Twitch
+builder.Services.AddSingleton<IParserStream<Bot.Services.Twitch.Models.User>, Bot.Services.Twitch.Parser>();
+
 // Files
 builder.Services.AddDbContext<FilesDbContext>(x => x.UseInMemoryDatabase("Files"));
 builder.Services.AddScoped<ITelegramFilesDbContext>(x => x.GetRequiredService<FilesDbContext>());
@@ -100,6 +103,8 @@ builder.Services.AddScoped<ISystemFilesDbContext>(x => x.GetRequiredService<File
 
 builder.Services.AddSingleton<SystemFilesRepository>();
 builder.Services.AddSingleton<TelegramFilesRepository>();
+
+builder.Services.AddSingleton<FilesManager>();
 
 // Projects inject
 builder.Services.AddBotTelegram();

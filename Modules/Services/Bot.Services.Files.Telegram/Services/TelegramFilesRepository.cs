@@ -1,42 +1,16 @@
+using Bot.Core.Models.Base;
 using Bot.Core.Models.Files.Abstractions;
 using Bot.Services.Files.Telegram.Models;
-using Bot.Services.Files.Telegram.Models.Abstractions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using TL;
-
 using WTelegram;
 
 namespace Bot.Services.Files.Telegram.Services {
-	public class TelegramFilesRepository(Client client, ITelegramFilesDbContext context, ILogger<TelegramFilesRepository> logger) : IFilesRepository<TelegramFile, long, TelegramFilesArgs> {
-		public async Task<bool> AddAsync(TelegramFile obj) {
-			if (context is not DbContext db) {
-				throw new ArgumentException("ITelegramFilesDbContext is not DbContext", nameof(context));
-			}
-			
-			context.TelegramFiles.Add(obj);
-
-			try {
-				await db.SaveChangesAsync();
-			} catch (DbUpdateException e) {
-				db.ChangeTracker.Clear();
-				logger.LogError(e, "Error while saving file {id} '{name}.{extension}'", obj.Id, obj.Name, obj.Extension);
-				return false;
-			}
-			
-			logger.LogInformation("Saved new file {id} '{name}.{extension}'", obj.Id, obj.Name, obj.Extension);
-
-			return true;
-		}
-
-		public Task<TelegramFile?> GetAsync(long key) {
-			return context.TelegramFiles.FindAsync(key).AsTask();
-		}
-		
+	public class TelegramFilesRepository(Client client, DbContext context, ILogger<TelegramFilesRepository> logger) : BaseReadOnlyRepository<TelegramFile, long>(context, logger), IFilesRepository<TelegramFile, long, TelegramFilesArgs> {
 		public Task<TelegramFile?> GetAsync(IFileArgs args) {
-			return context.TelegramFiles.FirstOrDefaultAsync(x => x.Name == args.Name && x.Extension == args.Extension && x.Service == args.Service);
+			return context.Set<TelegramFile>().FirstOrDefaultAsync(x => x.Name == args.Name && x.Extension == args.Extension && x.Service == args.Service);
 		}
 
 		public async Task<TelegramFile> CreateAsync(Stream stream, TelegramFilesArgs args, bool dispose_stream = true) {

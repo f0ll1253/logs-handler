@@ -1,4 +1,3 @@
-using Bot.Core.Models.Files.Abstractions;
 using Bot.Services.Files.System.Models;
 using Bot.Services.Files.System.Services;
 using Bot.Services.Files.Telegram.Models;

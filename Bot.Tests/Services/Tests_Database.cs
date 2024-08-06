@@ -52,7 +52,7 @@ namespace Bot.Tests.Services {
 		[TestCase("http://10.10.20.1/:admin:MasiWifi*10", false, "http", "20.1", "admin", "MasiWifi*10")]
 		[TestCase("http://10.10.20.1:10000/:admin:MasiWifi*10", false, "http", "20.1", "admin", "MasiWifi*10")]
 		public void Test_CredentialsConvertion(string str, bool is_null, string protocol = "", string domain = "", string username = "", string password = "") {
-			Credentials? credentials = str;
+			Credential? credentials = str;
 
 			if (is_null) {
 				Assert.That(credentials, Is.Null);
@@ -79,7 +79,7 @@ namespace Bot.Tests.Services {
 				EnableStreaming = true
 			});
 			
-			TestContext.Out.WriteLine(_context.Set<Credentials>().Count());
+			TestContext.Out.WriteLine(_context.Set<Credential>().Count());
 		}
 	}
 

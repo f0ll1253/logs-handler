@@ -1,5 +1,3 @@
-using System.Net;
-
 using Bot.Core.Models.Checkers.Abstractions;
 
 namespace Bot.Core.Models.Checkers.Base {

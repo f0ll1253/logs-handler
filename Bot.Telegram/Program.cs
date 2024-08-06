@@ -8,7 +8,6 @@ using Bot.Services.Files.System.Services;
 using Bot.Services.Files.Telegram.Models.Abstractions;
 using Bot.Services.Files.Telegram.Services;
 using Bot.Services.Proxies.Data;
-using Bot.Services.Proxies.Models;
 using Bot.Services.Proxies.Services;
 using Bot.Telegram.Data;
 using Bot.Telegram.Services;
@@ -110,17 +109,5 @@ builder.Services.AddSingleton<FilesManager>();
 builder.Services.AddBotTelegram();
 
 var host = builder.Build();
-
-// Initialize proxies
-using (var scope = host.Services.CreateScope()) {
-	scope.ServiceProvider.GetRequiredService<FilesDbContext>().Database.EnsureCreated();
-	
-	var context = scope.ServiceProvider.GetRequiredService<ProxiesDbContext>();
-	var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-	var section = config.GetSection("Proxies");
-
-	context.AddRange(section.Get<List<string>>()!.Select(x => (Proxy)x));
-	context.SaveChanges();
-}
 
 host.Run();

@@ -4,10 +4,6 @@ using Bot.Core.Models;
 using Bot.Core.Models.Commands.Abstractions;
 using Bot.Core.Models.Commands.Base;
 using Bot.Core.Models.Parsers.Abstractions;
-using Bot.Services.Files.System.Models;
-using Bot.Services.Files.System.Services;
-using Bot.Services.Files.Telegram.Models;
-using Bot.Services.Files.Telegram.Services;
 using Bot.Telegram.Commands.Common;
 using Bot.Telegram.Services;
 

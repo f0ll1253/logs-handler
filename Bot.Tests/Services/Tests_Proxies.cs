@@ -1,12 +1,10 @@
 using System.Net;
-using System.Reflection;
 
 using Bot.Services.Proxies.Data;
 using Bot.Services.Proxies.Models;
 using Bot.Services.Proxies.Services;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Bot.Tests.Services {

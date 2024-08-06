@@ -1,11 +1,7 @@
-using System.Text.RegularExpressions;
-
 using Bot.Services.Database.Models.Abstractions;
 
-using Microsoft.VisualBasic;
-
 namespace Bot.Services.Database.Models {
-	public class Credentials : ICredentials {
+	public class Credential : ICredentials {
 		public string Id { get; set; } = Guid.NewGuid().ToString();
 		public string Protocol { get; set; }
 		public string? DomainPath { get; set; }
@@ -15,8 +11,8 @@ namespace Bot.Services.Database.Models {
 		public string Username { get; set; }
 		public string Password { get; set; }
 
-		public static implicit operator Credentials?(string str) {
-			var credentials = new Credentials();
+		public static implicit operator Credential?(string str) {
+			var credentials = new Credential();
 			var data = str.Split(':');
 			var index = 0;
 

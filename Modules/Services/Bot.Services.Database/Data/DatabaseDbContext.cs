@@ -9,6 +9,6 @@ namespace Bot.Services.Database.Data {
 		public DatabaseDbContext() { }
 		public DatabaseDbContext(DbContextOptions<DatabaseDbContext> options) : base(options) { }
 		
-		public DbSet<Credentials> Credentials { get; set; }
+		public DbSet<Credential> Credentials { get; set; }
 	}
 }

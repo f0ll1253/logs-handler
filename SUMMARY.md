@@ -1,3 +1,3 @@
 # Table of contents
 
-* [Settings](README.md)
+* [🛠️ Settings](README.md)

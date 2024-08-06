@@ -1,7 +1,11 @@
 using System.Text.RegularExpressions;
 
+using Bot.Services.Database.Models.Abstractions;
+
+using Microsoft.VisualBasic;
+
 namespace Bot.Services.Database.Models {
-	public class Credentials {
+	public class Credentials : ICredentials {
 		public string Id { get; set; } = Guid.NewGuid().ToString();
 		public string Protocol { get; set; }
 		public string? DomainPath { get; set; }
@@ -11,60 +15,73 @@ namespace Bot.Services.Database.Models {
 		public string Username { get; set; }
 		public string Password { get; set; }
 
-		private static readonly Regex _url = new(@"([a-z]+):\/\/(.+\.)?([^\.]+)\.([a-z]+)(:[0-9]+)?(\/)(.+)?:(.+):(.+)");
-		private static readonly Regex _ip = new(@"([a-z]+):\/\/((?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?:\.(?!\:)|)){4})(\:(?!0)(\d{1,4}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5]))?(\/)(.+)?:(.+):(.+)");
 		public static implicit operator Credentials?(string str) {
-			if (_url.IsMatch(str)) {
-				return _ParseFromUrl(str);
-			}
-			
-			if (_ip.IsMatch(str)) {
-				return Credentials._ParseFromIp(str);
-			}
+			var credentials = new Credentials();
+			var data = str.Split(':');
+			var index = 0;
 
-			return null;
-		}
-
-		private static Credentials _ParseFromUrl(string str) {
-			var match = _url.Match(str);
-			int? port = null;
-
-			if (!string.IsNullOrEmpty(match.Groups[5].Value)) {
-				port = int.Parse(match.Groups[5].Value[1..]);
+			if (data.Length <= 3 || data[0].ToLower() == "unknown" || data[0] == "about") {
+				return null;
 			}
 
-			return new() {
-				Protocol = match.Groups[1].Value,
-				DomainPath = match.Groups[2].Value,
-				Domain = $"{match.Groups[3].Value}.{match.Groups[4].Value}",
-				Port = port,
-				Path = match.Groups[7].Value,
-				Username = match.Groups[8].Value,
-				Password = match.Groups[9].Value
-			};
-		}
+			// Protocol
+			credentials.Protocol = data[index];
 
-		private static Credentials? _ParseFromIp(string str) {
-			var match = _ip.Match(str);
-			int? port = null;
+			index++;
 
-			// check local
-			if (match.Groups[2].Value.StartsWith("192.168")) {
+			// Domain / DomainPath
+			if (data[index].Length <= 2) {
 				return null;
 			}
 			
-			if (!string.IsNullOrEmpty(match.Groups[4].Value)) {
-				port = int.Parse(match.Groups[4].Value[1..]);
+			data[index] = data[index][2..];
+			var slash_index = data[index].IndexOf('/');
+			var full_domain = data[index];
+
+			if (slash_index != -1) {
+				full_domain = full_domain[..slash_index];
 			}
 
-			return new() {
-				Protocol = match.Groups[1].Value,
-				Domain = match.Groups[2].Value,
-				Port = port,
-				Path = match.Groups[6].Value,
-				Username = match.Groups[7].Value,
-				Password = match.Groups[8].Value
-			};
+			if (full_domain.StartsWith("192.168") || full_domain.StartsWith("localhost")) {
+				return null;
+			}
+
+			var last_index = full_domain.LastIndexOf('.');
+
+			if (last_index == -1) {
+				credentials.Domain = full_domain;
+			}
+			else {
+				var pre_last_index = full_domain[..last_index].LastIndexOf('.');
+
+				credentials.Domain = full_domain[(pre_last_index + 1)..];
+
+				if (pre_last_index > 0) {
+					credentials.DomainPath = full_domain[..pre_last_index];
+				}
+			}
+
+			// Port
+			if (slash_index == -1) {
+				index++;
+
+				slash_index = data[index].IndexOf('/');
+
+				if (slash_index != -1 && int.TryParse(data[index][..slash_index], out var port)) {
+					credentials.Port = port;
+				}
+			}
+
+			// Path
+			credentials.Path = data[index][(slash_index + 1)..];
+
+			index++;
+
+			// Username / Password
+			credentials.Username = string.Join(':', data.Take(new Range(index, data.Length - 1)));
+			credentials.Password = data[^1];
+
+			return credentials;
 		}
 	}
 }

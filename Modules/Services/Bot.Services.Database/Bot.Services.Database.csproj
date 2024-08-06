@@ -10,4 +10,8 @@
       <ProjectReference Include="..\..\..\Core\Bot.Core.Models\Bot.Core.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Thinktecture.EntityFrameworkCore.BulkOperations" Version="8.1.1" />
+    </ItemGroup>
+
 </Project>

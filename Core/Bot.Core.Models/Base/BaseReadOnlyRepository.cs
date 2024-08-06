@@ -8,6 +8,8 @@ namespace Bot.Core.Models.Base {
 	public abstract class BaseReadOnlyRepository<T, TKey>(DbContext context, ILogger? logger) : IReadOnlyRepository<T, TKey> where T : class {
 		public virtual Task<bool> AddAsync(T entity) => _TrySaveAsync(context.AddAsync(entity).AsTask());
 
+		public virtual Task<bool> AddRangeAsync(ICollection<T> collection) => _TrySaveAsync(context.AddRangeAsync(collection));
+
 		public virtual Task<T?> GetAsync(TKey key) => context.FindAsync<T>(key).AsTask();
 		
 		// Protected
